@@ -8,28 +8,56 @@ datasource db {
 }
 
 model GitHubAccount {
-  id            String    @id @default(cuid())
-  githubUserId  Int       @unique
-  login         String    @unique
-  displayName   String?
-  avatarUrl     String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  installations Installation[]
-  authoredCommits Commit[] @relation("CommitAuthor")
+  id               String              @id @default(cuid())
+  githubUserId     Int                 @unique
+  login            String              @unique
+  displayName      String?
+  avatarUrl        String?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  authoredCommits  Commit[]            @relation("CommitAuthor")
+  installationGrants InstallationGrant[]
+  sessions         UserSession[]
 }
 
 model Installation {
-  id             String       @id @default(cuid())
-  githubInstallId Int         @unique
-  accountType    String
-  accountLogin   String
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  accountId      String?
-  account        GitHubAccount? @relation(fields: [accountId], references: [id])
-  repositories   Repository[]
-  syncJobs       SyncJob[]
+  id              String              @id @default(cuid())
+  githubInstallId Int                 @unique
+  accountType     String
+  accountLogin    String
+  targetType      String?
+  permissionsJson String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  repositories    Repository[]
+  syncJobs        SyncJob[]
+  grants          InstallationGrant[]
+}
+
+model InstallationGrant {
+  id             String        @id @default(cuid())
+  accountId      String
+  installationId String
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  account        GitHubAccount @relation(fields: [accountId], references: [id])
+  installation   Installation  @relation(fields: [installationId], references: [id])
+
+  @@unique([accountId, installationId])
+}
+
+model UserSession {
+  id                         String        @id @default(cuid())
+  sessionToken               String        @unique
+  accountId                  String
+  githubAccessToken          String
+  githubAccessTokenExpiresAt DateTime?
+  githubRefreshToken         String?
+  githubRefreshTokenExpiresAt DateTime?
+  expiresAt                  DateTime
+  createdAt                  DateTime      @default(now())
+  updatedAt                  DateTime      @updatedAt
+  account                    GitHubAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
 }
 
 model Repository {
@@ -62,7 +90,7 @@ model Branch {
 
 model Commit {
   id                    String         @id @default(cuid())
-  sha                   String         @unique
+  sha                   String
   repositoryId          String
   repository            Repository     @relation(fields: [repositoryId], references: [id])
   authorId              String?
@@ -80,6 +108,8 @@ model Commit {
   updatedAt             DateTime       @updatedAt
   branchLinks           CommitBranch[]
   pullRequestLinks      PullRequestCommit[]
+
+  @@unique([repositoryId, sha])
 }
 
 model CommitBranch {

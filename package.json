@@ -2,6 +2,9 @@
   "name": "vibe-tracker",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,10 +14,12 @@
     "db:push": "prisma db push"
   },
   "dependencies": {
+    "@octokit/auth-app": "^8.2.0",
     "@prisma/client": "^6.19.2",
     "clsx": "^2.1.1",
     "lucide-react": "^0.577.0",
     "next": "16.1.6",
+    "octokit": "^5.0.5",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "zod": "^4.3.6"

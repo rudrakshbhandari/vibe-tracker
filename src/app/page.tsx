@@ -1,10 +1,33 @@
 import Link from "next/link";
-import { ArrowRight, Github, LineChart } from "lucide-react";
+import { ArrowRight, CheckCircle2, Github, LineChart, RefreshCcw } from "lucide-react";
 
 import { formatNumber, getDashboardData } from "@/lib/dashboard";
+import type { AnalyticsView, MetricMode } from "@/lib/dashboard";
+import { getGithubConnectionState } from "@/lib/github-state";
+import { getLiveMetrics } from "@/lib/live-metrics";
 
-export default function Home() {
-  const dashboard = getDashboardData();
+type HomePageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function Home({ searchParams }: HomePageProps) {
+  const params = (await searchParams) ?? {};
+  const view =
+    typeof params.view === "string" &&
+    ["daily", "weekly", "monthly"].includes(params.view)
+      ? (params.view as AnalyticsView)
+      : "weekly";
+  const mode =
+    typeof params.mode === "string" &&
+    ["authored", "merged"].includes(params.mode)
+      ? (params.mode as MetricMode)
+      : "authored";
+  const dashboard = (await getLiveMetrics(view, mode)) ?? getDashboardData();
+  const githubState = await getGithubConnectionState();
+  const githubStatus =
+    typeof params.github === "string" ? params.github : undefined;
+  const views: AnalyticsView[] = ["daily", "weekly", "monthly"];
+  const modes: MetricMode[] = ["authored", "merged"];
 
   return (
     <main className="grid-lines min-h-screen">
@@ -33,21 +56,27 @@ export default function Home() {
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
                 href="#dashboard"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-foreground px-5 py-3 text-sm font-medium text-background transition-transform hover:-translate-y-0.5"
+                className="button-primary"
               >
-                Explore MVP
+                Open dashboard
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
-                href="/api/metrics?window=30d&mode=authored"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-line bg-panel-strong px-5 py-3 text-sm font-medium"
+                href={`/api/metrics?view=${view}&mode=${mode}`}
+                className="button-secondary"
               >
-                View API sample
+                View metrics JSON
                 <LineChart className="h-4 w-4" />
               </Link>
             </div>
           </div>
         </header>
+
+        {githubStatus ? (
+          <section className="rounded-[1.5rem] border border-line bg-panel px-5 py-4 text-sm text-muted shadow-[0_16px_50px_rgba(72,56,31,0.06)]">
+            GitHub flow status: <span className="font-semibold text-foreground">{githubStatus}</span>
+          </section>
+        ) : null}
 
         <section
           id="dashboard"
@@ -57,25 +86,59 @@ export default function Home() {
             <div className="flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-sm uppercase tracking-[0.24em] text-muted">
-                  Sample dashboard
+                  {dashboard.profile.source === "live" ? "Live dashboard" : "Sample dashboard"}
                 </p>
                 <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em]">
                   {dashboard.profile.login}
                 </h2>
                 <p className="mt-2 max-w-xl text-sm leading-6 text-muted">
-                  Local demo data that mirrors the model we will populate from the
-                  GitHub API during sync jobs.
+                  {dashboard.profile.source === "live"
+                    ? "These metrics are aggregated from synced GitHub commits in the local database."
+                    : "Local demo data that mirrors the model we will populate from the GitHub API during sync jobs."}
                 </p>
               </div>
-              <div className="flex flex-wrap gap-2 text-sm">
-                {dashboard.filters.map((filter) => (
-                  <span
-                    key={filter}
-                    className="rounded-full border border-line px-3 py-1.5 font-medium text-muted"
-                  >
-                    {filter}
-                  </span>
-                ))}
+              <div className="flex flex-col gap-3 text-sm sm:items-end">
+                <div className="flex flex-wrap gap-2">
+                  {views.map((entry) => (
+                    <Link
+                      key={entry}
+                      href={`/?view=${entry}&mode=${mode}`}
+                      className={
+                        entry === view
+                          ? "rounded-full bg-foreground px-3 py-1.5 font-medium text-background"
+                          : "rounded-full border border-line px-3 py-1.5 font-medium text-muted"
+                      }
+                    >
+                      {entry[0]?.toUpperCase()}
+                      {entry.slice(1)}
+                    </Link>
+                  ))}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {modes.map((entry) => (
+                    <Link
+                      key={entry}
+                      href={`/?view=${view}&mode=${entry}`}
+                      className={
+                        entry === mode
+                          ? "rounded-full bg-[#13222d] px-3 py-1.5 font-medium text-[#f6efe4]"
+                          : "rounded-full border border-line px-3 py-1.5 font-medium text-muted"
+                      }
+                    >
+                      {entry === "authored" ? "Authored" : "Merged"}
+                    </Link>
+                  ))}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {dashboard.filters.map((filter) => (
+                    <span
+                      key={filter}
+                      className="rounded-full border border-line px-3 py-1.5 font-medium text-muted"
+                    >
+                      {filter}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -99,7 +162,7 @@ export default function Home() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs uppercase tracking-[0.24em] text-[#b3c8d6]">
-                      Activity by week
+                      {dashboard.chartTitle}
                     </p>
                     <h3 className="mt-2 text-xl font-semibold">
                       Additions and deletions
@@ -166,6 +229,123 @@ export default function Home() {
 
           <aside className="flex flex-col gap-6">
             <section className="rounded-[2rem] border border-line bg-panel p-6 shadow-[0_24px_80px_rgba(72,56,31,0.08)] backdrop-blur">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm uppercase tracking-[0.24em] text-muted">
+                    GitHub connection
+                  </p>
+                  <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">
+                    {githubState.title}
+                  </h2>
+                </div>
+                {githubState.connected ? (
+                  <CheckCircle2 className="h-6 w-6 text-accent-2" />
+                ) : (
+                  <Github className="h-6 w-6" />
+                )}
+              </div>
+              <p className="mt-3 text-sm leading-6 text-muted">
+                {githubState.description}
+              </p>
+
+              <div className="mt-5 flex flex-col gap-3">
+                {githubState.primaryAction ? (
+                  <Link
+                    href={githubState.primaryAction.href}
+                    className="button-primary"
+                  >
+                    {githubState.primaryAction.label}
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                ) : null}
+                {githubState.connected ? (
+                  <form action="/api/github/activity-sync" method="post">
+                    <button type="submit" className="button-secondary w-full">
+                      Sync my activity
+                    </button>
+                  </form>
+                ) : null}
+              </div>
+
+              {githubState.viewer ? (
+                <div className="mt-6 rounded-[1.25rem] border border-line bg-panel-strong p-4">
+                  <p className="text-xs uppercase tracking-[0.24em] text-muted">
+                    Signed in as
+                  </p>
+                  <p className="mt-2 text-lg font-semibold">{githubState.viewer.login}</p>
+                  <p className="mt-1 text-sm text-muted">
+                    Session expires {githubState.viewer.sessionExpiryLabel}
+                  </p>
+                  <p className="mt-3 text-sm text-muted">
+                    Latest activity sync:{" "}
+                    {githubState.activitySync
+                      ? `${githubState.activitySync.status} at ${githubState.activitySync.updatedAt}`
+                      : "not run yet"}
+                  </p>
+                </div>
+              ) : null}
+            </section>
+
+            <section className="rounded-[2rem] border border-line bg-[#fffaf0] p-6">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm uppercase tracking-[0.24em] text-muted">
+                    Installations
+                  </p>
+                  <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">
+                    {githubState.installations.length} connected scopes
+                  </h2>
+                </div>
+                <RefreshCcw className="h-5 w-5 text-muted" />
+              </div>
+
+              <div className="mt-5 space-y-4">
+                {githubState.installations.length > 0 ? (
+                  githubState.installations.map((installation) => (
+                    <article
+                      key={installation.id}
+                      className="rounded-[1.25rem] border border-line bg-panel p-4"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <h3 className="font-semibold">{installation.accountLogin}</h3>
+                          <p className="mt-1 text-sm text-muted">
+                            {installation.repositoryCount} repos indexed locally
+                          </p>
+                        </div>
+                        <span className="rounded-full border border-line px-3 py-1 text-xs font-medium text-muted">
+                          #{installation.githubInstallId}
+                        </span>
+                      </div>
+                      <p className="mt-3 text-sm leading-6 text-muted">
+                        {installation.repositoryNames.length > 0
+                          ? installation.repositoryNames.join(", ")
+                          : "No repositories cached yet. Refresh repositories to pull grants."}
+                      </p>
+                      <form
+                        action={`/api/github/installations/${installation.githubInstallId}/sync`}
+                        method="post"
+                        className="mt-4"
+                      >
+                        <button
+                          type="submit"
+                          className="button-secondary px-4 py-2"
+                        >
+                          Refresh repositories
+                        </button>
+                      </form>
+                    </article>
+                  ))
+                ) : (
+                  <p className="text-sm leading-6 text-muted">
+                    Once the app is installed on a user or organization, it will
+                    appear here and can be synced into the local cache.
+                  </p>
+                )}
+              </div>
+            </section>
+
+            <section className="rounded-[2rem] border border-line bg-panel p-6 shadow-[0_24px_80px_rgba(72,56,31,0.08)] backdrop-blur">
               <p className="text-sm uppercase tracking-[0.24em] text-muted">
                 Locked decisions
               </p>
@@ -201,24 +381,30 @@ export default function Home() {
             <section className="rounded-[2rem] border border-line bg-[#13222d] p-6 text-[#f6efe4]">
               <div className="flex items-center gap-3">
                 <Github className="h-5 w-5" />
-                <h2 className="text-lg font-semibold">Next integration step</h2>
+                <h2 className="text-lg font-semibold">GitHub App env</h2>
               </div>
               <p className="mt-3 text-sm leading-6 text-[#b3c8d6]">
-                Wire GitHub App installation, store repository grants, and enqueue
-                sync jobs per installation.
+                The simplest hosted setup is one shared GitHub App. Users click one
+                button, GitHub handles auth/install, and this app syncs what they granted.
               </p>
               <div className="mt-5 rounded-[1.25rem] border border-white/10 bg-white/6 p-4">
                 <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#b3c8d6]">
-                  Planned env
+                  Required env
                 </p>
                 <p className="mt-3 font-mono text-sm text-white/90">
                   DATABASE_URL
                   <br />
                   GITHUB_APP_ID
                   <br />
+                  GITHUB_APP_CLIENT_ID
+                  <br />
+                  GITHUB_APP_CLIENT_SECRET
+                  <br />
                   GITHUB_APP_PRIVATE_KEY
                   <br />
-                  GITHUB_WEBHOOK_SECRET
+                  GITHUB_APP_SLUG
+                  <br />
+                  APP_URL
                 </p>
               </div>
             </section>
