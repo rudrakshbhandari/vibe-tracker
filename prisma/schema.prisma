@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model GitHubAccount {
+  id            String    @id @default(cuid())
+  githubUserId  Int       @unique
+  login         String    @unique
+  displayName   String?
+  avatarUrl     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  installations Installation[]
+  authoredCommits Commit[] @relation("CommitAuthor")
+}
+
+model Installation {
+  id             String       @id @default(cuid())
+  githubInstallId Int         @unique
+  accountType    String
+  accountLogin   String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  accountId      String?
+  account        GitHubAccount? @relation(fields: [accountId], references: [id])
+  repositories   Repository[]
+  syncJobs       SyncJob[]
+}
+
+model Repository {
+  id               String      @id @default(cuid())
+  githubRepoId     Int         @unique
+  owner            String
+  name             String
+  defaultBranch    String
+  isPrivate        Boolean
+  installationId   String
+  installation     Installation @relation(fields: [installationId], references: [id])
+  branches         Branch[]
+  commits          Commit[]
+  pullRequests     PullRequest[]
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+model Branch {
+  id           String   @id @default(cuid())
+  name         String
+  repositoryId String
+  repository   Repository @relation(fields: [repositoryId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  commitLinks   CommitBranch[]
+
+  @@unique([repositoryId, name])
+}
+
+model Commit {
+  id                    String         @id @default(cuid())
+  sha                   String         @unique
+  repositoryId          String
+  repository            Repository     @relation(fields: [repositoryId], references: [id])
+  authorId              String?
+  author                GitHubAccount? @relation("CommitAuthor", fields: [authorId], references: [id])
+  authorName            String?
+  authorEmail           String?
+  authoredAt            DateTime
+  committedAt           DateTime
+  messageHeadline       String
+  additions             Int
+  deletions             Int
+  changedFiles          Int?
+  mergedToDefaultBranch Boolean        @default(false)
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  branchLinks           CommitBranch[]
+  pullRequestLinks      PullRequestCommit[]
+}
+
+model CommitBranch {
+  id        String   @id @default(cuid())
+  commitId  String
+  branchId  String
+  commit    Commit   @relation(fields: [commitId], references: [id])
+  branch    Branch   @relation(fields: [branchId], references: [id])
+  firstSeenAt DateTime @default(now())
+
+  @@unique([commitId, branchId])
+}
+
+model PullRequest {
+  id             String   @id @default(cuid())
+  githubPrNumber Int
+  repositoryId   String
+  repository     Repository @relation(fields: [repositoryId], references: [id])
+  title          String
+  state          String
+  baseBranch     String
+  headBranch     String
+  openedAt       DateTime
+  mergedAt       DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  commitLinks    PullRequestCommit[]
+
+  @@unique([repositoryId, githubPrNumber])
+}
+
+model PullRequestCommit {
+  id            String      @id @default(cuid())
+  pullRequestId String
+  commitId      String
+  pullRequest   PullRequest @relation(fields: [pullRequestId], references: [id])
+  commit        Commit      @relation(fields: [commitId], references: [id])
+
+  @@unique([pullRequestId, commitId])
+}
+
+model SyncJob {
+  id              String       @id @default(cuid())
+  installationId  String
+  installation    Installation @relation(fields: [installationId], references: [id])
+  scope           String
+  status          String
+  startedAt       DateTime?
+  finishedAt      DateTime?
+  cursor          String?
+  errorMessage    String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
