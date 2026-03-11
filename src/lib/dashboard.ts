@@ -10,6 +10,7 @@ import type { LucideIcon } from "lucide-react";
 
 export type TimeWindow = "7d" | "30d" | "90d";
 export type MetricMode = "authored" | "merged";
+export type AnalyticsView = "daily" | "weekly" | "monthly";
 
 type PipelineStep = {
   title: string;
@@ -29,6 +30,7 @@ export function getDashboardData() {
   return {
     profile: {
       login: "@rudraksh",
+      source: "sample" as const,
     },
     filters: ["30 days", "Authored commits", "Deduped by SHA", "All installed repos"],
     summary: [
@@ -60,6 +62,7 @@ export function getDashboardData() {
       additionsHeight: Math.round((value / maxValue) * 100),
       deletionsHeight: Math.round((deletions[index] / maxValue) * 100),
     })),
+    chartTitle: "Weekly activity",
     repositories: [
       {
         name: "vibe-tracker/web",

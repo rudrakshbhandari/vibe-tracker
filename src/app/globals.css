@@ -5,11 +5,13 @@
   --foreground: #17222d;
   --panel: rgba(255, 252, 246, 0.82);
   --panel-strong: #fffaf0;
-  --muted: #617181;
-  --line: rgba(23, 34, 45, 0.12);
+  --muted: #526274;
+  --line: rgba(23, 34, 45, 0.16);
   --accent: #d9652b;
   --accent-2: #2f7c6c;
   --danger: #b34b3d;
+  --button-primary-fg: #fffaf0;
+  --button-secondary-bg: rgba(255, 250, 240, 0.92);
 }
 
 @theme inline {
@@ -55,4 +57,55 @@ a {
     linear-gradient(to right, rgba(23, 34, 45, 0.05) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(23, 34, 45, 0.05) 1px, transparent 1px);
   background-size: 28px 28px;
+}
+
+.button-primary,
+.button-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  transition:
+    transform 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.button-primary {
+  background: var(--foreground);
+  color: var(--button-primary-fg);
+  border: 1px solid rgba(23, 34, 45, 0.6);
+  box-shadow: 0 12px 28px rgba(23, 34, 45, 0.16);
+}
+
+.button-primary:hover {
+  transform: translateY(-2px);
+  background: #102030;
+}
+
+.button-secondary {
+  background: var(--button-secondary-bg);
+  color: var(--foreground);
+  border: 1px solid rgba(23, 34, 45, 0.14);
+}
+
+.button-secondary:hover {
+  transform: translateY(-2px);
+  background: #ffffff;
+  border-color: rgba(23, 34, 45, 0.22);
+}
+
+.button-primary:focus-visible,
+.button-secondary:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(244, 239, 228, 0.95),
+    0 0 0 5px rgba(23, 34, 45, 0.28);
 }

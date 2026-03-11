@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getMetricsResponse, metricsQuerySchema } from "@/lib/metrics";
+import { getMetricsResponseAsync, metricsQuerySchema } from "@/lib/metrics";
 
-export function GET(request: NextRequest) {
+export async function GET(request: NextRequest) {
   const parseResult = metricsQuerySchema.safeParse({
-    window: request.nextUrl.searchParams.get("window") ?? undefined,
+    view: request.nextUrl.searchParams.get("view") ?? undefined,
     mode: request.nextUrl.searchParams.get("mode") ?? undefined,
   });
 
@@ -18,5 +18,5 @@ export function GET(request: NextRequest) {
     );
   }
 
-  return NextResponse.json(getMetricsResponse(parseResult.data));
+  return NextResponse.json(await getMetricsResponseAsync(parseResult.data));
 }
