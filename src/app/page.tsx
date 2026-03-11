@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Github, LineChart, RefreshCcw } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Github,
+  LineChart,
+  RefreshCcw,
+} from "lucide-react";
 
 import { formatNumber, getDashboardData } from "@/lib/dashboard";
 import type { AnalyticsView, MetricMode } from "@/lib/dashboard";
@@ -54,10 +60,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               </div>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="#dashboard"
-                className="button-primary"
-              >
+              <Link href="#dashboard" className="button-primary">
                 Open dashboard
                 <ArrowRight className="h-4 w-4" />
               </Link>
@@ -74,19 +77,19 @@ export default async function Home({ searchParams }: HomePageProps) {
 
         {githubStatus ? (
           <section className="rounded-[1.5rem] border border-line bg-panel px-5 py-4 text-sm text-muted shadow-[0_16px_50px_rgba(72,56,31,0.06)]">
-            GitHub flow status: <span className="font-semibold text-foreground">{githubStatus}</span>
+            GitHub flow status:{" "}
+            <span className="font-semibold text-foreground">{githubStatus}</span>
           </section>
         ) : null}
 
-        <section
-          id="dashboard"
-          className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]"
-        >
-          <div className="rounded-[2rem] border border-line bg-panel p-6 shadow-[0_24px_80px_rgba(72,56,31,0.08)] backdrop-blur">
+        <section id="dashboard" className="grid gap-6 xl:grid-cols-12">
+          <div className="rounded-[2rem] border border-line bg-panel p-6 shadow-[0_24px_80px_rgba(72,56,31,0.08)] backdrop-blur xl:col-span-8">
             <div className="flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-sm uppercase tracking-[0.24em] text-muted">
-                  {dashboard.profile.source === "live" ? "Live dashboard" : "Sample dashboard"}
+                  {dashboard.profile.source === "live"
+                    ? "Live dashboard"
+                    : "Sample dashboard"}
                 </p>
                 <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em]">
                   {dashboard.profile.login}
@@ -105,7 +108,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                       href={`/?view=${entry}&mode=${mode}`}
                       className={
                         entry === view
-                          ? "rounded-full bg-foreground px-3 py-1.5 font-medium text-background"
+                          ? "rounded-full bg-foreground px-3 py-1.5 font-medium text-[#fffaf0]"
                           : "rounded-full border border-line px-3 py-1.5 font-medium text-muted"
                       }
                     >
@@ -188,7 +191,8 @@ export default async function Home({ searchParams }: HomePageProps) {
                       <div className="space-y-1 text-center">
                         <p className="text-xs text-[#b3c8d6]">{point.label}</p>
                         <p className="font-mono text-xs text-white/88">
-                          +{formatNumber(point.additions)} / -{formatNumber(point.deletions)}
+                          +{formatNumber(point.additions)} / -
+                          {formatNumber(point.deletions)}
                         </p>
                       </div>
                     </div>
@@ -227,7 +231,7 @@ export default async function Home({ searchParams }: HomePageProps) {
             </div>
           </div>
 
-          <aside className="flex flex-col gap-6">
+          <aside className="flex flex-col gap-6 xl:col-span-4">
             <section className="rounded-[2rem] border border-line bg-panel p-6 shadow-[0_24px_80px_rgba(72,56,31,0.08)] backdrop-blur">
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -272,7 +276,9 @@ export default async function Home({ searchParams }: HomePageProps) {
                   <p className="text-xs uppercase tracking-[0.24em] text-muted">
                     Signed in as
                   </p>
-                  <p className="mt-2 text-lg font-semibold">{githubState.viewer.login}</p>
+                  <p className="mt-2 text-lg font-semibold">
+                    {githubState.viewer.login}
+                  </p>
                   <p className="mt-1 text-sm text-muted">
                     Session expires {githubState.viewer.sessionExpiryLabel}
                   </p>
@@ -308,7 +314,9 @@ export default async function Home({ searchParams }: HomePageProps) {
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div>
-                          <h3 className="font-semibold">{installation.accountLogin}</h3>
+                          <h3 className="font-semibold">
+                            {installation.accountLogin}
+                          </h3>
                           <p className="mt-1 text-sm text-muted">
                             {installation.repositoryCount} repos indexed locally
                           </p>
@@ -345,70 +353,87 @@ export default async function Home({ searchParams }: HomePageProps) {
               </div>
             </section>
 
-            <section className="rounded-[2rem] border border-line bg-panel p-6 shadow-[0_24px_80px_rgba(72,56,31,0.08)] backdrop-blur">
-              <p className="text-sm uppercase tracking-[0.24em] text-muted">
-                Locked decisions
+            <section className="rounded-[2rem] border border-line bg-[#13222d] p-6 text-[#f6efe4]">
+              <div className="flex items-center gap-3">
+                <div className="rounded-full border border-white/12 bg-white/8 px-3 py-1 font-mono text-xs uppercase tracking-[0.2em] text-[#b3c8d6]">
+                  API sample
+                </div>
+              </div>
+              <h2 className="mt-4 text-lg font-semibold">Why the model scales</h2>
+              <p className="mt-3 text-sm leading-6 text-[#b3c8d6]">
+                Repositories, branches, and pull requests are just attribution
+                layers around one canonical commit record. That keeps the API
+                honest as repo count grows.
               </p>
-              <div className="mt-5 space-y-4">
-                {dashboard.decisions.map((decision) => (
-                  <article key={decision.title} className="space-y-1">
-                    <h3 className="font-semibold">{decision.title}</h3>
-                    <p className="text-sm leading-6 text-muted">{decision.value}</p>
-                  </article>
-                ))}
+              <div className="mt-5 rounded-[1.25rem] border border-white/10 bg-white/6 p-4">
+                <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#b3c8d6]">
+                  Core rule
+                </p>
+                <p className="mt-3 font-mono text-sm text-white/90">
+                  one commit SHA
+                  <br />
+                  = one unit of work
+                  <br />
+                  regardless of branch count
+                </p>
               </div>
             </section>
+          </aside>
 
-            <section className="rounded-[2rem] border border-line bg-[#fffaf0] p-6">
-              <p className="text-sm uppercase tracking-[0.24em] text-muted">
-                Sync pipeline
-              </p>
-              <div className="mt-5 space-y-4">
-                {dashboard.pipeline.map((step) => (
-                  <div key={step.title} className="flex gap-3">
+          <section className="rounded-[2rem] border border-line bg-panel p-6 shadow-[0_24px_80px_rgba(72,56,31,0.08)] backdrop-blur xl:col-span-5">
+            <p className="text-sm uppercase tracking-[0.24em] text-muted">
+              Locked decisions
+            </p>
+            <div className="mt-5 grid gap-4">
+              {dashboard.decisions.map((decision) => (
+                <article
+                  key={decision.title}
+                  className="rounded-[1.25rem] border border-line bg-panel-strong p-4"
+                >
+                  <h3 className="font-semibold">{decision.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-muted">
+                    {decision.value}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-[2rem] border border-line bg-[#fffaf0] p-6 xl:col-span-7">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm uppercase tracking-[0.24em] text-muted">
+                  Sync pipeline
+                </p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">
+                  How data lands in the dashboard
+                </h2>
+              </div>
+              <span className="rounded-full border border-line px-3 py-1 text-xs font-medium text-muted">
+                Background jobs
+              </span>
+            </div>
+            <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {dashboard.pipeline.map((step) => (
+                <div
+                  key={step.title}
+                  className="rounded-[1.25rem] border border-line bg-panel p-4"
+                >
+                  <div className="flex items-start gap-3">
                     <div className="mt-1 h-10 w-10 rounded-full border border-line bg-panel-strong p-2">
                       <step.icon className="h-full w-full" />
                     </div>
                     <div>
                       <h3 className="font-semibold">{step.title}</h3>
-                      <p className="text-sm leading-6 text-muted">{step.body}</p>
+                      <p className="mt-2 text-sm leading-6 text-muted">
+                        {step.body}
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="rounded-[2rem] border border-line bg-[#13222d] p-6 text-[#f6efe4]">
-              <div className="flex items-center gap-3">
-                <Github className="h-5 w-5" />
-                <h2 className="text-lg font-semibold">GitHub App env</h2>
-              </div>
-              <p className="mt-3 text-sm leading-6 text-[#b3c8d6]">
-                The simplest hosted setup is one shared GitHub App. Users click one
-                button, GitHub handles auth/install, and this app syncs what they granted.
-              </p>
-              <div className="mt-5 rounded-[1.25rem] border border-white/10 bg-white/6 p-4">
-                <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#b3c8d6]">
-                  Required env
-                </p>
-                <p className="mt-3 font-mono text-sm text-white/90">
-                  DATABASE_URL
-                  <br />
-                  GITHUB_APP_ID
-                  <br />
-                  GITHUB_APP_CLIENT_ID
-                  <br />
-                  GITHUB_APP_CLIENT_SECRET
-                  <br />
-                  GITHUB_APP_PRIVATE_KEY
-                  <br />
-                  GITHUB_APP_SLUG
-                  <br />
-                  APP_URL
-                </p>
-              </div>
-            </section>
-          </aside>
+                </div>
+              ))}
+            </div>
+          </section>
         </section>
       </div>
     </main>
