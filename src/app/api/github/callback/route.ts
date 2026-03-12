@@ -31,46 +31,70 @@ export async function GET(request: NextRequest) {
 
   try {
     const token = await exchangeCodeForUserToken(code);
-    const viewer = await getViewer(token.access_token);
+    try {
+      const viewer = await getViewer(token.access_token);
 
-    const account = await db.gitHubAccount.upsert({
-      where: {
-        githubUserId: viewer.id,
-      },
-      update: {
-        login: viewer.login,
-        displayName: viewer.name,
-        avatarUrl: viewer.avatar_url,
-      },
-      create: {
-        githubUserId: viewer.id,
-        login: viewer.login,
-        displayName: viewer.name,
-        avatarUrl: viewer.avatar_url,
-      },
-    });
+      const account = await db.gitHubAccount.upsert({
+        where: {
+          githubUserId: viewer.id,
+        },
+        update: {
+          login: viewer.login,
+          displayName: viewer.name,
+          avatarUrl: viewer.avatar_url,
+        },
+        create: {
+          githubUserId: viewer.id,
+          login: viewer.login,
+          displayName: viewer.name,
+          avatarUrl: viewer.avatar_url,
+        },
+      });
 
-    await createUserSession({
-      accountId: account.id,
-      accessToken: token.access_token,
-      expiresIn: token.expires_in,
-      refreshToken: token.refresh_token,
-      refreshTokenExpiresIn: token.refresh_token_expires_in,
-    });
+      try {
+        await createUserSession({
+          accountId: account.id,
+          accessToken: token.access_token,
+          expiresIn: token.expires_in,
+          refreshToken: token.refresh_token,
+          refreshTokenExpiresIn: token.refresh_token_expires_in,
+        });
+      } catch (error) {
+        console.error("GitHub OAuth session creation failed", error);
+        return NextResponse.redirect(
+          new URL("/?github=oauth-session-failed", request.url),
+        );
+      }
 
-    const installations = await getUserInstallations(token.access_token);
+      try {
+        const installations = await getUserInstallations(token.access_token);
 
-    if (installations.length === 0) {
-      return NextResponse.redirect(buildGitHubInstallUrl());
+        if (installations.length === 0) {
+          return NextResponse.redirect(buildGitHubInstallUrl());
+        }
+      } catch (error) {
+        console.error("GitHub OAuth installation fetch failed", error);
+        return NextResponse.redirect(
+          new URL("/?github=oauth-installations-failed", request.url),
+        );
+      }
+
+      await syncAllInstallationMetadataForAccount({
+        accountId: account.id,
+        userAccessToken: token.access_token,
+      });
+
+      return NextResponse.redirect(new URL("/?github=connected", request.url));
+    } catch (error) {
+      console.error("GitHub OAuth viewer fetch failed", error);
+      return NextResponse.redirect(
+        new URL("/?github=oauth-user-failed", request.url),
+      );
     }
-
-    await syncAllInstallationMetadataForAccount({
-      accountId: account.id,
-      userAccessToken: token.access_token,
-    });
-
-    return NextResponse.redirect(new URL("/?github=connected", request.url));
-  } catch {
-    return NextResponse.redirect(new URL("/?github=oauth-failed", request.url));
+  } catch (error) {
+    console.error("GitHub OAuth token exchange failed", error);
+    return NextResponse.redirect(
+      new URL("/?github=oauth-token-failed", request.url),
+    );
   }
 }

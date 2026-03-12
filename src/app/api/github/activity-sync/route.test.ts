@@ -4,10 +4,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
   afterMock,
+  canEnableHostedGitHubSyncMock,
   getValidUserAccessTokenMock,
   syncUserActivityForAccountMock,
 } = vi.hoisted(() => ({
   afterMock: vi.fn(),
+  canEnableHostedGitHubSyncMock: vi.fn(),
   getValidUserAccessTokenMock: vi.fn(),
   syncUserActivityForAccountMock: vi.fn(),
 }));
@@ -25,6 +27,10 @@ vi.mock("@/lib/session", () => ({
   getValidUserAccessToken: getValidUserAccessTokenMock,
 }));
 
+vi.mock("@/lib/env", () => ({
+  canEnableHostedGitHubSync: canEnableHostedGitHubSyncMock,
+}));
+
 vi.mock("@/lib/installation-sync", () => ({
   syncUserActivityForAccount: syncUserActivityForAccountMock,
 }));
@@ -34,8 +40,10 @@ import { POST } from "@/app/api/github/activity-sync/route";
 describe("POST /api/github/activity-sync", () => {
   beforeEach(() => {
     afterMock.mockReset();
+    canEnableHostedGitHubSyncMock.mockReset();
     getValidUserAccessTokenMock.mockReset();
     syncUserActivityForAccountMock.mockReset();
+    canEnableHostedGitHubSyncMock.mockReturnValue(true);
   });
 
   it("redirects unauthenticated users", async () => {
