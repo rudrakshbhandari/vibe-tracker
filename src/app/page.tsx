@@ -16,6 +16,64 @@ type HomePageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
+const GITHUB_STATUS_COPY: Record<
+  string,
+  { label: string; detail?: string }
+> = {
+  "activity-sync-started": {
+    label: "Activity sync started",
+  },
+  connected: {
+    label: "GitHub connected",
+  },
+  "installation-connected": {
+    label: "Installation connected",
+  },
+  "invalid-installation": {
+    label: "Installation could not be resolved",
+  },
+  "invalid-state": {
+    label: "OAuth state mismatch",
+    detail:
+      "The auth cookie was missing or expired before GitHub redirected back. Start the flow again in the same browser tab.",
+  },
+  "missing-code": {
+    label: "GitHub did not return an auth code",
+  },
+  "missing-config": {
+    label: "GitHub integration is not configured",
+  },
+  "not-connected": {
+    label: "GitHub account is not connected",
+  },
+  "oauth-installations-failed": {
+    label: "GitHub connected, but installations could not be loaded",
+    detail:
+      "The user token was issued, but `/user/installations` failed. Check whether the GitHub App is installed and whether the user can access that installation.",
+  },
+  "oauth-session-failed": {
+    label: "GitHub connected, but the session could not be stored",
+    detail:
+      "This usually points to a database write problem or a Prisma schema mismatch in the hosted environment.",
+  },
+  "oauth-token-failed": {
+    label: "GitHub token exchange failed",
+    detail:
+      "Most often this is a bad `APP_URL` or callback URL mismatch, or an invalid GitHub App client secret.",
+  },
+  "oauth-user-failed": {
+    label: "GitHub token worked, but user lookup failed",
+    detail:
+      "The callback reached GitHub successfully, then `/user` failed. Check the GitHub App user authorization settings and token permissions.",
+  },
+  "repositories-refreshed": {
+    label: "Repositories refreshed",
+  },
+  "sync-failed": {
+    label: "Sync failed",
+  },
+};
+
 export default async function Home({ searchParams }: HomePageProps) {
   const params = (await searchParams) ?? {};
   const view =
@@ -32,6 +90,11 @@ export default async function Home({ searchParams }: HomePageProps) {
   const githubState = await getGithubConnectionState();
   const githubStatus =
     typeof params.github === "string" ? params.github : undefined;
+  const githubStatusCopy = githubStatus
+    ? GITHUB_STATUS_COPY[githubStatus] ?? {
+        label: githubStatus,
+      }
+    : null;
   const views: AnalyticsView[] = ["daily", "weekly", "monthly"];
   const modes: MetricMode[] = ["authored", "merged"];
 
@@ -77,8 +140,15 @@ export default async function Home({ searchParams }: HomePageProps) {
 
         {githubStatus ? (
           <section className="rounded-[1.5rem] border border-line bg-panel px-5 py-4 text-sm text-muted shadow-[0_16px_50px_rgba(72,56,31,0.06)]">
-            GitHub flow status:{" "}
-            <span className="font-semibold text-foreground">{githubStatus}</span>
+            <span>
+              GitHub flow status:{" "}
+              <span className="font-semibold text-foreground">
+                {githubStatusCopy?.label ?? githubStatus}
+              </span>
+            </span>
+            {githubStatusCopy?.detail ? (
+              <p className="mt-2 max-w-3xl leading-6">{githubStatusCopy.detail}</p>
+            ) : null}
           </section>
         ) : null}
 
