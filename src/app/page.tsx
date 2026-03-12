@@ -26,6 +26,11 @@ const GITHUB_STATUS_COPY: Record<
   connected: {
     label: "GitHub connected",
   },
+  "oauth-account-failed": {
+    label: "GitHub connected, but account persistence failed",
+    detail:
+      "GitHub returned a valid user token, but the app could not write the account record. Check Prisma generation and the hosted database configuration.",
+  },
   "installation-connected": {
     label: "Installation connected",
   },

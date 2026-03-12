@@ -34,22 +34,30 @@ export async function GET(request: NextRequest) {
     try {
       const viewer = await getViewer(token.access_token);
 
-      const account = await db.gitHubAccount.upsert({
-        where: {
-          githubUserId: viewer.id,
-        },
-        update: {
-          login: viewer.login,
-          displayName: viewer.name,
-          avatarUrl: viewer.avatar_url,
-        },
-        create: {
-          githubUserId: viewer.id,
-          login: viewer.login,
-          displayName: viewer.name,
-          avatarUrl: viewer.avatar_url,
-        },
-      });
+      let account;
+      try {
+        account = await db.gitHubAccount.upsert({
+          where: {
+            githubUserId: viewer.id,
+          },
+          update: {
+            login: viewer.login,
+            displayName: viewer.name,
+            avatarUrl: viewer.avatar_url,
+          },
+          create: {
+            githubUserId: viewer.id,
+            login: viewer.login,
+            displayName: viewer.name,
+            avatarUrl: viewer.avatar_url,
+          },
+        });
+      } catch (error) {
+        console.error("GitHub OAuth account persistence failed", error);
+        return NextResponse.redirect(
+          new URL("/?github=oauth-account-failed", request.url),
+        );
+      }
 
       try {
         await createUserSession({

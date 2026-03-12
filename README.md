@@ -16,7 +16,7 @@ Vibe Tracker is a web MVP for aggregating GitHub code volume for a user across r
 
 - Next.js App Router with TypeScript
 - Tailwind CSS v4
-- Prisma with SQLite for local MVP persistence
+- Prisma with PostgreSQL
 - Route handlers for internal API endpoints
 
 ## Data model
@@ -65,6 +65,8 @@ Create a GitHub App with:
 Then fill in:
 
 - `APP_URL`
+- `DATABASE_URL`
+- `DIRECT_URL`
 - `GITHUB_APP_ID`
 - `GITHUB_APP_CLIENT_ID`
 - `GITHUB_APP_CLIENT_SECRET`
@@ -78,6 +80,12 @@ The current live flow is:
 3. If they do not, GitHub sends them to install the app, then returns to the setup URL.
 4. The setup URL refreshes repository grants only, so onboarding stays fast.
 5. The user can then run `Sync my activity`, which backfills authored commits, branch membership, and associated PR metadata for the last 12 months.
+
+Hosted note:
+
+- Production deploys must run `prisma generate` so the Prisma client matches the checked-in schema.
+- `DATABASE_URL` should point at the runtime Postgres connection.
+- `DIRECT_URL` should point at the direct Postgres connection Prisma uses for schema operations.
 
 ## Usability model
 
