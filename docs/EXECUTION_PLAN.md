@@ -4,8 +4,8 @@
 
 - Issue: [#13](https://github.com/rudrakshbhandari/vibe-tracker/issues/13)
 - Branch: `codex/simple-vibe-webapp`
-- PR: pending
-- Workflow: In Progress
+- PR: [#14](https://github.com/rudrakshbhandari/vibe-tracker/pull/14)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -16,7 +16,7 @@
 - [x] Add a clear disconnected state with connect/install/sync instructions
 - [x] Keep connected users focused on real synced metrics and repository breakdowns
 - [x] Run lint, tests, and build
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
 
 ## Issue #1 - Make Vibe Tracker onboarding and analytics usable
 
