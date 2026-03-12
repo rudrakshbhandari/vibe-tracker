@@ -38,7 +38,7 @@ export default async function Home({ searchParams }: HomePageProps) {
   return (
     <main className="grid-lines min-h-screen">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-5 py-6 sm:px-8 lg:px-10">
-        <header className="rounded-[2rem] border border-line bg-panel px-6 py-5 shadow-[0_24px_80px_rgba(72,56,31,0.08)] backdrop-blur">
+        <header className="glass-panel rounded-[2rem] px-6 py-5">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl space-y-4">
               <div className="flex items-center gap-3 text-sm font-medium uppercase tracking-[0.24em] text-muted">
@@ -76,14 +76,14 @@ export default async function Home({ searchParams }: HomePageProps) {
         </header>
 
         {githubStatus ? (
-          <section className="rounded-[1.5rem] border border-line bg-panel px-5 py-4 text-sm text-muted shadow-[0_16px_50px_rgba(72,56,31,0.06)]">
+          <section className="glass-panel rounded-[1.5rem] px-5 py-4 text-sm text-muted">
             GitHub flow status:{" "}
             <span className="font-semibold text-foreground">{githubStatus}</span>
           </section>
         ) : null}
 
         <section id="dashboard" className="grid gap-6 xl:grid-cols-12">
-          <div className="rounded-[2rem] border border-line bg-panel p-6 shadow-[0_24px_80px_rgba(72,56,31,0.08)] backdrop-blur xl:col-span-8">
+          <div className="glass-panel rounded-[2rem] p-6 xl:col-span-8">
             <div className="flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-sm uppercase tracking-[0.24em] text-muted">
@@ -141,7 +141,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               {dashboard.summary.map((item) => (
                 <article
                   key={item.label}
-                  className="rounded-[1.5rem] border border-line bg-panel-strong p-4"
+                  className="glass-panel-strong rounded-[1.5rem] p-4 transition-transform hover:-translate-y-1"
                 >
                   <p className="text-sm text-muted">{item.label}</p>
                   <p className="mt-3 text-3xl font-semibold tracking-[-0.04em]">
@@ -153,21 +153,23 @@ export default async function Home({ searchParams }: HomePageProps) {
             </div>
 
             <div className="mt-6 grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-              <section className="rounded-[1.5rem] border border-line bg-[#13222d] p-5 text-[#f6efe4]">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.24em] text-[#b3c8d6]">
-                      {dashboard.chartTitle}
-                    </p>
-                    <h3 className="mt-2 text-xl font-semibold">
-                      Additions and deletions
-                    </h3>
+              <section className="glass-panel-strong relative overflow-hidden rounded-[1.5rem] p-5">
+                <div className="absolute inset-0 bg-accent/5 blur-3xl" />
+                <div className="relative">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.24em] text-accent">
+                        {dashboard.chartTitle}
+                      </p>
+                      <h3 className="mt-2 text-xl font-semibold">
+                        Additions and deletions
+                      </h3>
+                    </div>
+                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs">
+                      Author date lens
+                    </span>
                   </div>
-                  <span className="rounded-full bg-white/10 px-3 py-1 text-xs">
-                    Author date lens
-                  </span>
-                </div>
-                <div className="mt-6 flex h-64 items-end gap-3">
+                  <div className="mt-6 flex h-64 items-end gap-3">
                   {dashboard.timeline.map((point) => (
                     <div key={point.label} className="flex flex-1 flex-col gap-3">
                       <div className="flex h-48 items-end gap-1">
@@ -181,8 +183,8 @@ export default async function Home({ searchParams }: HomePageProps) {
                         />
                       </div>
                       <div className="space-y-1 text-center">
-                        <p className="text-xs text-[#b3c8d6]">{point.label}</p>
-                        <p className="font-mono text-xs text-white/88">
+                        <p className="text-xs text-muted">{point.label}</p>
+                        <p className="font-mono text-xs text-foreground/80">
                           +{formatNumber(point.additions)} / -
                           {formatNumber(point.deletions)}
                         </p>
@@ -190,9 +192,10 @@ export default async function Home({ searchParams }: HomePageProps) {
                     </div>
                   ))}
                 </div>
+                </div>
               </section>
 
-              <section className="rounded-[1.5rem] border border-line bg-panel-strong p-5">
+              <section className="glass-panel-strong rounded-[1.5rem] p-5">
                 <p className="text-xs uppercase tracking-[0.24em] text-muted">
                   Repository breakdown
                 </p>
@@ -200,14 +203,14 @@ export default async function Home({ searchParams }: HomePageProps) {
                   {dashboard.repositories.map((repo) => (
                     <article
                       key={repo.name}
-                      className="rounded-[1.25rem] border border-line px-4 py-3"
+                      className="rounded-[1.25rem] border border-line bg-background/40 px-4 py-3 transition-colors hover:bg-background/60"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div>
                           <h3 className="font-semibold">{repo.name}</h3>
                           <p className="mt-1 text-sm text-muted">{repo.detail}</p>
                         </div>
-                        <span className="rounded-full bg-[#efe4cf] px-3 py-1 text-xs font-medium text-[#6f553b]">
+                        <span className="rounded-full bg-accent/10 border border-accent/20 px-3 py-1 text-xs font-medium text-accent">
                           {repo.visibility}
                         </span>
                       </div>
@@ -224,7 +227,7 @@ export default async function Home({ searchParams }: HomePageProps) {
           </div>
 
           <aside className="flex flex-col gap-6 xl:col-span-4">
-            <section className="rounded-[2rem] border border-line bg-panel p-6 shadow-[0_24px_80px_rgba(72,56,31,0.08)] backdrop-blur">
+            <section className="glass-panel rounded-[2rem] p-6">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-sm uppercase tracking-[0.24em] text-muted">
@@ -284,7 +287,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               ) : null}
             </section>
 
-            <section className="rounded-[2rem] border border-line bg-[#fffaf0] p-6">
+            <section className="glass-panel-strong rounded-[2rem] p-6">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-sm uppercase tracking-[0.24em] text-muted">
@@ -302,7 +305,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                   githubState.installations.map((installation) => (
                     <article
                       key={installation.id}
-                      className="rounded-[1.25rem] border border-line bg-panel p-4"
+                      className="glass-panel rounded-[1.25rem] p-4 transition-transform hover:-translate-y-1"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div>
@@ -345,34 +348,37 @@ export default async function Home({ searchParams }: HomePageProps) {
               </div>
             </section>
 
-            <section className="rounded-[2rem] border border-line bg-[#13222d] p-6 text-[#f6efe4]">
-              <div className="flex items-center gap-3">
-                <div className="rounded-full border border-white/12 bg-white/8 px-3 py-1 font-mono text-xs uppercase tracking-[0.2em] text-[#b3c8d6]">
-                  API sample
+            <section className="glass-panel-strong relative overflow-hidden rounded-[2rem] p-6">
+              <div className="absolute inset-0 bg-accent-2/5 blur-3xl" />
+              <div className="relative">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-full border border-accent/20 bg-accent/10 px-3 py-1 font-mono text-xs uppercase tracking-[0.2em] text-accent">
+                    API sample
+                  </div>
                 </div>
-              </div>
-              <h2 className="mt-4 text-lg font-semibold">Why the model scales</h2>
-              <p className="mt-3 text-sm leading-6 text-[#b3c8d6]">
+                <h2 className="mt-4 text-lg font-semibold">Why the model scales</h2>
+                <p className="mt-3 text-sm leading-6 text-muted">
                 Repositories, branches, and pull requests are just attribution
                 layers around one canonical commit record. That keeps the API
                 honest as repo count grows.
               </p>
-              <div className="mt-5 rounded-[1.25rem] border border-white/10 bg-white/6 p-4">
-                <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#b3c8d6]">
-                  Core rule
-                </p>
-                <p className="mt-3 font-mono text-sm text-white/90">
-                  one commit SHA
-                  <br />
-                  = one unit of work
-                  <br />
-                  regardless of branch count
-                </p>
+                <div className="mt-5 rounded-[1.25rem] border border-line bg-background/50 p-4">
+                  <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted">
+                    Core rule
+                  </p>
+                  <p className="mt-3 font-mono text-sm text-foreground/90">
+                    one commit SHA
+                    <br />
+                    = one unit of work
+                    <br />
+                    regardless of branch count
+                  </p>
+                </div>
               </div>
             </section>
           </aside>
 
-          <section className="rounded-[2rem] border border-line bg-panel p-6 shadow-[0_24px_80px_rgba(72,56,31,0.08)] backdrop-blur xl:col-span-5">
+          <section className="glass-panel rounded-[2rem] p-6 xl:col-span-5">
             <p className="text-sm uppercase tracking-[0.24em] text-muted">
               Locked decisions
             </p>
@@ -380,7 +386,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               {dashboard.decisions.map((decision) => (
                 <article
                   key={decision.title}
-                  className="rounded-[1.25rem] border border-line bg-panel-strong p-4"
+                  className="glass-panel-strong rounded-[1.25rem] p-4 transition-transform hover:-translate-y-1"
                 >
                   <h3 className="font-semibold">{decision.title}</h3>
                   <p className="mt-2 text-sm leading-6 text-muted">
@@ -391,7 +397,7 @@ export default async function Home({ searchParams }: HomePageProps) {
             </div>
           </section>
 
-          <section className="rounded-[2rem] border border-line bg-[#fffaf0] p-6 xl:col-span-7">
+          <section className="glass-panel-strong rounded-[2rem] p-6 xl:col-span-7">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm uppercase tracking-[0.24em] text-muted">
@@ -409,7 +415,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               {dashboard.pipeline.map((step) => (
                 <div
                   key={step.title}
-                  className="rounded-[1.25rem] border border-line bg-panel p-4"
+                  className="glass-panel rounded-[1.25rem] p-4 transition-transform hover:-translate-y-1"
                 >
                   <div className="flex items-start gap-3">
                     <div className="mt-1 h-10 w-10 rounded-full border border-line bg-panel-strong p-2">
