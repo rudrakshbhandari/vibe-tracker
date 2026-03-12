@@ -1,22 +1,6 @@
-import {
-  Clock3,
-  GitBranch,
-  GitPullRequest,
-  RefreshCcw,
-  ShieldCheck,
-} from "lucide-react";
-
-import type { LucideIcon } from "lucide-react";
-
 export type TimeWindow = "7d" | "30d" | "90d";
 export type MetricMode = "authored" | "merged";
 export type AnalyticsView = "daily" | "weekly" | "monthly";
-
-type PipelineStep = {
-  title: string;
-  body: string;
-  icon: LucideIcon;
-};
 
 export function formatNumber(value: number) {
   return new Intl.NumberFormat("en-US").format(value);
@@ -171,58 +155,5 @@ export function getDashboardData(
         commitCount: mode === "authored" ? 9 : 6,
       },
     ],
-    decisions: [
-      {
-        title: "Product shape",
-        value: "Web app with a backend API and background sync.",
-      },
-      {
-        title: "User scope",
-        value: "Logged-in users see repositories they authorize through GitHub.",
-      },
-      {
-        title: "Metric definition",
-        value: "Primary metric is authored commit volume, with a merged-to-default toggle.",
-      },
-      {
-        title: "Deduplication",
-        value: "Commits are deduped by SHA to avoid branch and PR double counting.",
-      },
-      {
-        title: "Time lens",
-        value: "Author date is the default lens for day, week, month, and custom windows.",
-      },
-      {
-        title: "Sync strategy",
-        value: "Hybrid live fetch plus background caching in a local database.",
-      },
-    ],
-    pipeline: [
-      {
-        title: "Discover repositories",
-        body: "Read the installations granted to the app and enqueue repo syncs by installation scope.",
-        icon: ShieldCheck,
-      },
-      {
-        title: "Index branches and commits",
-        body: "Walk refs, fetch commits within the requested window, and persist commit stats plus branch membership.",
-        icon: GitBranch,
-      },
-      {
-        title: "Link pull requests",
-        body: "Attach PR metadata for drilldowns while keeping commits as the canonical metric source.",
-        icon: GitPullRequest,
-      },
-      {
-        title: "Refresh incrementally",
-        body: "Use recent windows for live fetches and hand off deep history to repeatable background jobs.",
-        icon: RefreshCcw,
-      },
-      {
-        title: "Serve windowed analytics",
-        body: "Aggregate by user, repo, and time bucket from normalized commit records.",
-        icon: Clock3,
-      },
-    ] satisfies PipelineStep[],
   };
 }
