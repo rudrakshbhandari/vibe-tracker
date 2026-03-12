@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Github, LineChart } from "lucide-react";
+import { ArrowRight, CheckCircle2, Github, LineChart, RefreshCcw } from "lucide-react";
 
 import { formatNumber } from "@/lib/dashboard";
 import type { AnalyticsView, MetricMode } from "@/lib/dashboard";
@@ -10,7 +10,6 @@ import { ActivitySyncRefresh } from "@/components/activity-sync-refresh";
 type HomePageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
-
 const GITHUB_STATUS_COPY: Record<
   string,
   { label: string; detail?: string }
@@ -125,7 +124,7 @@ export default async function Home({ searchParams }: HomePageProps) {
     <main className="grid-lines min-h-screen">
       <ActivitySyncRefresh active={syncRefreshActive} />
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-5 py-6 sm:px-8 lg:px-10">
-        <header className="rounded-[2rem] border border-line bg-panel px-6 py-6 shadow-[0_24px_80px_rgba(72,56,31,0.08)] backdrop-blur">
+        <header className="glass-panel rounded-[2rem] px-6 py-5">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl space-y-4">
               <div className="flex items-center gap-3 text-sm font-medium uppercase tracking-[0.24em] text-muted">
@@ -169,173 +168,174 @@ export default async function Home({ searchParams }: HomePageProps) {
         </header>
 
         {githubStatus ? (
-          <section className="rounded-[1.5rem] border border-line bg-panel px-5 py-4 text-sm text-muted shadow-[0_16px_50px_rgba(72,56,31,0.06)]">
-            <span>
+          <section className="glass-panel rounded-[1.5rem] px-5 py-4 text-sm text-muted">
+            <p>
               GitHub status:{" "}
               <span className="font-semibold text-foreground">
                 {githubStatusCopy?.label ?? githubStatus}
               </span>
-            </span>
-            {githubStatusCopy?.detail ? (
+            </p>
+            {githubStatusCopy?.detail && (
               <p className="mt-2 max-w-3xl leading-6">{githubStatusCopy.detail}</p>
-            ) : null}
+            )}
           </section>
         ) : null}
 
-        <section className="grid gap-6 xl:grid-cols-[1.45fr_0.95fr]">
-          <section
-            id="dashboard"
-            className="rounded-[2rem] border border-line bg-panel p-6 shadow-[0_24px_80px_rgba(72,56,31,0.08)] backdrop-blur"
-          >
+        <section id="dashboard" className="grid gap-6 xl:grid-cols-[1.45fr_0.95fr]">
+          <section className="rounded-[2rem] border border-line bg-panel p-6 shadow-[0_24px_80px_rgba(72,56,31,0.08)] backdrop-blur">
             {dashboard ? (
               <>
                 <div className="flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <p className="text-sm uppercase tracking-[0.24em] text-muted">
-                      Live dashboard
+                      {dashboard.profile.source === "live"
+                        ? "Live dashboard"
+                        : "Sample dashboard"}
                     </p>
                     <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em]">
                       {dashboard.profile.login}
                     </h2>
                     <p className="mt-2 max-w-xl text-sm leading-6 text-muted">
-                      These totals come from synced GitHub commits for the signed-in user.
+                      {dashboard.profile.source === "live"
+                        ? "These metrics are aggregated from synced GitHub commits in the local database."
+                        : "Local demo data that mirrors the model we will populate from the GitHub API during sync jobs."}
                     </p>
                   </div>
-                  <div className="flex flex-col gap-3 text-sm sm:items-end">
-                    <div className="flex flex-wrap gap-2">
-                      {views.map((entry) => (
-                        <Link
-                          key={entry}
-                          href={`/?view=${entry}&mode=${mode}`}
-                          className={entry === view ? "toggle-pill toggle-pill-active" : "toggle-pill"}
-                        >
-                          {entry[0]?.toUpperCase()}
-                          {entry.slice(1)}
-                        </Link>
-                      ))}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {modes.map((entry) => (
-                        <Link
-                          key={entry}
-                          href={`/?view=${view}&mode=${entry}`}
-                          className={entry === mode ? "toggle-pill toggle-pill-active" : "toggle-pill"}
-                        >
-                          {entry === "authored" ? "Authored" : "Merged"}
-                        </Link>
-                      ))}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {dashboard.filters.map((filter) => (
-                        <span
-                          key={filter}
-                          className="rounded-full border border-line px-3 py-1.5 font-medium text-muted"
-                        >
-                          {filter}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                  {dashboard.summary.map((item) => (
-                    <article
-                      key={item.label}
-                      className="rounded-[1.5rem] border border-line bg-panel-strong p-4"
+              <div className="flex flex-col gap-3 text-sm sm:items-end">
+                <div className="flex flex-wrap gap-2">
+                  {views.map((entry) => (
+                    <Link
+                      key={entry}
+                      href={`/?view=${entry}&mode=${mode}`}
+                      className={entry === view ? "toggle-pill toggle-pill-active" : "toggle-pill"}
                     >
-                      <p className="text-sm text-muted">{item.label}</p>
-                      <p className="mt-3 text-3xl font-semibold tracking-[-0.04em]">
-                        {item.value}
-                      </p>
-                      <p className="mt-2 text-sm text-muted">{item.detail}</p>
-                    </article>
+                      {entry[0]?.toUpperCase()}
+                      {entry.slice(1)}
+                    </Link>
                   ))}
                 </div>
-
-                <div className="mt-6 grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-                  <section className="min-w-0 overflow-hidden rounded-[1.5rem] border border-line bg-[#13222d] p-5 text-[#f6efe4]">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs uppercase tracking-[0.24em] text-[#b3c8d6]">
-                          {dashboard.chartTitle}
-                        </p>
-                        <h3 className="mt-2 text-xl font-semibold">
-                          Additions and deletions
-                        </h3>
-                      </div>
-                      <span className="rounded-full bg-white/10 px-3 py-1 text-xs">
-                        GitHub sync
-                      </span>
-                    </div>
-                    <div className="mt-6 overflow-x-auto pb-2">
-                      <div className="flex h-64 min-w-[42rem] items-end gap-3">
-                        {dashboard.timeline.map((point) => (
-                          <div key={point.label} className="flex flex-1 flex-col gap-3">
-                            <div className="flex h-48 items-end gap-1">
-                              <div
-                                className="w-1/2 rounded-t-full bg-accent"
-                                style={{ height: `${point.additionsHeight}%` }}
-                              />
-                              <div
-                                className="w-1/2 rounded-t-full bg-accent-2"
-                                style={{ height: `${point.deletionsHeight}%` }}
-                              />
-                            </div>
-                            <div className="space-y-1 text-center">
-                              <p className="text-xs text-[#b3c8d6]">{point.label}</p>
-                              <p className="font-mono text-xs text-white/88">
-                                +{formatNumber(point.additions)} / -{formatNumber(point.deletions)}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </section>
-
-                  <section className="min-w-0 rounded-[1.5rem] border border-line bg-panel-strong p-5">
-                    <p className="text-xs uppercase tracking-[0.24em] text-muted">
-                      Repositories
-                    </p>
-                    <div className="mt-4 max-h-[36rem] space-y-4 overflow-y-auto pr-1">
-                      {dashboard.repositories.length > 0 ? (
-                        dashboard.repositories.map((repo) => (
-                          <article
-                            key={repo.name}
-                            className="rounded-[1.25rem] border border-line px-4 py-3"
-                          >
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="min-w-0">
-                                <h3 className="break-words font-semibold">{repo.name}</h3>
-                                <p className="mt-1 break-words text-sm text-muted">
-                                  {repo.detail}
-                                </p>
-                              </div>
-                              <span className="rounded-full bg-[#efe4cf] px-3 py-1 text-xs font-medium text-[#6f553b]">
-                                {repo.visibility}
-                              </span>
-                            </div>
-                            <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted">
-                              <span>+{formatNumber(repo.additions)}</span>
-                              <span>-{formatNumber(repo.deletions)}</span>
-                              <span>{repo.commitCount} commits</span>
-                            </div>
-                          </article>
-                        ))
-                      ) : (
-                        <article className="rounded-[1.25rem] border border-line px-4 py-3">
-                          <h3 className="font-semibold">No synced repositories yet</h3>
-                          <p className="mt-2 text-sm leading-6 text-muted">
-                            Install the GitHub App on a user or organization, refresh repositories, then run your first activity sync.
-                          </p>
-                        </article>
-                      )}
-                    </div>
-                  </section>
+                <div className="flex flex-wrap gap-2">
+                  {modes.map((entry) => (
+                    <Link
+                      key={entry}
+                      href={`/?view=${view}&mode=${entry}`}
+                      className={entry === mode ? "toggle-pill toggle-pill-active" : "toggle-pill"}
+                    >
+                      {entry === "authored" ? "Authored" : "Merged"}
+                    </Link>
+                  ))}
                 </div>
-              </>
-            ) : (
+                <div className="flex flex-wrap gap-2">
+                  {dashboard.filters.map((filter) => (
+                    <span
+                      key={filter}
+                      className="rounded-full border border-line px-3 py-1.5 font-medium text-muted"
+                    >
+                      {filter}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {dashboard.summary.map((item) => (
+                <article
+                  key={item.label}
+                  className="glass-panel-strong rounded-[1.5rem] p-4 transition-transform hover:-translate-y-1"
+                >
+                  <p className="text-sm text-muted">{item.label}</p>
+                  <p className="mt-3 text-3xl font-semibold tracking-[-0.04em]">
+                    {item.value}
+                  </p>
+                  <p className="mt-2 text-sm text-muted">{item.detail}</p>
+                </article>
+              ))}
+            </div>
+
+            <div className="mt-6 grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+              <section className="glass-panel-strong relative overflow-hidden rounded-[1.5rem] p-5">
+                <div className="absolute inset-0 bg-accent/5 blur-3xl" />
+                <div className="relative">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.24em] text-accent">
+                        {dashboard.chartTitle}
+                      </p>
+                      <h3 className="mt-2 text-xl font-semibold">
+                        Additions and deletions
+                      </h3>
+                    </div>
+                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs">
+                      Author date lens
+                    </span>
+                  </div>
+                  <div className="mt-6 flex h-64 items-end gap-3">
+                  {dashboard.timeline.map((point) => (
+                    <div key={point.label} className="flex flex-1 flex-col gap-3">
+                      <div className="flex h-48 items-end gap-1">
+                        <div
+                          className="w-1/2 rounded-t-full bg-accent"
+                          style={{ height: `${point.additionsHeight}%` }}
+                        />
+                        <div
+                          className="w-1/2 rounded-t-full bg-accent-2"
+                          style={{ height: `${point.deletionsHeight}%` }}
+                        />
+                      </div>
+                      <div className="space-y-1 text-center">
+                        <p className="text-xs text-muted">{point.label}</p>
+                        <p className="font-mono text-xs text-foreground/80">
+                          +{formatNumber(point.additions)} / -
+                          {formatNumber(point.deletions)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                </div>
+              </section>
+
+              <section className="glass-panel-strong rounded-[1.5rem] p-5">
+                <p className="text-xs uppercase tracking-[0.24em] text-muted">
+                  Repository breakdown
+                </p>
+                <div className="mt-4 max-h-[36rem] space-y-4 overflow-y-auto pr-1">
+                  {dashboard.repositories.length > 0 ? (
+                    dashboard.repositories.map((repo) => (
+                    <article
+                      key={repo.name}
+                      className="rounded-[1.25rem] border border-line bg-background/40 px-4 py-3 transition-colors hover:bg-background/60"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <h3 className="font-semibold">{repo.name}</h3>
+                          <p className="mt-1 text-sm text-muted">{repo.detail}</p>
+                        </div>
+                        <span className="rounded-full bg-accent/10 border border-accent/20 px-3 py-1 text-xs font-medium text-accent">
+                          {repo.visibility}
+                        </span>
+                      </div>
+                      <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted">
+                        <span>+{formatNumber(repo.additions)}</span>
+                        <span>-{formatNumber(repo.deletions)}</span>
+                        <span>{repo.commitCount} commits</span>
+                      </div>
+                    </article>
+                  ))
+                ) : (
+                  <article className="rounded-[1.25rem] border border-line bg-background/40 px-4 py-3">
+                    <h3 className="font-semibold">No synced repositories yet</h3>
+                    <p className="mt-2 text-sm leading-6 text-muted">
+                      Install the GitHub App on a user or organization, refresh repositories, then run your first activity sync.
+                    </p>
+                  </article>
+                )}
+              </div>
+            </section>
+          </div>
+          </>
+        ) : (
               <div className="flex h-full flex-col justify-between gap-8">
                 <div>
                   <p className="text-sm uppercase tracking-[0.24em] text-muted">
@@ -382,7 +382,7 @@ export default async function Home({ searchParams }: HomePageProps) {
           </section>
 
           <aside className="flex flex-col gap-6">
-            <section className="rounded-[2rem] border border-line bg-panel p-6 shadow-[0_24px_80px_rgba(72,56,31,0.08)] backdrop-blur">
+            <section className="glass-panel-strong rounded-[2rem] p-6">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-sm uppercase tracking-[0.24em] text-muted">
@@ -448,21 +448,24 @@ export default async function Home({ searchParams }: HomePageProps) {
               ) : null}
             </section>
 
-            <section className="rounded-[2rem] border border-line bg-[#fffaf0] p-6">
+            <section className="glass-panel-strong rounded-[2rem] p-6">
               <p className="text-sm uppercase tracking-[0.24em] text-muted">
                 Installations
               </p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">
-                {githubState.installations.length} connected scope
-                {githubState.installations.length === 1 ? "" : "s"}
-              </h2>
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">
+                  {githubState.installations.length} connected scope
+                  {githubState.installations.length === 1 ? "" : "s"}
+                </h2>
+                <RefreshCcw className="h-5 w-5 text-muted" />
+              </div>
 
               <div className="mt-5 max-h-[40rem] space-y-4 overflow-y-auto pr-1">
                 {hasInstallations ? (
                   githubState.installations.map((installation) => (
                     <article
                       key={installation.id}
-                      className="rounded-[1.25rem] border border-line bg-panel p-4"
+                      className="glass-panel rounded-[1.25rem] p-4 transition-transform hover:-translate-y-1"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div>
@@ -504,6 +507,35 @@ export default async function Home({ searchParams }: HomePageProps) {
                     </p>
                   </article>
                 )}
+              </div>
+            </section>
+
+            <section className="glass-panel-strong relative overflow-hidden rounded-[2rem] p-6">
+              <div className="absolute inset-0 bg-accent-2/5 blur-3xl" />
+              <div className="relative">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-full border border-accent/20 bg-accent/10 px-3 py-1 font-mono text-xs uppercase tracking-[0.2em] text-accent">
+                    API sample
+                  </div>
+                </div>
+                <h2 className="mt-4 text-lg font-semibold">Why the model scales</h2>
+                <p className="mt-3 text-sm leading-6 text-muted">
+                  Repositories, branches, and pull requests are just attribution
+                  layers around one canonical commit record. That keeps the API
+                  honest as repo count grows.
+                </p>
+                <div className="mt-5 rounded-[1.25rem] border border-line bg-background/50 p-4">
+                  <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted">
+                    Core rule
+                  </p>
+                  <p className="mt-3 font-mono text-sm text-foreground/90">
+                    one commit SHA
+                    <br />
+                    = one unit of work
+                    <br />
+                    regardless of branch count
+                  </p>
+                </div>
               </div>
             </section>
           </aside>
