@@ -142,7 +142,6 @@ export default async function Home({ searchParams }: HomePageProps) {
                 </p>
               </div>
             </div>
-            </div>
             <div className="flex flex-col gap-3 sm:flex-row">
               {githubState.primaryAction ? (
                 <Link href={githubState.primaryAction.href} className="button-primary">
@@ -301,8 +300,9 @@ export default async function Home({ searchParams }: HomePageProps) {
                 <p className="text-xs uppercase tracking-[0.24em] text-muted">
                   Repository breakdown
                 </p>
-                <div className="mt-4 space-y-4">
-                  {dashboard.repositories.map((repo) => (
+                <div className="mt-4 max-h-[36rem] space-y-4 overflow-y-auto pr-1">
+                  {dashboard.repositories.length > 0 ? (
+                    dashboard.repositories.map((repo) => (
                     <article
                       key={repo.name}
                       className="rounded-[1.25rem] border border-line bg-background/40 px-4 py-3 transition-colors hover:bg-background/60"
