@@ -4,6 +4,10 @@ import { cookies } from "next/headers";
 
 import { db } from "@/lib/db";
 import { getGitHubTokenExpiry, refreshUserToken } from "@/lib/github";
+import {
+  getSessionTokenLookupValues,
+  hashSessionToken,
+} from "@/lib/session-token";
 
 const SESSION_COOKIE_NAME = "vibe_tracker_session";
 const OAUTH_STATE_COOKIE_NAME = "vibe_tracker_oauth_state";
@@ -36,11 +40,12 @@ export async function createUserSession(input: {
   refreshTokenExpiresIn?: number;
 }) {
   const sessionToken = randomUUID();
+  const sessionTokenHash = hashSessionToken(sessionToken);
   const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30);
 
   await db.userSession.create({
     data: {
-      sessionToken,
+      sessionToken: sessionTokenHash,
       accountId: input.accountId,
       githubAccessToken: input.accessToken,
       githubAccessTokenExpiresAt: getGitHubTokenExpiry(input.expiresIn),
@@ -68,9 +73,12 @@ export async function getOptionalUserSession() {
     return null;
   }
 
-  const session = await db.userSession.findUnique({
+  const lookupValues = getSessionTokenLookupValues(sessionToken);
+  const session = await db.userSession.findFirst({
     where: {
-      sessionToken,
+      OR: lookupValues.map((value) => ({
+        sessionToken: value,
+      })),
     },
     include: {
       account: {
@@ -101,6 +109,18 @@ export async function getOptionalUserSession() {
     return null;
   }
 
+  if (session.sessionToken !== lookupValues[0]) {
+    await db.userSession.update({
+      where: {
+        id: session.id,
+      },
+      data: {
+        sessionToken: lookupValues[0],
+      },
+    });
+    session.sessionToken = lookupValues[0];
+  }
+
   return session;
 }
 
@@ -109,9 +129,12 @@ export async function clearUserSession() {
   const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
   if (sessionToken) {
+    const lookupValues = getSessionTokenLookupValues(sessionToken);
     await db.userSession.deleteMany({
       where: {
-        sessionToken,
+        OR: lookupValues.map((value) => ({
+          sessionToken: value,
+        })),
       },
     });
   }
