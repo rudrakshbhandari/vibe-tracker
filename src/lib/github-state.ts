@@ -21,6 +21,7 @@ export async function getGithubConnectionState() {
       primaryAction: null,
       viewer: null,
       activitySync: null,
+      activitySyncRunning: false,
       installations: [] as Array<{
         id: string;
         githubInstallId: number;
@@ -40,6 +41,7 @@ export async function getGithubConnectionState() {
       primaryAction: null,
       viewer: null,
       activitySync: null,
+      activitySyncRunning: false,
       installations: [] as Array<{
         id: string;
         githubInstallId: number;
@@ -65,6 +67,7 @@ export async function getGithubConnectionState() {
         },
         viewer: null,
         activitySync: null,
+        activitySyncRunning: false,
         installations: [],
       };
     }
@@ -116,6 +119,7 @@ export async function getGithubConnectionState() {
             updatedAt: formatDate(latestActivitySync.updatedAt),
           }
         : null,
+      activitySyncRunning: latestActivitySync?.status === "running",
       installations,
     };
   } catch {
@@ -127,6 +131,7 @@ export async function getGithubConnectionState() {
       primaryAction: null,
       viewer: null,
       activitySync: null,
+      activitySyncRunning: false,
       installations: [],
     };
   }
