@@ -4,8 +4,8 @@
 
 - Issue: [#16](https://github.com/rudrakshbhandari/vibe-tracker/issues/16)
 - Branch: `rudrakshbhandari/improve-ui`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#17](https://github.com/rudrakshbhandari/vibe-tracker/pull/17)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -17,7 +17,7 @@
 - [x] Improve the visual system with stronger typography, color, and card treatments
 - [x] Preserve current GitHub connection, sync, and metrics actions
 - [x] Run lint, tests, and build
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
 
 ## Issue #13 - Simplify homepage to real vibe-coding dashboard and clear connect state
 
