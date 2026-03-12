@@ -58,8 +58,8 @@
 
 - Issue: [#11](https://github.com/rudrakshbhandari/vibe-tracker/issues/11)
 - Branch: `codex/fix-sync-refresh-and-dashboard-layout`
-- PR: pending
-- Workflow: In Progress
+- PR: [#12](https://github.com/rudrakshbhandari/vibe-tracker/pull/12)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -71,4 +71,4 @@
 - [x] Auto-refresh the dashboard while sync is running
 - [x] Constrain the live dashboard layout so large data sets do not collide
 - [x] Run tests, lint, and build
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
