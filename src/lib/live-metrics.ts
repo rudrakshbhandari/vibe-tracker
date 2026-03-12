@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { formatNumber, getDashboardData } from "@/lib/dashboard";
+import { formatNumber } from "@/lib/dashboard";
 import type { AnalyticsView, MetricMode } from "@/lib/dashboard";
 import { hasDurableDatabaseUrl } from "@/lib/env";
 import { getOptionalUserSession } from "@/lib/session";
@@ -85,7 +85,6 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
   }
 
   const session = await getOptionalUserSession();
-  const fallback = getDashboardData();
 
   if (!session) {
     return null;
@@ -95,17 +94,34 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
     (grant) => grant.installation.id,
   );
 
-  const latestActivitySync = await db.syncJob.findFirst({
-    where: {
-      installationId: {
-        in: installationIds,
-      },
-      scope: "activity",
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  const runningActivitySync = installationIds.length
+    ? await db.syncJob.findFirst({
+        where: {
+          installationId: {
+            in: installationIds,
+          },
+          scope: "activity",
+          status: "running",
+        },
+        orderBy: {
+          updatedAt: "desc",
+        },
+      })
+    : null;
+
+  const latestActivitySync = installationIds.length
+    ? await db.syncJob.findFirst({
+        where: {
+          installationId: {
+            in: installationIds,
+          },
+          scope: "activity",
+        },
+        orderBy: {
+          updatedAt: "desc",
+        },
+      })
+    : null;
 
   if (installationIds.length === 0) {
     return {
@@ -147,8 +163,6 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
         deletionsHeight: 0,
       })),
       repositories: [],
-      decisions: fallback.decisions,
-      pipeline: fallback.pipeline,
       chartTitle: getViewConfig(view).title,
     };
   }
@@ -275,14 +289,14 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
       },
       {
         label: "Latest sync",
-        value: latestActivitySync?.status === "running" ? "Running" : "Ready",
-        detail: latestActivitySync?.updatedAt
+        value: runningActivitySync ? "Running" : "Ready",
+        detail: (runningActivitySync ?? latestActivitySync)?.updatedAt
           ? `Updated ${new Intl.DateTimeFormat("en-US", {
               month: "short",
               day: "numeric",
               hour: "numeric",
               minute: "2-digit",
-            }).format(latestActivitySync.updatedAt)}`
+            }).format((runningActivitySync ?? latestActivitySync)!.updatedAt)}`
           : "Run your first activity sync to replace demo metrics.",
       },
     ],
@@ -296,8 +310,7 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
     repositories: Array.from(repositoryMap.values())
       .sort((left, right) => right.additions - left.additions)
       .slice(0, 6),
-    decisions: fallback.decisions,
-    pipeline: fallback.pipeline,
     chartTitle: getViewConfig(view).title,
+    activitySyncRunning: Boolean(runningActivitySync),
   };
 }

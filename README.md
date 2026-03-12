@@ -2,21 +2,16 @@
 
 Vibe Tracker is a web MVP for aggregating GitHub code volume for a user across repositories, branches, and pull requests without double-counting the same commit across refs.
 
-## Locked product decisions
+The homepage is intentionally simple:
 
-- Product shape: web app with a backend API and background sync.
-- User scope: logged-in users see repositories they authorize through GitHub.
-- Metric definition: authored commits are the primary source of truth.
-- Secondary lens: merged-to-default-branch is a toggle, not a separate canonical metric.
-- Deduplication: commit SHA is canonical for counting work.
-- Time lens: author date is the default basis for day, week, month, and custom windows.
-- Sync strategy: hybrid live fetch plus cached background sync.
+- If GitHub is not connected, the app shows a clear disconnected state and the exact steps to connect, install, and sync.
+- If GitHub is connected, the app shows real synced metrics only. It does not fall back to demo analytics for signed-out users.
 
 ## Stack
 
 - Next.js App Router with TypeScript
 - Tailwind CSS v4
-- Prisma with SQLite for local MVP persistence
+- Prisma with PostgreSQL
 - Route handlers for internal API endpoints
 
 ## Data model
@@ -65,6 +60,8 @@ Create a GitHub App with:
 Then fill in:
 
 - `APP_URL`
+- `DATABASE_URL`
+- `DIRECT_URL`
 - `GITHUB_APP_ID`
 - `GITHUB_APP_CLIENT_ID`
 - `GITHUB_APP_CLIENT_SECRET`
@@ -79,6 +76,12 @@ The current live flow is:
 4. The setup URL refreshes repository grants only, so onboarding stays fast.
 5. The user can then run `Sync my activity`, which backfills authored commits, branch membership, and associated PR metadata for the last 12 months.
 
+Hosted note:
+
+- Production deploys must run `prisma generate` so the Prisma client matches the checked-in schema.
+- `DATABASE_URL` should point at the runtime Postgres connection.
+- `DIRECT_URL` should point at the direct Postgres connection Prisma uses for schema operations.
+
 ## Usability model
 
 - Install/setup is lightweight and should return quickly.
@@ -91,4 +94,4 @@ The current live flow is:
 1. Add a real background queue so authored activity sync does not block the HTTP request.
 2. Persist sync cursors so repeat activity syncs only fetch new commits.
 3. Add webhook handling so installation changes and pushes can trigger targeted refreshes.
-4. Replace the sample fallback dashboard copy once a user has connected but not yet synced activity.
+4. Add drilldowns so users can inspect which repositories and commits drove each time bucket.
