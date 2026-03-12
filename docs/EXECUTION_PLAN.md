@@ -34,3 +34,22 @@
 - [x] Move the Issue #1 project item to Done
 - [x] Commit the repository AGENTS instructions file
 - [x] Open the cleanup PR and record its URL
+
+## Issue #9 - Fix Prisma production generation for hosted deploys
+
+- Issue: [#9](https://github.com/rudrakshbhandari/vibe-tracker/issues/9)
+- Branch: `codex/fix-prisma-production-build`
+- PR: pending
+- Workflow: In Progress
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Reproduce the hosted OAuth failure against production logs
+- [x] Confirm the failure is a Prisma client / datasource mismatch rather than GitHub token exchange
+- [ ] Regenerate Prisma client during install/build so hosted deploys match the checked-in schema
+- [ ] Surface account persistence failures separately from GitHub `/user` failures
+- [ ] Update docs and agent instructions for the hosted Postgres flow
+- [ ] Run tests and build
+- [ ] Push branch and open PR

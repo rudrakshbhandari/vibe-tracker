@@ -11,6 +11,7 @@ This file defines project-wide instructions for AI agents working in this reposi
 5. No placeholders or TODOs. Production‑ready output only.
 6. If something is unclear, ask clarifying questions as needed.
 7. **Always run relevant tests yourself** (install deps if needed). Do not ask the user to run tests you can execute. If tests fail, fix or report with exact output.
+8. For obvious, low-risk implementation fixes, default to action instead of asking for confirmation first.
 
 **Response style**: concise, confident, practical, proactive.
 
