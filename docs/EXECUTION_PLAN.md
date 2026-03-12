@@ -71,3 +71,22 @@
 - [x] Update docs and agent instructions for the hosted Postgres flow
 - [x] Run tests and build
 - [x] Push branch and open PR
+
+## Issue #11 - Fix activity sync refresh behavior and dashboard overflow
+
+- Issue: [#11](https://github.com/rudrakshbhandari/vibe-tracker/issues/11)
+- Branch: `codex/fix-sync-refresh-and-dashboard-layout`
+- PR: [#12](https://github.com/rudrakshbhandari/vibe-tracker/pull/12)
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Reproduce the repeated-click sync behavior and layout overflow against live data
+- [x] Confirm duplicate syncs are possible from the current route/UI flow
+- [x] Guard against overlapping activity sync runs
+- [x] Auto-refresh the dashboard while sync is running
+- [x] Constrain the live dashboard layout so large data sets do not collide
+- [x] Run tests, lint, and build
+- [x] Push branch and open PR

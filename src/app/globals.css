@@ -78,6 +78,14 @@ a {
     box-shadow 160ms ease;
 }
 
+.button-primary:disabled,
+.button-secondary:disabled {
+  cursor: wait;
+  transform: none;
+  opacity: 0.68;
+  box-shadow: none;
+}
+
 .button-primary {
   background: var(--foreground);
   color: var(--button-primary-fg);

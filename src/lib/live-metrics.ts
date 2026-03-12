@@ -94,17 +94,34 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
     (grant) => grant.installation.id,
   );
 
-  const latestActivitySync = await db.syncJob.findFirst({
-    where: {
-      installationId: {
-        in: installationIds,
-      },
-      scope: "activity",
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  const runningActivitySync = installationIds.length
+    ? await db.syncJob.findFirst({
+        where: {
+          installationId: {
+            in: installationIds,
+          },
+          scope: "activity",
+          status: "running",
+        },
+        orderBy: {
+          updatedAt: "desc",
+        },
+      })
+    : null;
+
+  const latestActivitySync = installationIds.length
+    ? await db.syncJob.findFirst({
+        where: {
+          installationId: {
+            in: installationIds,
+          },
+          scope: "activity",
+        },
+        orderBy: {
+          updatedAt: "desc",
+        },
+      })
+    : null;
 
   if (installationIds.length === 0) {
     return {
@@ -272,14 +289,14 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
       },
       {
         label: "Latest sync",
-        value: latestActivitySync?.status === "running" ? "Running" : "Ready",
-        detail: latestActivitySync?.updatedAt
+        value: runningActivitySync ? "Running" : "Ready",
+        detail: (runningActivitySync ?? latestActivitySync)?.updatedAt
           ? `Updated ${new Intl.DateTimeFormat("en-US", {
               month: "short",
               day: "numeric",
               hour: "numeric",
               minute: "2-digit",
-            }).format(latestActivitySync.updatedAt)}`
+            }).format((runningActivitySync ?? latestActivitySync)!.updatedAt)}`
           : "Run your first activity sync to replace demo metrics.",
       },
     ],
@@ -294,5 +311,6 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
       .sort((left, right) => right.additions - left.additions)
       .slice(0, 6),
     chartTitle: getViewConfig(view).title,
+    activitySyncRunning: Boolean(runningActivitySync),
   };
 }

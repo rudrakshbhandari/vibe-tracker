@@ -5,6 +5,7 @@ import { formatNumber } from "@/lib/dashboard";
 import type { AnalyticsView, MetricMode } from "@/lib/dashboard";
 import { getGithubConnectionState } from "@/lib/github-state";
 import { getLiveMetrics } from "@/lib/live-metrics";
+import { ActivitySyncRefresh } from "@/components/activity-sync-refresh";
 
 type HomePageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -16,21 +17,29 @@ const GITHUB_STATUS_COPY: Record<
 > = {
   "activity-sync-started": {
     label: "Activity sync started",
-    detail: "We are pulling your recent authored commits now. Reload in a minute for updated totals.",
+    detail:
+      "The dashboard will refresh automatically while your activity is being pulled in.",
+  },
+  "activity-sync-running": {
+    label: "Activity sync is already running",
+    detail:
+      "A sync is already in progress. The dashboard will refresh automatically; no extra clicks are needed.",
   },
   connected: {
     label: "GitHub connected",
   },
   "installation-connected": {
     label: "Installation connected",
-    detail: "Your repository access is available now. Run an activity sync to load your coding totals.",
+    detail:
+      "Your repository access is available now. Run an activity sync to load your coding totals.",
   },
   "invalid-installation": {
     label: "Installation could not be resolved",
   },
   "invalid-state": {
     label: "OAuth state mismatch",
-    detail: "GitHub returned to the app without a valid auth state. Start the connection flow again in the same tab.",
+    detail:
+      "GitHub returned to the app without a valid auth state. Start the connection flow again in the same tab.",
   },
   "missing-code": {
     label: "GitHub did not return an auth code",
@@ -43,15 +52,18 @@ const GITHUB_STATUS_COPY: Record<
   },
   "oauth-account-failed": {
     label: "GitHub connected, but account setup failed",
-    detail: "GitHub connected, but the app could not finish setting up your account. Please try again.",
+    detail:
+      "GitHub connected, but the app could not finish setting up your account. Please try again.",
   },
   "oauth-installations-failed": {
     label: "GitHub connected, but installations could not be loaded",
-    detail: "The GitHub login worked, but installation access could not be read yet.",
+    detail:
+      "The GitHub login worked, but installation access could not be read yet.",
   },
   "oauth-session-failed": {
     label: "GitHub connected, but the session could not be stored",
-    detail: "GitHub connected, but the app could not complete sign-in. Please try again.",
+    detail:
+      "GitHub connected, but the app could not complete sign-in. Please try again.",
   },
   "oauth-token-failed": {
     label: "GitHub token exchange failed",
@@ -66,14 +78,14 @@ const GITHUB_STATUS_COPY: Record<
   },
   "sync-failed": {
     label: "Sync failed",
-    detail: "The app could not complete your activity sync. Check the server logs and try again.",
+    detail: "The app could not complete your activity sync. Please try again.",
   },
 };
 
 const CONNECT_STEPS = [
   "Connect your GitHub account.",
   "Install the GitHub App on the user or organization you want to measure.",
-  "Run an activity sync to load your vibe-coding totals.",
+  "Run Sync my activity to load your vibe-coding totals.",
 ];
 
 export default async function Home({ searchParams }: HomePageProps) {
@@ -102,9 +114,16 @@ export default async function Home({ searchParams }: HomePageProps) {
   const views: AnalyticsView[] = ["daily", "weekly", "monthly"];
   const modes: MetricMode[] = ["authored", "merged"];
   const hasInstallations = githubState.installations.length > 0;
+  const syncRefreshActive = Boolean(
+    githubStatus === "activity-sync-started" ||
+      githubStatus === "activity-sync-running" ||
+      githubState.activitySyncRunning ||
+      dashboard?.activitySyncRunning,
+  );
 
   return (
     <main className="grid-lines min-h-screen">
+      <ActivitySyncRefresh active={syncRefreshActive} />
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-5 py-6 sm:px-8 lg:px-10">
         <header className="rounded-[2rem] border border-line bg-panel px-6 py-6 shadow-[0_24px_80px_rgba(72,56,31,0.08)] backdrop-blur">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -235,7 +254,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                 </div>
 
                 <div className="mt-6 grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-                  <section className="rounded-[1.5rem] border border-line bg-[#13222d] p-5 text-[#f6efe4]">
+                  <section className="min-w-0 overflow-hidden rounded-[1.5rem] border border-line bg-[#13222d] p-5 text-[#f6efe4]">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs uppercase tracking-[0.24em] text-[#b3c8d6]">
@@ -249,35 +268,37 @@ export default async function Home({ searchParams }: HomePageProps) {
                         GitHub sync
                       </span>
                     </div>
-                    <div className="mt-6 flex h-64 items-end gap-3">
-                      {dashboard.timeline.map((point) => (
-                        <div key={point.label} className="flex flex-1 flex-col gap-3">
-                          <div className="flex h-48 items-end gap-1">
-                            <div
-                              className="w-1/2 rounded-t-full bg-accent"
-                              style={{ height: `${point.additionsHeight}%` }}
-                            />
-                            <div
-                              className="w-1/2 rounded-t-full bg-accent-2"
-                              style={{ height: `${point.deletionsHeight}%` }}
-                            />
+                    <div className="mt-6 overflow-x-auto pb-2">
+                      <div className="flex h-64 min-w-[42rem] items-end gap-3">
+                        {dashboard.timeline.map((point) => (
+                          <div key={point.label} className="flex flex-1 flex-col gap-3">
+                            <div className="flex h-48 items-end gap-1">
+                              <div
+                                className="w-1/2 rounded-t-full bg-accent"
+                                style={{ height: `${point.additionsHeight}%` }}
+                              />
+                              <div
+                                className="w-1/2 rounded-t-full bg-accent-2"
+                                style={{ height: `${point.deletionsHeight}%` }}
+                              />
+                            </div>
+                            <div className="space-y-1 text-center">
+                              <p className="text-xs text-[#b3c8d6]">{point.label}</p>
+                              <p className="font-mono text-xs text-white/88">
+                                +{formatNumber(point.additions)} / -{formatNumber(point.deletions)}
+                              </p>
+                            </div>
                           </div>
-                          <div className="space-y-1 text-center">
-                            <p className="text-xs text-[#b3c8d6]">{point.label}</p>
-                            <p className="font-mono text-xs text-white/88">
-                              +{formatNumber(point.additions)} / -{formatNumber(point.deletions)}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </section>
 
-                  <section className="rounded-[1.5rem] border border-line bg-panel-strong p-5">
+                  <section className="min-w-0 rounded-[1.5rem] border border-line bg-panel-strong p-5">
                     <p className="text-xs uppercase tracking-[0.24em] text-muted">
                       Repositories
                     </p>
-                    <div className="mt-4 space-y-4">
+                    <div className="mt-4 max-h-[36rem] space-y-4 overflow-y-auto pr-1">
                       {dashboard.repositories.length > 0 ? (
                         dashboard.repositories.map((repo) => (
                           <article
@@ -285,15 +306,17 @@ export default async function Home({ searchParams }: HomePageProps) {
                             className="rounded-[1.25rem] border border-line px-4 py-3"
                           >
                             <div className="flex items-start justify-between gap-4">
-                              <div>
-                                <h3 className="font-semibold">{repo.name}</h3>
-                                <p className="mt-1 text-sm text-muted">{repo.detail}</p>
+                              <div className="min-w-0">
+                                <h3 className="break-words font-semibold">{repo.name}</h3>
+                                <p className="mt-1 break-words text-sm text-muted">
+                                  {repo.detail}
+                                </p>
                               </div>
                               <span className="rounded-full bg-[#efe4cf] px-3 py-1 text-xs font-medium text-[#6f553b]">
                                 {repo.visibility}
                               </span>
                             </div>
-                            <div className="mt-4 flex items-center gap-3 text-sm text-muted">
+                            <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted">
                               <span>+{formatNumber(repo.additions)}</span>
                               <span>-{formatNumber(repo.deletions)}</span>
                               <span>{repo.commitCount} commits</span>
@@ -322,7 +345,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                     Connect GitHub to see your vibe-coding totals.
                   </h2>
                   <p className="mt-3 max-w-2xl text-sm leading-7 text-muted">
-                    This app only shows real GitHub activity. There is no sample dashboard anymore, so until GitHub is connected there is nothing to calculate.
+                    This app only shows real GitHub activity. Until GitHub is connected, there is nothing to calculate.
                   </p>
                 </div>
 
@@ -391,8 +414,14 @@ export default async function Home({ searchParams }: HomePageProps) {
                 ) : null}
                 {githubState.connected ? (
                   <form action="/api/github/activity-sync" method="post">
-                    <button type="submit" className="button-secondary w-full">
-                      Sync my activity
+                    <button
+                      type="submit"
+                      className="button-secondary w-full"
+                      disabled={githubState.activitySyncRunning}
+                    >
+                      {githubState.activitySyncRunning
+                        ? "Sync in progress"
+                        : "Sync my activity"}
                     </button>
                   </form>
                 ) : null}
@@ -424,10 +453,11 @@ export default async function Home({ searchParams }: HomePageProps) {
                 Installations
               </p>
               <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">
-                {githubState.installations.length} connected scope{githubState.installations.length === 1 ? "" : "s"}
+                {githubState.installations.length} connected scope
+                {githubState.installations.length === 1 ? "" : "s"}
               </h2>
 
-              <div className="mt-5 space-y-4">
+              <div className="mt-5 max-h-[40rem] space-y-4 overflow-y-auto pr-1">
                 {hasInstallations ? (
                   githubState.installations.map((installation) => (
                     <article
@@ -447,7 +477,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                           #{installation.githubInstallId}
                         </span>
                       </div>
-                      <p className="mt-3 text-sm leading-6 text-muted">
+                      <p className="mt-3 break-words text-sm leading-6 text-muted">
                         {installation.repositoryNames.length > 0
                           ? installation.repositoryNames.join(", ")
                           : "No repositories cached yet. Refresh repositories to pull grants."}
@@ -470,7 +500,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                   <article className="rounded-[1.25rem] border border-line bg-panel p-4">
                     <h3 className="font-semibold">Nothing installed yet</h3>
                     <p className="mt-2 text-sm leading-6 text-muted">
-                      After you connect GitHub, install the app on the account you want to measure. That will unlock repository access and let the sync job pull your activity.
+                      After you connect GitHub, install the app on the account you want to measure. That unlocks repository access and lets the sync job pull your activity.
                     </p>
                   </article>
                 )}
