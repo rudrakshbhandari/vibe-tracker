@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { canEnableHostedGitHubSync } from "@/lib/env";
 import { getValidUserAccessToken } from "@/lib/session";
 import { syncInstallationMetadataForAccount } from "@/lib/installation-sync";
 
 export async function GET(request: NextRequest) {
+  if (!canEnableHostedGitHubSync()) {
+    return NextResponse.redirect(new URL("/?github=missing-config", request.url));
+  }
+
   const installationId = Number.parseInt(
     request.nextUrl.searchParams.get("installation_id") ?? "",
     10,

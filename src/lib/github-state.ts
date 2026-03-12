@@ -1,4 +1,4 @@
-import { hasGitHubAppEnv } from "@/lib/env";
+import { hasGitHubAppEnv, hasDurableDatabaseUrl } from "@/lib/env";
 import { db } from "@/lib/db";
 import { getOptionalUserSession } from "@/lib/session";
 
@@ -13,22 +13,41 @@ function formatDate(date: Date) {
 
 export async function getGithubConnectionState() {
   if (!hasGitHubAppEnv()) {
-      return {
-        connected: false,
-        title: "Add GitHub App credentials",
-        description:
-          "Set the GitHub App env variables locally, then the app can issue user sessions and installation syncs.",
-        primaryAction: null,
-        viewer: null,
-        activitySync: null,
-        installations: [] as Array<{
-          id: string;
-          githubInstallId: number;
-          accountLogin: string;
-          repositoryCount: number;
-          repositoryNames: string[];
-        }>,
-      };
+    return {
+      connected: false,
+      title: "Add GitHub App credentials",
+      description:
+        "Set the GitHub App env variables locally, then the app can issue user sessions and installation syncs.",
+      primaryAction: null,
+      viewer: null,
+      activitySync: null,
+      installations: [] as Array<{
+        id: string;
+        githubInstallId: number;
+        accountLogin: string;
+        repositoryCount: number;
+        repositoryNames: string[];
+      }>,
+    };
+  }
+
+  if (!hasDurableDatabaseUrl()) {
+    return {
+      connected: false,
+      title: "Hosted demo mode",
+      description:
+        "GitHub auth and sync stay disabled on Vercel until a hosted database is configured. The public deployment still serves the dashboard and metrics demo safely.",
+      primaryAction: null,
+      viewer: null,
+      activitySync: null,
+      installations: [] as Array<{
+        id: string;
+        githubInstallId: number;
+        accountLogin: string;
+        repositoryCount: number;
+        repositoryNames: string[];
+      }>,
+    };
   }
 
   try {
@@ -78,15 +97,15 @@ export async function getGithubConnectionState() {
         .map((repository) => `${repository.owner}/${repository.name}`),
     }));
 
-      return {
-        connected: true,
-        title: "GitHub is connected",
-        description:
-          "Installations are cached locally. Activity sync is separate so onboarding stays fast even if you have many repositories.",
-        primaryAction: {
-          label: "Add another installation",
-          href: "/api/github/install",
-        },
+    return {
+      connected: true,
+      title: "GitHub is connected",
+      description:
+        "Installations are cached locally. Activity sync is separate so onboarding stays fast even if you have many repositories.",
+      primaryAction: {
+        label: "Add another installation",
+        href: "/api/github/install",
+      },
       viewer: {
         login: session.account.login,
         sessionExpiryLabel: formatDate(session.expiresAt),

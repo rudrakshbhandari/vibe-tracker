@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { canEnableHostedGitHubSync } from "@/lib/env";
 import { db } from "@/lib/db";
 import {
   buildGitHubInstallUrl,
@@ -11,6 +12,10 @@ import { syncAllInstallationMetadataForAccount } from "@/lib/installation-sync";
 import { consumeOAuthState, createUserSession } from "@/lib/session";
 
 export async function GET(request: NextRequest) {
+  if (!canEnableHostedGitHubSync()) {
+    return NextResponse.redirect(new URL("/?github=missing-config", request.url));
+  }
+
   const code = request.nextUrl.searchParams.get("code");
   const state = request.nextUrl.searchParams.get("state");
 
