@@ -28,7 +28,7 @@ export default async function Home({ searchParams }: HomePageProps) {
     ["authored", "merged"].includes(params.mode)
       ? (params.mode as MetricMode)
       : "authored";
-  const dashboard = (await getLiveMetrics(view, mode)) ?? getDashboardData();
+  const dashboard = (await getLiveMetrics(view, mode)) ?? getDashboardData(view, mode);
   const githubState = await getGithubConnectionState();
   const githubStatus =
     typeof params.github === "string" ? params.github : undefined;
@@ -106,11 +106,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                     <Link
                       key={entry}
                       href={`/?view=${entry}&mode=${mode}`}
-                      className={
-                        entry === view
-                          ? "rounded-full bg-foreground px-3 py-1.5 font-medium text-[#fffaf0]"
-                          : "rounded-full border border-line px-3 py-1.5 font-medium text-muted"
-                      }
+                      className={entry === view ? "toggle-pill toggle-pill-active" : "toggle-pill"}
                     >
                       {entry[0]?.toUpperCase()}
                       {entry.slice(1)}
@@ -122,11 +118,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                     <Link
                       key={entry}
                       href={`/?view=${view}&mode=${entry}`}
-                      className={
-                        entry === mode
-                          ? "rounded-full bg-[#13222d] px-3 py-1.5 font-medium text-[#f6efe4]"
-                          : "rounded-full border border-line px-3 py-1.5 font-medium text-muted"
-                      }
+                      className={entry === mode ? "toggle-pill toggle-pill-active" : "toggle-pill"}
                     >
                       {entry === "authored" ? "Authored" : "Merged"}
                     </Link>

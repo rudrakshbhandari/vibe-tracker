@@ -20,3 +20,17 @@ export function getGitHubAppEnv() {
 export function normalizePrivateKey(privateKey: string) {
   return privateKey.replace(/\\n/g, "\n");
 }
+
+export function hasDurableDatabaseUrl() {
+  const databaseUrl = process.env.DATABASE_URL;
+
+  if (!databaseUrl) {
+    return false;
+  }
+
+  return !databaseUrl.startsWith("file:");
+}
+
+export function canEnableHostedGitHubSync() {
+  return hasGitHubAppEnv() && hasDurableDatabaseUrl();
+}

@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { formatNumber, getDashboardData } from "@/lib/dashboard";
 import type { AnalyticsView, MetricMode } from "@/lib/dashboard";
+import { hasDurableDatabaseUrl } from "@/lib/env";
 import { getOptionalUserSession } from "@/lib/session";
 
 type TimelineBucket = {
@@ -79,6 +80,10 @@ function getWindowStart(view: AnalyticsView) {
 }
 
 export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
+  if (!hasDurableDatabaseUrl()) {
+    return null;
+  }
+
   const session = await getOptionalUserSession();
   const fallback = getDashboardData();
 
