@@ -23,8 +23,8 @@
 
 - Issue: [#6](https://github.com/rudrakshbhandari/vibe-tracker/issues/6)
 - Branch: `rudrakshbhandari/close-task-cleanup`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#7](https://github.com/rudrakshbhandari/vibe-tracker/pull/7)
+- Workflow: In Review
 - Priority: P3
 - App: multi
 
@@ -33,4 +33,4 @@
 - [x] Confirm Issue #1 PR state after merge
 - [x] Move the Issue #1 project item to Done
 - [x] Commit the repository AGENTS instructions file
-- [ ] Open the cleanup PR and record its URL
+- [x] Open the cleanup PR and record its URL
