@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 
 import { canEnableHostedGitHubSync } from "@/lib/env";
+import { dispatchActivitySync } from "@/lib/activity-sync-dispatch";
 import { syncUserActivityForAccount } from "@/lib/installation-sync";
 import { getValidUserAccessToken } from "@/lib/session";
 
@@ -15,15 +16,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.redirect(new URL("/?github=not-connected", request.url));
   }
 
-  try {
+  dispatchActivitySync(after, async () => {
     await syncUserActivityForAccount({
       accountId: session.session.accountId,
       authorLogin: session.session.account.login,
       userAccessToken: session.accessToken,
     });
+  });
 
-    return NextResponse.redirect(new URL("/?github=activity-synced", request.url));
-  } catch {
-    return NextResponse.redirect(new URL("/?github=activity-sync-failed", request.url));
-  }
+  return NextResponse.redirect(new URL("/?github=activity-sync-started", request.url));
 }
