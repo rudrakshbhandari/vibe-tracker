@@ -37,6 +37,5 @@ export async function getMetricsResponseAsync(
     summary: dashboard.summary,
     timeline: dashboard.timeline,
     repositories: dashboard.repositories,
-    decisions: dashboard.decisions,
   };
 }

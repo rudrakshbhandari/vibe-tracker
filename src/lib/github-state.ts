@@ -15,9 +15,9 @@ export async function getGithubConnectionState() {
   if (!hasGitHubAppEnv()) {
     return {
       connected: false,
-      title: "Add GitHub App credentials",
+      title: "GitHub connection unavailable",
       description:
-        "Set the GitHub App env variables locally, then the app can issue user sessions and installation syncs.",
+        "GitHub connection is not available right now. Please try again later.",
       primaryAction: null,
       viewer: null,
       activitySync: null,
@@ -35,9 +35,9 @@ export async function getGithubConnectionState() {
   if (!hasDurableDatabaseUrl()) {
     return {
       connected: false,
-      title: "Hosted demo mode",
+      title: "GitHub sync unavailable",
       description:
-        "GitHub auth and sync stay disabled on Vercel until a hosted database is configured. The public deployment still serves the dashboard and metrics demo safely.",
+        "GitHub sync is temporarily unavailable. Please try again later.",
       primaryAction: null,
       viewer: null,
       activitySync: null,
@@ -125,9 +125,9 @@ export async function getGithubConnectionState() {
   } catch {
     return {
       connected: false,
-      title: "Database not initialized",
+      title: "GitHub sync unavailable",
       description:
-        "Run `npm run db:push` locally so session and installation records can be stored.",
+        "We could not load your GitHub connection right now. Please try again later.",
       primaryAction: null,
       viewer: null,
       activitySync: null,

@@ -1,5 +1,23 @@
 # Execution Plan
 
+## Issue #13 - Simplify homepage to real vibe-coding dashboard and clear connect state
+
+- Issue: [#13](https://github.com/rudrakshbhandari/vibe-tracker/issues/13)
+- Branch: `codex/simple-vibe-webapp`
+- PR: [#14](https://github.com/rudrakshbhandari/vibe-tracker/pull/14)
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Remove the internal "Locked decisions" and other prototype-only homepage sections
+- [x] Stop showing sample/demo analytics to disconnected users
+- [x] Add a clear disconnected state with connect/install/sync instructions
+- [x] Keep connected users focused on real synced metrics and repository breakdowns
+- [x] Run lint, tests, and build
+- [x] Push branch and open PR
+
 ## Issue #1 - Make Vibe Tracker onboarding and analytics usable
 
 - Issue: [#1](https://github.com/rudrakshbhandari/vibe-tracker/issues/1)

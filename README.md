@@ -2,15 +2,10 @@
 
 Vibe Tracker is a web MVP for aggregating GitHub code volume for a user across repositories, branches, and pull requests without double-counting the same commit across refs.
 
-## Locked product decisions
+The homepage is intentionally simple:
 
-- Product shape: web app with a backend API and background sync.
-- User scope: logged-in users see repositories they authorize through GitHub.
-- Metric definition: authored commits are the primary source of truth.
-- Secondary lens: merged-to-default-branch is a toggle, not a separate canonical metric.
-- Deduplication: commit SHA is canonical for counting work.
-- Time lens: author date is the default basis for day, week, month, and custom windows.
-- Sync strategy: hybrid live fetch plus cached background sync.
+- If GitHub is not connected, the app shows a clear disconnected state and the exact steps to connect, install, and sync.
+- If GitHub is connected, the app shows real synced metrics only. It does not fall back to demo analytics for signed-out users.
 
 ## Stack
 
@@ -99,4 +94,4 @@ Hosted note:
 1. Add a real background queue so authored activity sync does not block the HTTP request.
 2. Persist sync cursors so repeat activity syncs only fetch new commits.
 3. Add webhook handling so installation changes and pushes can trigger targeted refreshes.
-4. Replace the sample fallback dashboard copy once a user has connected but not yet synced activity.
+4. Add drilldowns so users can inspect which repositories and commits drove each time bucket.

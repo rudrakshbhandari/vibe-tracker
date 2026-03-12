@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { formatNumber, getDashboardData } from "@/lib/dashboard";
+import { formatNumber } from "@/lib/dashboard";
 import type { AnalyticsView, MetricMode } from "@/lib/dashboard";
 import { hasDurableDatabaseUrl } from "@/lib/env";
 import { getOptionalUserSession } from "@/lib/session";
@@ -85,7 +85,6 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
   }
 
   const session = await getOptionalUserSession();
-  const fallback = getDashboardData();
 
   if (!session) {
     return null;
@@ -164,8 +163,6 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
         deletionsHeight: 0,
       })),
       repositories: [],
-      decisions: fallback.decisions,
-      pipeline: fallback.pipeline,
       chartTitle: getViewConfig(view).title,
     };
   }
@@ -313,8 +310,6 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
     repositories: Array.from(repositoryMap.values())
       .sort((left, right) => right.additions - left.additions)
       .slice(0, 6),
-    decisions: fallback.decisions,
-    pipeline: fallback.pipeline,
     chartTitle: getViewConfig(view).title,
     activitySyncRunning: Boolean(runningActivitySync),
   };
