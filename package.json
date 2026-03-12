@@ -10,6 +10,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
     "db:generate": "prisma generate",
     "db:push": "prisma db push"
   },
@@ -33,6 +34,7 @@
     "eslint-config-next": "16.1.6",
     "prisma": "^6.19.2",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.4"
   }
 }

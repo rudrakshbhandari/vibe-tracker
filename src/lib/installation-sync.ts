@@ -8,6 +8,7 @@ import {
   listRepositoryBranches,
   type GitHubInstallation,
 } from "@/lib/github";
+import { getStaleRepositoryIds } from "@/lib/repository-sync";
 
 const ACTIVITY_SYNC_LOOKBACK_DAYS = 365;
 
@@ -69,6 +70,93 @@ async function syncInstallationRepositories(input: {
   const githubRepositories = await getInstallationRepositories(
     input.installation.id,
   );
+  const persistedRepositories = await db.repository.findMany({
+    where: {
+      installationId: installation.id,
+    },
+    select: {
+      id: true,
+      githubRepoId: true,
+    },
+  });
+
+  const staleRepositoryIds = getStaleRepositoryIds({
+    persistedRepositories,
+    githubRepositoryIds: githubRepositories.map((repository) => repository.id),
+  });
+
+  if (staleRepositoryIds.length > 0) {
+    await db.$transaction([
+      db.pullRequestCommit.deleteMany({
+        where: {
+          OR: [
+            {
+              pullRequest: {
+                repositoryId: {
+                  in: staleRepositoryIds,
+                },
+              },
+            },
+            {
+              commit: {
+                repositoryId: {
+                  in: staleRepositoryIds,
+                },
+              },
+            },
+          ],
+        },
+      }),
+      db.commitBranch.deleteMany({
+        where: {
+          OR: [
+            {
+              commit: {
+                repositoryId: {
+                  in: staleRepositoryIds,
+                },
+              },
+            },
+            {
+              branch: {
+                repositoryId: {
+                  in: staleRepositoryIds,
+                },
+              },
+            },
+          ],
+        },
+      }),
+      db.pullRequest.deleteMany({
+        where: {
+          repositoryId: {
+            in: staleRepositoryIds,
+          },
+        },
+      }),
+      db.commit.deleteMany({
+        where: {
+          repositoryId: {
+            in: staleRepositoryIds,
+          },
+        },
+      }),
+      db.branch.deleteMany({
+        where: {
+          repositoryId: {
+            in: staleRepositoryIds,
+          },
+        },
+      }),
+      db.repository.deleteMany({
+        where: {
+          id: {
+            in: staleRepositoryIds,
+          },
+        },
+      }),
+    ]);
+  }
 
   await Promise.all(
     githubRepositories.map((repository) =>
