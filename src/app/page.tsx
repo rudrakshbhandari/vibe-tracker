@@ -43,7 +43,7 @@ const GITHUB_STATUS_COPY: Record<
   },
   "oauth-account-failed": {
     label: "GitHub connected, but account setup failed",
-    detail: "The app could not save the GitHub account record. Check the database and Prisma setup.",
+    detail: "GitHub connected, but the app could not finish setting up your account. Please try again.",
   },
   "oauth-installations-failed": {
     label: "GitHub connected, but installations could not be loaded",
@@ -51,11 +51,11 @@ const GITHUB_STATUS_COPY: Record<
   },
   "oauth-session-failed": {
     label: "GitHub connected, but the session could not be stored",
-    detail: "This usually means the database is not ready for auth sessions.",
+    detail: "GitHub connected, but the app could not complete sign-in. Please try again.",
   },
   "oauth-token-failed": {
     label: "GitHub token exchange failed",
-    detail: "The GitHub callback or app credentials are misconfigured.",
+    detail: "GitHub sign-in did not complete successfully. Please try again.",
   },
   "oauth-user-failed": {
     label: "GitHub token worked, but user lookup failed",
