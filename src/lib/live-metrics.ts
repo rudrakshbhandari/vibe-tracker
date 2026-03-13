@@ -15,7 +15,7 @@ type TimelineBucket = {
 function getViewConfig(view: AnalyticsView) {
   if (view === "daily") {
     return {
-      title: "Daily activity",
+      title: "Daily shipped work",
       bucketCount: 14,
       stepDays: 1,
       filterLabel: "Last 14 days",
@@ -28,7 +28,7 @@ function getViewConfig(view: AnalyticsView) {
 
   if (view === "weekly") {
     return {
-      title: "Weekly activity",
+      title: "Weekly shipped work",
       bucketCount: 12,
       stepDays: 7,
       filterLabel: "Last 12 weeks",
@@ -40,7 +40,7 @@ function getViewConfig(view: AnalyticsView) {
   }
 
   return {
-    title: "Monthly activity",
+    title: "Monthly shipped work",
     bucketCount: 12,
     stepDays: 30,
     filterLabel: "Last 12 months",
@@ -129,7 +129,9 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
             in: installationIds,
           },
           scope: "activity",
-          status: "running",
+          status: {
+            in: ["queued", "running"],
+          },
         },
         orderBy: {
           updatedAt: "desc",
@@ -157,30 +159,27 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
         login: `@${session.account.login}`,
         source: "live" as const,
       },
-      filters: [
-        getViewConfig(view).filterLabel,
-        mode === "authored" ? "Authored commits" : "Merged to default branch",
-      ],
+    filters: [getViewConfig(view).filterLabel, "Shipped work"],
       summary: [
         {
-          label: "Lines added",
+          label: "Lines shipped",
           value: "+0",
           detail: "Install the GitHub App on a scope to pull repository access.",
         },
         {
-          label: "Lines deleted",
+          label: "Lines removed",
           value: "-0",
           detail: "No repositories are connected yet.",
         },
         {
-          label: "Tracked repos",
+          label: "Merged PRs",
           value: "0",
-          detail: "Repository grants appear here right after installation.",
+          detail: "Shipped-work totals appear after the first merged-PR sync.",
         },
         {
           label: "Latest sync",
           value: "Not started",
-          detail: "Run the activity sync once the installation is connected.",
+          detail: "Run the shipped-work sync once the installation is connected.",
         },
       ],
       timeline: buildTimelineBuckets(view).map((bucket) => ({
@@ -195,43 +194,44 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
     };
   }
 
-  const commits = await db.commit.findMany({
+  const windowStart = getWindowStart(view);
+  const dailyStats = await db.dailyUserRepoStats.findMany({
     where: {
+      accountId: session.accountId,
       repository: {
         installationId: {
           in: installationIds,
         },
       },
-      authorId: session.accountId,
-      authoredAt: {
-        gte: getWindowStart(view),
+      day: {
+        gte: windowStart,
       },
-      ...(mode === "merged" ? { mergedToDefaultBranch: true } : {}),
     },
     include: {
       repository: true,
-      branchLinks: {
-        include: {
-          branch: true,
-        },
-      },
-      pullRequestLinks: {
-        include: {
-          pullRequest: true,
-        },
-      },
     },
     orderBy: {
-      authoredAt: "desc",
+      day: "desc",
     },
   });
 
-  const totals = commits.reduce(
-    (accumulator, commit) => ({
-      additions: accumulator.additions + commit.additions,
-      deletions: accumulator.deletions + commit.deletions,
+  const timeline = buildTimelineBuckets(view);
+  const installationRepoCount = await db.repository.count({
+    where: {
+      installationId: {
+        in: installationIds,
+      },
+    },
+  });
+
+  const totals = dailyStats.reduce(
+    (accumulator, stat) => ({
+      additions: accumulator.additions + stat.additions,
+      deletions: accumulator.deletions + stat.deletions,
+      mergedPrCount: accumulator.mergedPrCount + stat.mergedPrCount,
+      commitCount: accumulator.commitCount + stat.commitCount,
     }),
-    { additions: 0, deletions: 0 },
+    { additions: 0, deletions: 0, mergedPrCount: 0, commitCount: 0 },
   );
 
   const repositoryMap = new Map<
@@ -243,35 +243,33 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
       additions: number;
       deletions: number;
       commitCount: number;
+      mergedPrCount: number;
     }
   >();
 
-  const timeline = buildTimelineBuckets(view);
-
-  for (const commit of commits) {
-    const key = commit.repositoryId;
-    const existing = repositoryMap.get(key) ?? {
-      name: `${commit.repository.owner}/${commit.repository.name}`,
-      detail:
-        commit.pullRequestLinks[0]?.pullRequest.title ??
-        `${commit.branchLinks.length} branch refs captured`,
-      visibility: commit.repository.isPrivate ? "private" : "public",
+  for (const stat of dailyStats) {
+    const existing = repositoryMap.get(stat.repositoryId) ?? {
+      name: `${stat.repository.owner}/${stat.repository.name}`,
+      detail: "Merged pull requests landed on the default branch in this window.",
+      visibility: stat.repository.isPrivate ? "private" : "public",
       additions: 0,
       deletions: 0,
       commitCount: 0,
+      mergedPrCount: 0,
     };
 
-    existing.additions += commit.additions;
-    existing.deletions += commit.deletions;
-    existing.commitCount += 1;
-    repositoryMap.set(key, existing);
+    existing.additions += stat.additions;
+    existing.deletions += stat.deletions;
+    existing.commitCount += stat.commitCount;
+    existing.mergedPrCount += stat.mergedPrCount;
+    repositoryMap.set(stat.repositoryId, existing);
 
     const bucket = timeline.find(
-      (item) => commit.authoredAt >= item.start && commit.authoredAt < item.end,
+      (item) => stat.day >= item.start && stat.day < item.end,
     );
     if (bucket) {
-      bucket.additions += commit.additions;
-      bucket.deletions += commit.deletions;
+      bucket.additions += stat.additions;
+      bucket.deletions += stat.deletions;
     }
   }
 
@@ -280,11 +278,23 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
     ...timeline.flatMap((item) => [item.additions, item.deletions]),
   );
 
-  const installationRepoCount = await db.repository.count({
+  const latestPullRequest = await db.pullRequest.findFirst({
     where: {
-      installationId: {
-        in: installationIds,
+      authorId: session.accountId,
+      repository: {
+        installationId: {
+          in: installationIds,
+        },
       },
+      mergedAt: {
+        gte: windowStart,
+      },
+    },
+    include: {
+      repository: true,
+    },
+    orderBy: {
+      mergedAt: "desc",
     },
   });
 
@@ -295,25 +305,25 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
     },
     filters: [
       getViewConfig(view).filterLabel,
-      mode === "authored" ? "Authored commits" : "Merged to default branch",
-      "Deduped by repo + SHA",
+      mode === "shipped" ? "Shipped work" : "Shipped work",
+      "Merged PRs only",
       `${installationRepoCount} tracked repos`,
     ],
     summary: [
       {
-        label: "Lines added",
+        label: "Lines shipped",
         value: `+${formatNumber(totals.additions)}`,
-        detail: `From ${formatNumber(commits.length)} authored commits in the selected view.`,
+        detail: `From ${formatNumber(totals.mergedPrCount)} merged pull requests in the selected view.`,
       },
       {
-        label: "Lines deleted",
+        label: "Lines removed",
         value: `-${formatNumber(totals.deletions)}`,
-        detail: "Counted once even if the same commit appears on multiple branches.",
+        detail: "Measured when the pull request merged, not from branch recrawls.",
       },
       {
-        label: "Tracked repos",
-        value: formatNumber(installationRepoCount),
-        detail: "Repositories granted through your current GitHub App installations.",
+        label: "Merged PRs",
+        value: formatNumber(totals.mergedPrCount),
+        detail: `Across ${formatNumber(totals.commitCount)} shipped commits in the selected window.`,
       },
       {
         label: "Latest sync",
@@ -325,7 +335,7 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
               hour: "numeric",
               minute: "2-digit",
             }).format((runningActivitySync ?? latestActivitySync)!.updatedAt)}`
-          : "Run your first activity sync to replace demo metrics.",
+          : "Run your first shipped-work sync to replace sample metrics.",
       },
     ],
     timeline: timeline.map((item) => ({
@@ -337,8 +347,15 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
     })),
     repositories: Array.from(repositoryMap.values())
       .sort((left, right) => right.additions - left.additions)
-      .slice(0, 6),
+      .slice(0, 6)
+      .map((repository) => ({
+        ...repository,
+        detail: `${formatNumber(repository.mergedPrCount)} merged PRs in the selected window.`,
+      })),
     chartTitle: getViewConfig(view).title,
+    latestPullRequestTitle: latestPullRequest
+      ? `${latestPullRequest.repository.owner}/${latestPullRequest.repository.name}: ${latestPullRequest.title}`
+      : null,
     activitySyncRunning: Boolean(runningActivitySync),
   };
 }

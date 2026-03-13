@@ -41,7 +41,6 @@ export async function POST(request: NextRequest) {
   dispatchActivitySync(after, async () => {
     await syncUserActivityForAccount({
       accountId: session.session.accountId,
-      authorLogin: session.session.account.login,
       userAccessToken: session.accessToken,
     });
   });

@@ -40,42 +40,31 @@ export type GitHubRepository = {
   };
 };
 
-export type GitHubBranch = {
-  name: string;
-};
-
-export type GitHubCommitListItem = {
-  sha: string;
-  commit: {
-    author: {
-      name: string;
-      email: string;
-      date: string;
-    } | null;
-    committer: {
-      date: string;
-    } | null;
-    message: string;
-  };
-  author: {
+export type GitHubPullRequestListItem = {
+  number: number;
+  title: string;
+  state: string;
+  user: {
     id: number;
     login: string;
     avatar_url: string;
   } | null;
+  base: {
+    ref: string;
+  };
+  head: {
+    ref: string;
+  };
+  created_at: string;
+  updated_at: string;
+  merged_at: string | null;
 };
 
-export type GitHubCommitDetail = {
-  sha: string;
-  commit: GitHubCommitListItem["commit"];
-  author: GitHubCommitListItem["author"];
-  stats?: {
-    additions: number;
-    deletions: number;
-    total: number;
-  };
-  files?: Array<{
-    filename: string;
-  }>;
+export type GitHubPullRequestDetail = GitHubPullRequestListItem & {
+  additions: number;
+  deletions: number;
+  changed_files: number;
+  commits: number;
 };
 
 export type GitHubAssociatedPullRequest = {
@@ -225,9 +214,13 @@ export async function createInstallationToken(installationId: number) {
   return authResult.token;
 }
 
-export async function getInstallationRepositories(installationId: number) {
+async function createInstallationOctokit(installationId: number) {
   const token = await createInstallationToken(installationId);
-  const octokit = new Octokit({ auth: token });
+  return new Octokit({ auth: token });
+}
+
+export async function getInstallationRepositories(installationId: number) {
+  const octokit = await createInstallationOctokit(installationId);
   const response = await octokit.request("GET /installation/repositories", {
     per_page: 100,
     headers: {
@@ -238,89 +231,54 @@ export async function getInstallationRepositories(installationId: number) {
   return response.data.repositories as GitHubRepository[];
 }
 
-export async function listRepositoryBranches(input: {
+export async function listMergedPullRequests(input: {
   owner: string;
   repo: string;
   installationId: number;
+  updatedSince?: string;
 }) {
-  const token = await createInstallationToken(input.installationId);
-  const octokit = new Octokit({ auth: token });
-  const response = await octokit.paginate(octokit.rest.repos.listBranches, {
+  const octokit = await createInstallationOctokit(input.installationId);
+  const response = await octokit.paginate(octokit.rest.pulls.list, {
     owner: input.owner,
     repo: input.repo,
+    state: "closed",
+    sort: "updated",
+    direction: "desc",
     per_page: 100,
     headers: {
       "X-GitHub-Api-Version": "2022-11-28",
     },
   });
 
-  return response as GitHubBranch[];
+  const pullRequests = response as GitHubPullRequestListItem[];
+
+  if (!input.updatedSince) {
+    return pullRequests.filter((pullRequest) => pullRequest.merged_at);
+  }
+
+  const cursorTime = new Date(input.updatedSince).getTime();
+
+  return pullRequests.filter((pullRequest) => {
+    const updatedAt = new Date(pullRequest.updated_at).getTime();
+    return updatedAt > cursorTime && Boolean(pullRequest.merged_at);
+  });
 }
 
-export async function listBranchCommits(input: {
+export async function getPullRequestDetail(input: {
   owner: string;
   repo: string;
-  branch: string;
-  since: string;
-  author?: string;
+  pullNumber: number;
   installationId: number;
 }) {
-  const token = await createInstallationToken(input.installationId);
-  const octokit = new Octokit({ auth: token });
-  const response = await octokit.paginate(octokit.rest.repos.listCommits, {
+  const octokit = await createInstallationOctokit(input.installationId);
+  const response = await octokit.request("GET /repos/{owner}/{repo}/pulls/{pull_number}", {
     owner: input.owner,
     repo: input.repo,
-    sha: input.branch,
-    since: input.since,
-    author: input.author,
-    per_page: 100,
+    pull_number: input.pullNumber,
     headers: {
       "X-GitHub-Api-Version": "2022-11-28",
     },
   });
 
-  return response as GitHubCommitListItem[];
-}
-
-export async function getCommitDetail(input: {
-  owner: string;
-  repo: string;
-  sha: string;
-  installationId: number;
-}) {
-  const token = await createInstallationToken(input.installationId);
-  const octokit = new Octokit({ auth: token });
-  const response = await octokit.request("GET /repos/{owner}/{repo}/commits/{ref}", {
-    owner: input.owner,
-    repo: input.repo,
-    ref: input.sha,
-    headers: {
-      "X-GitHub-Api-Version": "2022-11-28",
-    },
-  });
-
-  return response.data as GitHubCommitDetail;
-}
-
-export async function getAssociatedPullRequests(input: {
-  owner: string;
-  repo: string;
-  sha: string;
-  installationId: number;
-}) {
-  const token = await createInstallationToken(input.installationId);
-  const octokit = new Octokit({ auth: token });
-  const response = await octokit.request(
-    "GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls",
-    {
-      owner: input.owner,
-      repo: input.repo,
-      commit_sha: input.sha,
-      headers: {
-        "X-GitHub-Api-Version": "2022-11-28",
-      },
-    },
-  );
-
-  return response.data as GitHubAssociatedPullRequest[];
+  return response.data as GitHubPullRequestDetail;
 }
