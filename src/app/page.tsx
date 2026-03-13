@@ -217,7 +217,6 @@ export default async function Home({ searchParams }: HomePageProps) {
       githubState.activitySyncRunning ||
       dashboard?.activitySyncRunning,
   );
-
   const topRepository = dashboard?.repositories[0] ?? null;
   const peakTimelinePoint =
     dashboard?.timeline.reduce((highest, point) => {
@@ -232,8 +231,8 @@ export default async function Home({ searchParams }: HomePageProps) {
       )
     : 0;
   const visibleTimelineLabelStep =
-    dashboard && dashboard.timeline.length > 8
-      ? Math.ceil(dashboard.timeline.length / 6)
+    dashboard && dashboard.timeline.length > 10
+      ? Math.ceil(dashboard.timeline.length / 7)
       : 1;
   const visibleRepos = dashboard?.repositories.slice(0, 5) ?? [];
 
@@ -253,12 +252,12 @@ export default async function Home({ searchParams }: HomePageProps) {
 
             <div className="space-y-5">
               <h1 className="hero-title">
-                Read your actual coding signal, not a wall of decorative cards.
+                Make the output contour the first thing you can trust.
               </h1>
               <p className="hero-description">
-                Vibe Tracker should feel like a concise operating board: one
-                place for output, current sync health, and repository pressure
-                without letting setup controls drown the analytics.
+                Vibe Tracker should read like a live signal board, not a maze of
+                competing cards. The chart leads, the controls support it, and
+                the supporting panels stay contained.
               </p>
             </div>
 
@@ -338,8 +337,8 @@ export default async function Home({ searchParams }: HomePageProps) {
             </div>
 
             <p className="hero-sidekick-copy">
-              The page now pushes the live signal up front and moves GitHub
-              controls into a dedicated control rail so the analytics can lead.
+              The contour section now gets the full dashboard width. Supporting
+              controls and repository context sit below it instead of squeezing it.
             </p>
           </div>
         </section>
@@ -362,10 +361,7 @@ export default async function Home({ searchParams }: HomePageProps) {
           </section>
         ) : null}
 
-        <section
-          id="dashboard"
-          className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_360px]"
-        >
+        <section id="dashboard" className="dashboard-stack">
           <section className="workspace-panel">
             {dashboard ? (
               <>
@@ -384,7 +380,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                       <h2 className="dashboard-title">{dashboard.profile.login}</h2>
                       <p className="max-w-2xl text-sm leading-7 text-muted sm:text-base">
                         {dashboard.profile.source === "live"
-                          ? "Synced commit records are deduped before aggregation, so this view is closer to an operating report than a vanity graph."
+                          ? "Synced commit records are deduped before aggregation, so this view stays closer to an operating report than a vanity graph."
                           : "Local demo data that mirrors the model we will populate from the GitHub API during sync jobs."}
                       </p>
                     </div>
@@ -452,83 +448,91 @@ export default async function Home({ searchParams }: HomePageProps) {
                   ))}
                 </section>
 
-                <div className="analysis-grid">
-                  <section className="analysis-panel analysis-panel-chart">
-                    <div className="panel-topline">
-                      <div>
-                        <p className="panel-label">Activity contour</p>
-                        <h3 className="section-title">
-                          Read the trend before you read the totals
-                        </h3>
-                      </div>
-                      <div className="legend-row">
-                        <span className="legend-chip">
-                          <span className="legend-swatch legend-swatch-additions" />
-                          Additions
-                        </span>
-                        <span className="legend-chip">
-                          <span className="legend-swatch legend-swatch-deletions" />
-                          Deletions
-                        </span>
-                      </div>
+                <section className="contour-panel">
+                  <div className="panel-topline">
+                    <div>
+                      <p className="panel-label">Output contour</p>
+                      <h3 className="section-title section-title-wide">
+                        Additions and deletions over time
+                      </h3>
                     </div>
-
-                    <div className="insight-row">
-                      <div className="insight-card">
-                        <p className="panel-label">Peak window</p>
-                        <p className="insight-value">
-                          {peakTimelinePoint?.label ?? "No data"}
-                        </p>
-                        <p className="insight-copy">
-                          {peakTimelinePoint
-                            ? `${formatNumber(
-                                peakTimelinePoint.additions +
-                                  peakTimelinePoint.deletions,
-                              )} total changed lines`
-                            : "No synced activity yet."}
-                        </p>
-                      </div>
-                      <div className="insight-card">
-                        <p className="panel-label">Net output</p>
-                        <p className="insight-value">
-                          {netOutput >= 0 ? "+" : ""}
-                          {formatNumber(netOutput)}
-                        </p>
-                        <p className="insight-copy">
-                          Additions minus deletions inside this selected window.
-                        </p>
-                      </div>
+                    <div className="legend-row">
+                      <span className="legend-chip">
+                        <span className="legend-swatch legend-swatch-additions" />
+                        Additions
+                      </span>
+                      <span className="legend-chip">
+                        <span className="legend-swatch legend-swatch-deletions" />
+                        Deletions
+                      </span>
                     </div>
+                  </div>
 
-                    <div className="timeline-chart">
-                      {dashboard.timeline.map((point, index) => (
-                        <div key={point.label} className="timeline-column">
-                          <div className="timeline-bars">
-                            <div
-                              className="timeline-bar timeline-bar-additions"
-                              style={{ height: `${point.additionsHeight}%` }}
-                            />
-                            <div
-                              className="timeline-bar timeline-bar-deletions"
-                              style={{ height: `${point.deletionsHeight}%` }}
-                            />
-                          </div>
-                          <div className="timeline-meta">
-                            <p>
-                              {index % visibleTimelineLabelStep === 0 ||
-                              index === dashboard.timeline.length - 1
-                                ? point.label
-                                : " "}
-                            </p>
-                            <p className="font-mono text-foreground/80">
-                              +{formatNumber(point.additions)}
-                            </p>
-                          </div>
+                  <div className="insight-row insight-row-contour">
+                    <div className="insight-card">
+                      <p className="panel-label">Peak window</p>
+                      <p className="insight-value">
+                        {peakTimelinePoint?.label ?? "No data"}
+                      </p>
+                      <p className="insight-copy">
+                        {peakTimelinePoint
+                          ? `${formatNumber(
+                              peakTimelinePoint.additions +
+                                peakTimelinePoint.deletions,
+                            )} total changed lines`
+                          : "No synced activity yet."}
+                      </p>
+                    </div>
+                    <div className="insight-card">
+                      <p className="panel-label">Net output</p>
+                      <p className="insight-value">
+                        {netOutput >= 0 ? "+" : ""}
+                        {formatNumber(netOutput)}
+                      </p>
+                      <p className="insight-copy">
+                        Additions minus deletions inside this selected window.
+                      </p>
+                    </div>
+                    <div className="insight-card">
+                      <p className="panel-label">Reading mode</p>
+                      <p className="insight-value">
+                        {view[0]?.toUpperCase()}
+                        {view.slice(1)}
+                      </p>
+                      <p className="insight-copy">
+                        The primary chart spans the full dashboard width so trend
+                        is legible before you scan supporting panels.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="timeline-chart timeline-chart-expanded">
+                    {dashboard.timeline.map((point, index) => (
+                      <div key={point.label} className="timeline-column">
+                        <div className="timeline-bars">
+                          <div
+                            className="timeline-bar timeline-bar-additions"
+                            style={{ height: `${point.additionsHeight}%` }}
+                          />
+                          <div
+                            className="timeline-bar timeline-bar-deletions"
+                            style={{ height: `${point.deletionsHeight}%` }}
+                          />
                         </div>
-                      ))}
-                    </div>
-                  </section>
+                        <div className="timeline-meta">
+                          <p>
+                            {index % visibleTimelineLabelStep === 0 ||
+                            index === dashboard.timeline.length - 1
+                              ? point.label
+                              : ""}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
 
+                <div className="dashboard-lower-grid">
                   <section className="analysis-panel">
                     <div className="panel-topline">
                       <div>
@@ -546,11 +550,11 @@ export default async function Home({ searchParams }: HomePageProps) {
                       <div className="repo-spotlight">
                         <p className="panel-label">Top repository</p>
                         <div className="repo-spotlight-row">
-                          <div>
+                          <div className="repo-spotlight-copy-wrap">
                             <h4 className="repo-spotlight-title">
                               {topRepository.name}
                             </h4>
-                            <p className="repo-spotlight-copy">
+                            <p className="repo-copy">
                               {topRepository.detail}
                             </p>
                           </div>
@@ -581,7 +585,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                                   <span className="repo-rank">
                                     {String(index + 1).padStart(2, "0")}
                                   </span>
-                                  <div>
+                                  <div className="repo-title-content">
                                     <h4 className="repo-name">{repo.name}</h4>
                                     <p className="repo-copy">{repo.detail}</p>
                                   </div>
@@ -619,6 +623,182 @@ export default async function Home({ searchParams }: HomePageProps) {
                       )}
                     </div>
                   </section>
+
+                  <aside className="control-rail">
+                    <section className="rail-panel rail-panel-primary">
+                      <div className="panel-topline">
+                        <div>
+                          <p className="panel-label">Control rail</p>
+                          <h2 className="section-title section-title-rail">
+                            GitHub connection and sync
+                          </h2>
+                        </div>
+                        {githubState.connected ? (
+                          <CheckCircle2 className="h-6 w-6 text-lime-300" />
+                        ) : (
+                          <Github className="h-6 w-6 text-foreground/80" />
+                        )}
+                      </div>
+
+                      <div className="rail-status">
+                        <div>
+                          <p className="rail-label">{githubState.title}</p>
+                          <p className="rail-copy">{githubState.description}</p>
+                        </div>
+                        <StatusChip
+                          label={
+                            githubState.activitySyncRunning
+                              ? "Sync running"
+                              : githubState.connected
+                                ? "Ready"
+                                : "Offline"
+                          }
+                          tone={
+                            githubState.activitySyncRunning
+                              ? "active"
+                              : githubState.connected
+                                ? "good"
+                                : "neutral"
+                          }
+                        />
+                      </div>
+
+                      <div className="rail-actions">
+                        {githubState.primaryAction ? (
+                          <ConnectionAction
+                            href={githubState.primaryAction.href}
+                            label={githubState.primaryAction.label}
+                          />
+                        ) : null}
+                        {githubState.connected ? (
+                          <form action="/api/github/activity-sync" method="post">
+                            <button
+                              type="submit"
+                              className="button-secondary w-full"
+                              disabled={githubState.activitySyncRunning}
+                            >
+                              {githubState.activitySyncRunning
+                                ? "Sync in progress"
+                                : "Sync my activity"}
+                            </button>
+                          </form>
+                        ) : null}
+                      </div>
+
+                      {githubState.viewer ? (
+                        <div className="rail-subpanel">
+                          <p className="panel-label">Signed in as</p>
+                          <p className="rail-user">{githubState.viewer.login}</p>
+                          <div className="rail-meta-grid">
+                            <div>
+                              <p className="panel-label">Session</p>
+                              <p className="rail-meta-copy">
+                                Expires {githubState.viewer.sessionExpiryLabel}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="panel-label">Latest activity sync</p>
+                              <p className="rail-meta-copy">
+                                {githubState.activitySync
+                                  ? `${githubState.activitySync.status} at ${githubState.activitySync.updatedAt}`
+                                  : "Not run yet"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : null}
+                    </section>
+
+                    <section className="rail-panel">
+                      <div className="panel-topline">
+                        <div>
+                          <p className="panel-label">Installations</p>
+                          <h2 className="section-title section-title-rail">
+                            Connected scopes
+                          </h2>
+                        </div>
+                        <RefreshCcw className="h-5 w-5 text-muted" />
+                      </div>
+
+                      <div className="installation-stack">
+                        {hasInstallations ? (
+                          githubState.installations.map((installation) => (
+                            <article
+                              key={installation.id}
+                              className="installation-card"
+                            >
+                              <div className="installation-head">
+                                <div>
+                                  <h3 className="installation-title">
+                                    {installation.accountLogin}
+                                  </h3>
+                                  <p className="installation-copy">
+                                    {installation.repositoryCount} repos indexed locally
+                                  </p>
+                                </div>
+                                <span className="dashboard-tag">
+                                  #{installation.githubInstallId}
+                                </span>
+                              </div>
+
+                              <p className="installation-copy installation-copy-break">
+                                {installation.repositoryNames.length > 0
+                                  ? installation.repositoryNames.join(", ")
+                                  : "No repositories cached yet. Refresh repositories to pull grants."}
+                              </p>
+
+                              <form
+                                action={`/api/github/installations/${installation.githubInstallId}/sync`}
+                                method="post"
+                                className="mt-4"
+                              >
+                                <button type="submit" className="button-secondary w-full">
+                                  Refresh repositories
+                                </button>
+                              </form>
+                            </article>
+                          ))
+                        ) : (
+                          <article className="installation-card">
+                            <h3 className="installation-title">Nothing installed yet</h3>
+                            <p className="installation-copy">
+                              Install the GitHub App on the account you want to
+                              measure. That unlocks repository access for sync jobs.
+                            </p>
+                          </article>
+                        )}
+                      </div>
+                    </section>
+
+                    <section className="rail-panel rail-panel-quiet">
+                      <div className="panel-topline">
+                        <div>
+                          <p className="panel-label">Model note</p>
+                          <h2 className="section-title section-title-rail">
+                            Why the totals hold up
+                          </h2>
+                        </div>
+                        <ArrowUpRight className="h-4 w-4 text-accent" />
+                      </div>
+
+                      <p className="rail-copy">
+                        Repositories, branches, and pull requests are attribution
+                        layers around one canonical commit record. That prevents repo
+                        sprawl from inflating totals.
+                      </p>
+
+                      <div className="api-rule-card">
+                        <p className="panel-label">Core rule</p>
+                        <p className="api-rule-copy">
+                          one commit SHA
+                          <br />
+                          equals one unit of work
+                          <br />
+                          regardless of branch count
+                        </p>
+                      </div>
+                    </section>
+                  </aside>
                 </div>
               </>
             ) : (
@@ -662,179 +842,6 @@ export default async function Home({ searchParams }: HomePageProps) {
               </div>
             )}
           </section>
-
-          <aside className="control-rail">
-            <section className="rail-panel rail-panel-primary">
-              <div className="panel-topline">
-                <div>
-                  <p className="panel-label">Control rail</p>
-                  <h2 className="section-title section-title-rail">
-                    GitHub connection and sync
-                  </h2>
-                </div>
-                {githubState.connected ? (
-                  <CheckCircle2 className="h-6 w-6 text-lime-300" />
-                ) : (
-                  <Github className="h-6 w-6 text-foreground/80" />
-                )}
-              </div>
-
-              <div className="rail-status">
-                <div>
-                  <p className="rail-label">{githubState.title}</p>
-                  <p className="rail-copy">{githubState.description}</p>
-                </div>
-                <StatusChip
-                  label={
-                    githubState.activitySyncRunning
-                      ? "Sync running"
-                      : githubState.connected
-                        ? "Ready"
-                        : "Offline"
-                  }
-                  tone={
-                    githubState.activitySyncRunning
-                      ? "active"
-                      : githubState.connected
-                        ? "good"
-                        : "neutral"
-                  }
-                />
-              </div>
-
-              <div className="rail-actions">
-                {githubState.primaryAction ? (
-                  <ConnectionAction
-                    href={githubState.primaryAction.href}
-                    label={githubState.primaryAction.label}
-                  />
-                ) : null}
-                {githubState.connected ? (
-                  <form action="/api/github/activity-sync" method="post">
-                    <button
-                      type="submit"
-                      className="button-secondary w-full"
-                      disabled={githubState.activitySyncRunning}
-                    >
-                      {githubState.activitySyncRunning
-                        ? "Sync in progress"
-                        : "Sync my activity"}
-                    </button>
-                  </form>
-                ) : null}
-              </div>
-
-              {githubState.viewer ? (
-                <div className="rail-subpanel">
-                  <p className="panel-label">Signed in as</p>
-                  <p className="rail-user">{githubState.viewer.login}</p>
-                  <div className="rail-meta-grid">
-                    <div>
-                      <p className="panel-label">Session</p>
-                      <p className="rail-meta-copy">
-                        Expires {githubState.viewer.sessionExpiryLabel}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="panel-label">Latest activity sync</p>
-                      <p className="rail-meta-copy">
-                        {githubState.activitySync
-                          ? `${githubState.activitySync.status} at ${githubState.activitySync.updatedAt}`
-                          : "Not run yet"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-            </section>
-
-            <section className="rail-panel">
-              <div className="panel-topline">
-                <div>
-                  <p className="panel-label">Installations</p>
-                  <h2 className="section-title section-title-rail">
-                    Connected scopes
-                  </h2>
-                </div>
-                <RefreshCcw className="h-5 w-5 text-muted" />
-              </div>
-
-              <div className="installation-stack">
-                {hasInstallations ? (
-                  githubState.installations.map((installation) => (
-                    <article key={installation.id} className="installation-card">
-                      <div className="installation-head">
-                        <div>
-                          <h3 className="installation-title">
-                            {installation.accountLogin}
-                          </h3>
-                          <p className="installation-copy">
-                            {installation.repositoryCount} repos indexed locally
-                          </p>
-                        </div>
-                        <span className="dashboard-tag">
-                          #{installation.githubInstallId}
-                        </span>
-                      </div>
-
-                      <p className="installation-copy installation-copy-break">
-                        {installation.repositoryNames.length > 0
-                          ? installation.repositoryNames.join(", ")
-                          : "No repositories cached yet. Refresh repositories to pull grants."}
-                      </p>
-
-                      <form
-                        action={`/api/github/installations/${installation.githubInstallId}/sync`}
-                        method="post"
-                        className="mt-4"
-                      >
-                        <button type="submit" className="button-secondary w-full">
-                          Refresh repositories
-                        </button>
-                      </form>
-                    </article>
-                  ))
-                ) : (
-                  <article className="installation-card">
-                    <h3 className="installation-title">Nothing installed yet</h3>
-                    <p className="installation-copy">
-                      Install the GitHub App on the account you want to measure.
-                      That unlocks repository access for sync jobs.
-                    </p>
-                  </article>
-                )}
-              </div>
-            </section>
-
-            <section className="rail-panel rail-panel-quiet">
-              <div className="panel-topline">
-                <div>
-                  <p className="panel-label">Model note</p>
-                  <h2 className="section-title section-title-rail">
-                    Why the totals hold up
-                  </h2>
-                </div>
-                <ArrowUpRight className="h-4 w-4 text-accent" />
-              </div>
-
-              <p className="rail-copy">
-                Repositories, branches, and pull requests are attribution
-                layers around one canonical commit record. That prevents repo
-                sprawl from inflating totals.
-              </p>
-
-              <div className="api-rule-card">
-                <p className="panel-label">Core rule</p>
-                <p className="api-rule-copy">
-                  one commit SHA
-                  <br />
-                  equals one unit of work
-                  <br />
-                  regardless of branch count
-                </p>
-              </div>
-            </section>
-          </aside>
         </section>
       </div>
     </main>
