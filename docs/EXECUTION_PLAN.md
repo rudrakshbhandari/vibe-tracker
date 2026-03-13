@@ -4,9 +4,9 @@
 
 - Issue: [#28](https://github.com/rudrakshbhandari/vibe-tracker/issues/28)
 - Branch: `rudrakshbhandari/social-leaderboards`
-- PR: Pending
+- PR: [#29](https://github.com/rudrakshbhandari/vibe-tracker/pull/29)
 
-- Workflow: In Progress
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -18,7 +18,7 @@
 - [x] Refresh global leaderboard snapshots after activity sync completes
 - [x] Add score/helper tests and API route coverage for the new social surface
 - [x] Run lint, tests, and build
-- [ ] Push branch and open PR
+- [x] Open PR and sync the project fields/docs with the PR URL
 
 ## Issue #24 - Refine dashboard layout, remove redundant setup UI, and switch to elegant light theme
 
