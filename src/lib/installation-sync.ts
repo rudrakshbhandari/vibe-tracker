@@ -9,6 +9,7 @@ import {
   type GitHubInstallation,
 } from "@/lib/github";
 import { getStaleRepositoryIds } from "@/lib/repository-sync";
+import { refreshLeaderboardSnapshotsForAccount } from "@/lib/social";
 
 const ACTIVITY_SYNC_LOOKBACK_DAYS = 365;
 
@@ -516,6 +517,8 @@ export async function syncUserActivityForAccount(input: {
         }),
       ),
     );
+
+    await refreshLeaderboardSnapshotsForAccount();
   } catch (error) {
     await Promise.all(
       syncJobs.map((syncJob) =>
