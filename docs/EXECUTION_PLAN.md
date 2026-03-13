@@ -1,5 +1,22 @@
 # Execution Plan
 
+## Issue #22 - Elevate homepage UI and reduce visual congestion
+
+- Issue: [#22](https://github.com/rudrakshbhandari/vibe-tracker/issues/22)
+- Branch: `rudrakshbhandari/elegant-homepage-refresh`
+- PR: [#23](https://github.com/rudrakshbhandari/vibe-tracker/pull/23)
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Capture the current homepage in Playwright at desktop and mobile sizes
+- [x] Identify the main congestion problems and visual hierarchy issues
+- [x] Redesign the homepage structure for a cleaner disconnected and connected experience
+- [x] Run lint, tests, build, and a final Playwright verification pass
+- [x] Push branch and open PR
+
 ## Issue #20 - Fix unreadable activity chart and align monthly buckets
 
 - Issue: [#20](https://github.com/rudrakshbhandari/vibe-tracker/issues/20)
