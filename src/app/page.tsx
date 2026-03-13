@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Github, LineChart, RefreshCcw, TimerReset } from "lucide-react";
+import { ArrowRight, CheckCircle2, Github, RefreshCcw, TimerReset } from "lucide-react";
 
 import { ActivitySyncRefresh } from "@/components/activity-sync-refresh";
 import { formatNumber } from "@/lib/dashboard";
@@ -28,7 +28,7 @@ const GITHUB_STATUS_COPY: Record<string, { label: string; detail?: string }> = {
   "installation-connected": {
     label: "Installation connected",
     detail:
-      "Your repository access is available now. Run an activity sync to load your coding totals.",
+      "Repository access is available now. Run an activity sync to load your coding totals.",
   },
   "invalid-installation": {
     label: "Installation could not be resolved",
@@ -82,17 +82,27 @@ const GITHUB_STATUS_COPY: Record<string, { label: string; detail?: string }> = {
 const CONNECT_STEPS = [
   {
     title: "Connect your GitHub account",
-    detail: "Start the OAuth flow and store the local session used for metrics and sync jobs.",
+    detail: "Sign in once so the dashboard knows which commits belong to you.",
   },
   {
-    title: "Install the GitHub App",
-    detail: "Grant access to the user or organization whose repositories should count toward the dashboard.",
+    title: "Grant repository access",
+    detail: "Install the GitHub App on the user or organization you want included.",
   },
   {
-    title: "Run activity sync",
-    detail: "Pull commit metadata into the local database so the dashboard can calculate real totals.",
+    title: "Run the first sync",
+    detail: "Pull commit metadata into the local database so the totals become real.",
   },
 ];
+
+type TimelinePoint = {
+  label: string;
+  additions: number;
+  deletions: number;
+};
+
+const CHART_WIDTH = 960;
+const CHART_HEIGHT = 360;
+const CHART_PADDING = { top: 20, right: 16, bottom: 40, left: 62 };
 
 function getStatusTone(status?: string) {
   if (!status) {
@@ -129,16 +139,6 @@ function ConnectionAction({
   );
 }
 
-type TimelinePoint = {
-  label: string;
-  additions: number;
-  deletions: number;
-};
-
-const CHART_WIDTH = 960;
-const CHART_HEIGHT = 320;
-const CHART_PADDING = { top: 18, right: 18, bottom: 34, left: 58 };
-
 function roundTick(value: number) {
   if (value <= 0) {
     return 0;
@@ -153,74 +153,6 @@ function getTickValues(maxValue: number) {
   return [roundedMax, Math.round(roundedMax * 0.66), Math.round(roundedMax * 0.33), 0];
 }
 
-function buildChartGeometry(timeline: TimelinePoint[]) {
-  const innerWidth = CHART_WIDTH - CHART_PADDING.left - CHART_PADDING.right;
-  const innerHeight = CHART_HEIGHT - CHART_PADDING.top - CHART_PADDING.bottom;
-  const maxValue = Math.max(
-    1,
-    ...timeline.flatMap((point) => [point.additions, point.deletions]),
-  );
-
-  const toY = (value: number) => {
-    if (value <= 0) {
-      return CHART_PADDING.top + innerHeight;
-    }
-
-    const normalized = Math.sqrt(value / maxValue);
-    return CHART_PADDING.top + innerHeight - normalized * innerHeight;
-  };
-
-  const getX = (index: number) =>
-    CHART_PADDING.left +
-    (timeline.length === 1 ? innerWidth / 2 : (index / (timeline.length - 1)) * innerWidth);
-
-  const additionsPoints = timeline.map((point, index) => ({
-    x: getX(index),
-    y: toY(point.additions),
-    value: point.additions,
-    label: point.label,
-  }));
-  const deletionsPoints = timeline.map((point, index) => ({
-    x: getX(index),
-    y: toY(point.deletions),
-    value: point.deletions,
-    label: point.label,
-  }));
-
-  const linePath = (points: { x: number; y: number }[]) =>
-    points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
-
-  const areaPath = (points: { x: number; y: number }[]) => {
-    const baseline = CHART_PADDING.top + innerHeight;
-    const line = linePath(points);
-    const lastPoint = points.at(-1);
-    const firstPoint = points[0];
-
-    if (!lastPoint || !firstPoint) {
-      return "";
-    }
-
-    return `${line} L ${lastPoint.x} ${baseline} L ${firstPoint.x} ${baseline} Z`;
-  };
-
-  return {
-    ticks: getTickValues(maxValue),
-    maxValue,
-    maxAdditions: Math.max(...timeline.map((point) => point.additions), 0),
-    maxDeletions: Math.max(...timeline.map((point) => point.deletions), 0),
-    additionsPoints,
-    deletionsPoints,
-    additionsLine: linePath(additionsPoints),
-    deletionsLine: linePath(deletionsPoints),
-    additionsArea: areaPath(additionsPoints),
-    deletionsArea: areaPath(deletionsPoints),
-    baselineY: CHART_PADDING.top + innerHeight,
-    innerHeight,
-    innerWidth,
-    toY,
-  };
-}
-
 function shouldShowXAxisLabel(index: number, total: number, view: AnalyticsView) {
   if (index === 0 || index === total - 1) {
     return true;
@@ -231,6 +163,59 @@ function shouldShowXAxisLabel(index: number, total: number, view: AnalyticsView)
   }
 
   return index % 2 === 0;
+}
+
+function buildBarChartGeometry(timeline: TimelinePoint[]) {
+  const innerWidth = CHART_WIDTH - CHART_PADDING.left - CHART_PADDING.right;
+  const innerHeight = CHART_HEIGHT - CHART_PADDING.top - CHART_PADDING.bottom;
+  const maxValue = Math.max(
+    1,
+    ...timeline.flatMap((point) => [point.additions, point.deletions]),
+  );
+  const groupWidth = innerWidth / Math.max(timeline.length, 1);
+  const barWidth = Math.min(22, Math.max(10, groupWidth * 0.28));
+  const barGap = Math.max(4, groupWidth * 0.08);
+  const baselineY = CHART_PADDING.top + innerHeight;
+
+  const toHeight = (value: number) => {
+    if (value <= 0) {
+      return 0;
+    }
+
+    return Math.max(6, (value / maxValue) * innerHeight);
+  };
+
+  const bars = timeline.map((point, index) => {
+    const centerX = CHART_PADDING.left + index * groupWidth + groupWidth / 2;
+    const additionsHeight = toHeight(point.additions);
+    const deletionsHeight = toHeight(point.deletions);
+
+    return {
+      label: point.label,
+      centerX,
+      additions: {
+        x: centerX - barWidth - barGap / 2,
+        y: baselineY - additionsHeight,
+        height: additionsHeight,
+      },
+      deletions: {
+        x: centerX + barGap / 2,
+        y: baselineY - deletionsHeight,
+        height: deletionsHeight,
+      },
+    };
+  });
+
+  return {
+    ticks: getTickValues(maxValue),
+    maxAdditions: Math.max(...timeline.map((point) => point.additions), 0),
+    maxDeletions: Math.max(...timeline.map((point) => point.deletions), 0),
+    bars,
+    baselineY,
+    barWidth,
+    toY: (value: number) =>
+      baselineY - (value <= 0 ? 0 : (value / maxValue) * innerHeight),
+  };
 }
 
 export default async function Home({ searchParams }: HomePageProps) {
@@ -246,11 +231,8 @@ export default async function Home({ searchParams }: HomePageProps) {
       ? (params.mode as MetricMode)
       : "authored";
   const githubState = await getGithubConnectionState();
-  const dashboard = githubState.connected
-    ? await getLiveMetrics(view, mode)
-    : null;
-  const githubStatus =
-    typeof params.github === "string" ? params.github : undefined;
+  const dashboard = githubState.connected ? await getLiveMetrics(view, mode) : null;
+  const githubStatus = typeof params.github === "string" ? params.github : undefined;
   const githubStatusCopy = githubStatus
     ? GITHUB_STATUS_COPY[githubStatus] ?? { label: githubStatus }
     : null;
@@ -269,129 +251,90 @@ export default async function Home({ searchParams }: HomePageProps) {
       (repository) => repository.additions + repository.deletions,
     ) ?? [1]),
   );
-  const chartGeometry = dashboard ? buildChartGeometry(dashboard.timeline) : null;
+  const chartGeometry = dashboard ? buildBarChartGeometry(dashboard.timeline) : null;
+  const connectionSummary = githubState.activitySyncRunning
+    ? "Running now"
+    : githubState.activitySync
+      ? `${githubState.activitySync.status} · ${githubState.activitySync.updatedAt}`
+      : "Ready to sync";
+  const accessibleRepositoryCount = githubState.installations.reduce(
+    (count, installation) => count + installation.repositoryCount,
+    0,
+  );
+  const compactFilters = dashboard
+    ? [
+        dashboard.filters[0],
+        mode === "authored" ? "Authored commits" : "Merged to default branch",
+        dashboard.filters.at(-1),
+      ].filter(Boolean)
+    : [];
 
   return (
-    <main className="aurora-shell min-h-screen">
+    <main className="page-shell min-h-screen">
       <ActivitySyncRefresh active={syncRefreshActive} />
-      <div className="page-grid" />
-      <div className="page-noise" />
+      <div className="page-wash" />
 
-      <div className="relative mx-auto flex w-full max-w-[1500px] flex-col gap-5 px-4 py-4 sm:px-6 sm:py-6 lg:px-10 lg:py-8">
-        <section className="hero-panel">
-          <div className="flex w-full flex-col gap-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div className="space-y-3">
-                <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-muted">
-                  <span className="rounded-full border border-white/12 px-3 py-1">
-                    Vibe Tracker
-                  </span>
-                  <span className="rounded-full border border-white/12 px-3 py-1">
-                    Core dashboard
-                  </span>
-                  <span className="rounded-full border border-white/12 px-3 py-1">
-                    {githubState.connected ? "GitHub connected" : "Not connected"}
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  <h1 className="max-w-3xl text-2xl font-semibold tracking-[-0.05em] text-foreground sm:text-4xl">
-                    Read the signal, not the chrome.
-                  </h1>
-                  <p className="max-w-2xl text-sm leading-6 text-muted sm:text-base">
-                    Identity, key output, trend, repositories, and sync health.
-                    The rest is gone.
-                  </p>
-                </div>
+      <div className="relative mx-auto flex w-full max-w-[1320px] flex-col gap-5 px-4 py-5 sm:px-6 sm:py-8 lg:px-10 lg:py-10">
+        <section className="top-panel">
+          <div className="top-panel-copy">
+            <span className="eyebrow">Vibe Tracker</span>
+            <div className="space-y-3">
+              <h1 className="page-title">Quiet, readable GitHub activity.</h1>
+              <p className="page-description">
+                Keep the live totals, recent trend, and repository breakdown.
+                Drop the extra chrome.
+              </p>
+            </div>
+          </div>
+
+          <div className="top-panel-meta">
+            <div className="meta-stack">
+              <div className="meta-row">
+                <span className="hero-meta-label">Connection</span>
+                <span className="hero-meta-value">
+                  {githubState.connected ? "GitHub connected" : "Not connected"}
+                </span>
               </div>
-
-              <div className="flex flex-wrap gap-2 lg:max-w-sm lg:justify-end">
-                {githubState.primaryAction ? (
-                  <ConnectionAction
-                    href={githubState.primaryAction.href}
-                    label={githubState.primaryAction.label}
-                  />
-                ) : null}
-                {dashboard ? (
-                  <Link
-                    href={`/api/metrics?view=${view}&mode=${mode}`}
-                    className="button-secondary w-full sm:w-auto"
-                  >
-                    Metrics JSON
-                    <LineChart className="h-4 w-4" />
-                  </Link>
-                ) : null}
-                {githubState.connected ? (
-                  <form action="/api/github/activity-sync" method="post">
-                    <button
-                      type="submit"
-                      className="button-secondary w-full sm:w-auto"
-                      disabled={githubState.activitySyncRunning}
-                    >
-                      {githubState.activitySyncRunning ? "Syncing" : "Sync now"}
-                    </button>
-                  </form>
-                ) : null}
+              <div className="meta-row">
+                <span className="hero-meta-label">Latest sync</span>
+                <span className="hero-meta-value">{connectionSummary}</span>
+              </div>
+              <div className="meta-row">
+                <span className="hero-meta-label">Connected repositories</span>
+                <span className="hero-meta-value">
+                  {formatNumber(accessibleRepositoryCount)}
+                </span>
               </div>
             </div>
 
-            <div className="grid gap-3 lg:grid-cols-[1.3fr_1fr_1fr_1fr]">
-              <section className="story-panel !p-4">
-                <p className="panel-label">Identity</p>
-                <div className="mt-2 flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-2xl font-semibold tracking-[-0.05em] text-foreground">
-                      {dashboard?.profile.login ?? githubState.viewer?.login ?? "Connect GitHub"}
-                    </p>
-                    <p className="mt-1 text-sm text-muted">
-                      {dashboard
-                        ? "Live GitHub metrics in the current view."
-                        : githubState.description}
-                    </p>
-                  </div>
-                  {githubState.connected ? (
-                    <CheckCircle2 className="mt-1 h-5 w-5 text-lime-300" />
-                  ) : (
-                    <Github className="mt-1 h-5 w-5 text-muted" />
-                  )}
-                </div>
-              </section>
+            <p className="hero-note">
+              Repository permissions are cached locally. Activity sync refreshes
+              the metrics from commit history when you need a fresh snapshot.
+            </p>
 
-              <section className="story-panel !p-4">
-                <p className="panel-label">Connection</p>
-                <p className="mt-2 text-lg font-semibold text-foreground">{githubState.title}</p>
-                <p className="mt-1 text-sm text-muted">
-                  {githubState.viewer
-                    ? `Session ${githubState.viewer.sessionExpiryLabel}`
-                    : "Sign in to unlock live metrics."}
-                </p>
-              </section>
+            <div className="hero-actions">
+              {!githubState.connected && githubState.primaryAction ? (
+                <ConnectionAction
+                  href={githubState.primaryAction.href}
+                  label={githubState.primaryAction.label}
+                />
+              ) : null}
 
-              <section className="story-panel !p-4">
-                <p className="panel-label">Sync</p>
-                <p className="mt-2 text-lg font-semibold text-foreground">
-                  {githubState.activitySyncRunning
-                    ? "Running"
-                    : githubState.activitySync
-                      ? githubState.activitySync.status
-                      : "Idle"}
-                </p>
-                <p className="mt-1 text-sm text-muted">
-                  {githubState.activitySync
-                    ? githubState.activitySync.updatedAt
-                    : "No sync completed yet."}
-                </p>
-              </section>
+              {githubState.connected && !hasInstallations ? (
+                <ConnectionAction href="/api/github/install" label="Install GitHub App" />
+              ) : null}
 
-              <section className="story-panel !p-4">
-                <p className="panel-label">Installations</p>
-                <p className="mt-2 text-lg font-semibold text-foreground">
-                  {githubState.installations.length} scope
-                  {githubState.installations.length === 1 ? "" : "s"}
-                </p>
-                <p className="mt-1 text-sm text-muted">
-                  {hasInstallations ? "Repository access cached locally." : "No scopes installed yet."}
-                </p>
-              </section>
+              {githubState.connected && hasInstallations ? (
+                <form action="/api/github/activity-sync" method="post">
+                  <button
+                    type="submit"
+                    className="button-secondary w-full sm:w-auto"
+                    disabled={githubState.activitySyncRunning}
+                  >
+                    {githubState.activitySyncRunning ? "Syncing" : "Run sync"}
+                  </button>
+                </form>
+              ) : null}
             </div>
           </div>
         </section>
@@ -420,19 +363,17 @@ export default async function Home({ searchParams }: HomePageProps) {
               <div className="dashboard-head">
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center gap-3">
-                    <span className="eyebrow eyebrow-subtle">
-                      {dashboard.profile.source === "live"
-                        ? "Live dashboard"
-                        : "Sample dashboard"}
+                    <span className="eyebrow eyebrow-subtle">{dashboard.chartTitle}</span>
+                    <span className="dashboard-pill">
+                      {dashboard.profile.source === "live" ? "Live data" : "Sample data"}
                     </span>
-                    <span className="dashboard-pill">{dashboard.chartTitle}</span>
                   </div>
                   <div className="space-y-3">
                     <h2 className="dashboard-title">{dashboard.profile.login}</h2>
                     <p className="max-w-2xl text-sm leading-7 text-muted sm:text-base">
                       {dashboard.profile.source === "live"
-                        ? "These metrics are aggregated from synced GitHub commits in the local database."
-                        : "Local demo data that mirrors the model we will populate from the GitHub API during sync jobs."}
+                        ? "These numbers come from synced GitHub commits stored in the local database."
+                        : "This is sample data that mirrors the shape of the live metrics once GitHub activity has been synced."}
                     </p>
                   </div>
                 </div>
@@ -443,11 +384,8 @@ export default async function Home({ searchParams }: HomePageProps) {
                       <Link
                         key={entry}
                         href={`/?view=${entry}&mode=${mode}`}
-                        className={
-                          entry === view
-                            ? "toggle-pill toggle-pill-active"
-                            : "toggle-pill"
-                        }
+                        scroll={false}
+                        className={entry === view ? "toggle-pill toggle-pill-active" : "toggle-pill"}
                       >
                         {entry[0]?.toUpperCase()}
                         {entry.slice(1)}
@@ -460,11 +398,8 @@ export default async function Home({ searchParams }: HomePageProps) {
                       <Link
                         key={entry}
                         href={`/?view=${view}&mode=${entry}`}
-                        className={
-                          entry === mode
-                            ? "toggle-pill toggle-pill-active"
-                            : "toggle-pill"
-                        }
+                        scroll={false}
+                        className={entry === mode ? "toggle-pill toggle-pill-active" : "toggle-pill"}
                       >
                         {entry === "authored" ? "Authored" : "Merged"}
                       </Link>
@@ -472,7 +407,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                   </div>
 
                   <div className="filter-row">
-                    {dashboard.filters.map((filter) => (
+                    {compactFilters.map((filter) => (
                       <span key={filter} className="filter-chip">
                         {filter}
                       </span>
@@ -481,12 +416,9 @@ export default async function Home({ searchParams }: HomePageProps) {
                 </div>
               </div>
 
-              <div className="mt-6 grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
-                {dashboard.summary.map((item, index) => (
-                  <article
-                    key={item.label}
-                    className={index === 0 ? "metric-card metric-card-featured" : "metric-card"}
-                  >
+              <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {dashboard.summary.map((item) => (
+                  <article key={item.label} className="metric-card">
                     <p className="metric-label">{item.label}</p>
                     <p className="metric-value">{item.value}</p>
                     <p className="metric-detail">{item.detail}</p>
@@ -498,57 +430,44 @@ export default async function Home({ searchParams }: HomePageProps) {
             <section className="story-panel">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="panel-label text-accent">{dashboard.chartTitle}</p>
-                  <h3 className="panel-heading">Activity trend</h3>
+                  <p className="panel-label">{dashboard.chartTitle}</p>
+                  <h3 className="panel-heading">Activity by time bucket</h3>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-muted">
-                    <span className="h-2 w-2 rounded-full bg-cyan-300" />
+                  <span className="legend-pill">
+                    <span className="legend-swatch legend-swatch-additions" />
                     Additions
                   </span>
-                  <span className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-muted">
-                    <span className="h-2 w-2 rounded-full bg-lime-300" />
+                  <span className="legend-pill">
+                    <span className="legend-swatch legend-swatch-deletions" />
                     Deletions
                   </span>
-                  <span className="dashboard-pill">Author date lens</span>
                 </div>
               </div>
 
               {chartGeometry ? (
-                <div className="mt-6 space-y-4">
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <article className="rounded-[1rem] border border-white/8 bg-white/[0.03] px-4 py-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted">
-                        Peak additions
-                      </p>
-                      <p className="mt-2 text-xl font-semibold text-foreground">
+                <div className="mt-6 space-y-5">
+                  <div className="chart-stat-row">
+                    <article className="chart-stat-card">
+                      <p className="panel-label">Peak additions</p>
+                      <p className="chart-stat-value">
                         +{formatNumber(chartGeometry.maxAdditions)}
                       </p>
                     </article>
-                    <article className="rounded-[1rem] border border-white/8 bg-white/[0.03] px-4 py-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted">
-                        Highest deletion month
-                      </p>
-                      <p className="mt-2 text-xl font-semibold text-foreground">
+                    <article className="chart-stat-card">
+                      <p className="panel-label">Peak deletions</p>
+                      <p className="chart-stat-value">
                         -{formatNumber(chartGeometry.maxDeletions)}
-                      </p>
-                    </article>
-                    <article className="rounded-[1rem] border border-white/8 bg-white/[0.03] px-4 py-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted">
-                        Scaling
-                      </p>
-                      <p className="mt-2 text-sm leading-6 text-muted">
-                        Sqrt-scaled to keep smaller months visible instead of flattening them.
                       </p>
                     </article>
                   </div>
 
-                  <div className="overflow-hidden rounded-[1.5rem] border border-white/8 bg-black/20 p-3 sm:p-5">
+                  <div className="bar-chart-shell">
                     <svg
                       viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
-                      className="h-[22rem] w-full"
+                      className="h-[24rem] w-full"
                       role="img"
-                      aria-label={`${dashboard.chartTitle} additions and deletions trend`}
+                      aria-label={`${dashboard.chartTitle} additions and deletions bar chart`}
                     >
                       {chartGeometry.ticks.map((tick) => {
                         const y = chartGeometry.toY(tick);
@@ -560,14 +479,14 @@ export default async function Home({ searchParams }: HomePageProps) {
                               x2={CHART_WIDTH - CHART_PADDING.right}
                               y1={y}
                               y2={y}
-                              stroke="rgba(255,255,255,0.08)"
+                              stroke="rgba(89, 98, 112, 0.16)"
                               strokeDasharray="4 10"
                             />
                             <text
                               x={CHART_PADDING.left - 12}
                               y={y + 4}
                               textAnchor="end"
-                              fill="rgba(255,255,255,0.58)"
+                              fill="rgba(91, 99, 111, 0.85)"
                               fontSize="12"
                             >
                               {tick === 0 ? "0" : formatNumber(tick)}
@@ -576,68 +495,42 @@ export default async function Home({ searchParams }: HomePageProps) {
                         );
                       })}
 
-                      <path d={chartGeometry.deletionsArea} fill="rgba(163, 230, 53, 0.08)" />
-                      <path d={chartGeometry.additionsArea} fill="rgba(103, 232, 249, 0.08)" />
-                      <path
-                        d={chartGeometry.deletionsLine}
-                        fill="none"
-                        stroke="rgba(163, 230, 53, 0.95)"
-                        strokeWidth="3"
-                        strokeLinejoin="round"
-                        strokeLinecap="round"
-                      />
-                      <path
-                        d={chartGeometry.additionsLine}
-                        fill="none"
-                        stroke="rgba(103, 232, 249, 0.95)"
-                        strokeWidth="3"
-                        strokeLinejoin="round"
-                        strokeLinecap="round"
-                      />
-
-                      {chartGeometry.additionsPoints.map((point, index) => (
-                        <g key={point.label}>
-                          <circle cx={point.x} cy={point.y} r="4" fill="rgba(103, 232, 249, 1)" />
-                          <circle
-                            cx={chartGeometry.deletionsPoints[index]?.x}
-                            cy={chartGeometry.deletionsPoints[index]?.y}
-                            r="4"
-                            fill="rgba(163, 230, 53, 1)"
+                      {chartGeometry.bars.map((bar, index) => (
+                        <g key={bar.label}>
+                          <rect
+                            x={bar.additions.x}
+                            y={bar.additions.y}
+                            width={chartGeometry.barWidth}
+                            height={bar.additions.height}
+                            rx="8"
+                            fill="#6e84ad"
+                          />
+                          <rect
+                            x={bar.deletions.x}
+                            y={bar.deletions.y}
+                            width={chartGeometry.barWidth}
+                            height={bar.deletions.height}
+                            rx="8"
+                            fill="#d4a06a"
                           />
                           {shouldShowXAxisLabel(index, dashboard.timeline.length, view) ? (
                             <text
-                              x={point.x}
-                              y={CHART_HEIGHT - 8}
+                              x={bar.centerX}
+                              y={CHART_HEIGHT - 10}
                               textAnchor="middle"
-                              fill="rgba(255,255,255,0.65)"
+                              fill="rgba(91, 99, 111, 0.85)"
                               fontSize="12"
                             >
-                              {point.label}
+                              {bar.label}
                             </text>
                           ) : null}
                         </g>
                       ))}
                     </svg>
-
-                    <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                      {dashboard.timeline.map((point, index) =>
-                        shouldShowXAxisLabel(index, dashboard.timeline.length, view) ? (
-                          <article
-                            key={point.label}
-                            className="rounded-[1rem] border border-white/6 bg-white/[0.03] px-3 py-2"
-                          >
-                            <p className="text-xs text-muted">{point.label}</p>
-                            <p className="mt-1 font-mono text-sm text-foreground/85">
-                              +{formatNumber(point.additions)} / -{formatNumber(point.deletions)}
-                            </p>
-                          </article>
-                        ) : null,
-                      )}
-                    </div>
                   </div>
                 </div>
               ) : (
-                <div className="mt-6 rounded-[1.25rem] border border-white/8 bg-black/20 px-4 py-6 text-sm text-muted">
+                <div className="mt-6 rounded-[1.4rem] border border-line bg-white/70 px-4 py-6 text-sm text-muted">
                   No timeline data available yet.
                 </div>
               )}
@@ -659,10 +552,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                   {dashboard.repositories.length > 0 ? (
                     dashboard.repositories.map((repo, index) => {
                       const totalActivity = repo.additions + repo.deletions;
-                      const width = `${Math.max(
-                        12,
-                        (totalActivity / repoActivityMax) * 100,
-                      )}%`;
+                      const width = `${Math.max(12, (totalActivity / repoActivityMax) * 100)}%`;
 
                       return (
                         <article key={repo.name} className="repo-card">
@@ -672,13 +562,11 @@ export default async function Home({ searchParams }: HomePageProps) {
                                 <span className="repo-rank">
                                   {String(index + 1).padStart(2, "0")}
                                 </span>
-                                <h3 className="font-semibold text-foreground">
+                                <h3 className="text-lg font-semibold text-foreground">
                                   {repo.name}
                                 </h3>
                               </div>
-                              <p className="text-sm leading-6 text-muted">
-                                {repo.detail}
-                              </p>
+                              <p className="text-sm leading-6 text-muted">{repo.detail}</p>
                             </div>
                             <span className="repo-visibility">{repo.visibility}</span>
                           </div>
@@ -698,110 +586,96 @@ export default async function Home({ searchParams }: HomePageProps) {
                     })
                   ) : (
                     <article className="repo-card">
-                      <h3 className="font-semibold text-foreground">
+                      <h3 className="text-lg font-semibold text-foreground">
                         No synced repositories yet
                       </h3>
                       <p className="mt-2 text-sm leading-6 text-muted">
-                        Install the GitHub App on a user or organization,
-                        refresh repositories, then run your first activity sync.
+                        Install the GitHub App, then run the first sync to populate repository metrics.
                       </p>
                     </article>
                   )}
                 </div>
               </section>
 
-              <aside className="flex flex-col gap-4">
-                <section className="story-panel !p-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="panel-label">Account</p>
-                      <h3 className="panel-heading !text-[1.35rem]">
-                        {githubState.viewer?.login ?? "Not signed in"}
-                      </h3>
-                    </div>
-                    {githubState.connected ? (
-                      <CheckCircle2 className="h-5 w-5 text-lime-300" />
-                    ) : (
-                      <Github className="h-5 w-5 text-muted" />
-                    )}
+              <aside className="sidebar-panel">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="panel-label">Connected scope</p>
+                    <h3 className="panel-heading">
+                      {hasInstallations
+                        ? `${githubState.installations.length} GitHub App installation${
+                            githubState.installations.length === 1 ? "" : "s"
+                          }`
+                        : "No installation yet"}
+                    </h3>
                   </div>
-                  <p className="mt-3 text-sm leading-6 text-muted">
-                    {githubState.activitySync
-                      ? `Latest sync: ${githubState.activitySync.status} at ${githubState.activitySync.updatedAt}`
-                      : "No completed sync recorded yet."}
-                  </p>
-                </section>
+                  {githubState.connected ? (
+                    <CheckCircle2 className="mt-1 h-5 w-5 text-[var(--success)]" />
+                  ) : (
+                    <Github className="mt-1 h-5 w-5 text-muted" />
+                  )}
+                </div>
 
-                <section className="story-panel !p-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="panel-label">Installations</p>
-                      <h3 className="panel-heading !text-[1.35rem]">
-                        {githubState.installations.length} connected scope
-                        {githubState.installations.length === 1 ? "" : "s"}
-                      </h3>
-                    </div>
-                    <RefreshCcw className="h-4 w-4 text-muted" />
-                  </div>
+                <p className="scope-summary">
+                  {hasInstallations
+                    ? `${formatNumber(accessibleRepositoryCount)} repositories are available in the current scope.`
+                    : "Install the GitHub App on the account you want to measure to unlock repository-level metrics."}
+                </p>
 
-                  <div className="mt-4 space-y-3">
-                    {hasInstallations ? (
-                      githubState.installations.map((installation) => (
-                        <article key={installation.id} className="installation-card">
-                          <div className="flex items-start justify-between gap-4">
-                            <div>
-                              <h3 className="text-lg font-semibold text-foreground">
-                                {installation.accountLogin}
-                              </h3>
-                              <p className="mt-1 text-sm text-muted">
-                                {installation.repositoryCount} repos indexed locally
-                              </p>
-                            </div>
-                            <span className="dashboard-pill">#{installation.githubInstallId}</span>
+                {hasInstallations ? (
+                  <div className="scope-list">
+                    {githubState.installations.map((installation, index) => (
+                      <article key={installation.id} className="scope-item">
+                        <div className="scope-item-head">
+                          <div>
+                            <p className="scope-item-title">
+                              {githubState.installations.length === 1
+                                ? "Primary scope"
+                                : installation.accountLogin}
+                            </p>
+                            <p className="scope-item-meta">
+                              {installation.repositoryCount} cached repos
+                            </p>
                           </div>
-                          <p className="mt-3 break-words text-sm leading-6 text-muted">
-                            {installation.repositoryNames.length > 0
-                              ? installation.repositoryNames.join(", ")
-                              : "No repositories cached yet. Refresh repositories to pull grants."}
-                          </p>
                           <form
                             action={`/api/github/installations/${installation.githubInstallId}/sync`}
                             method="post"
-                            className="mt-4"
                           >
-                            <button type="submit" className="button-secondary w-full">
-                              Refresh repositories
+                            <button type="submit" className="button-secondary button-compact">
+                              <RefreshCcw className="h-4 w-4" />
+                              Refresh
                             </button>
                           </form>
-                        </article>
-                      ))
-                    ) : (
-                      <article className="installation-card">
-                        <h3 className="text-lg font-semibold text-foreground">
-                          Nothing installed yet
-                        </h3>
-                        <p className="mt-2 text-sm leading-6 text-muted">
-                          Install the GitHub App on the account you want to measure to
-                          unlock repository-level metrics.
+                        </div>
+                        <p className="scope-copy">
+                          {installation.repositoryNames.length > 0
+                            ? installation.repositoryNames.join(", ")
+                            : index === 0
+                              ? "Repository names will appear here after the next refresh."
+                              : "No repositories cached yet for this scope."}
                         </p>
                       </article>
-                    )}
+                    ))}
                   </div>
-                </section>
+                ) : (
+                  <div className="mt-5">
+                    <ConnectionAction href="/api/github/install" label="Install GitHub App" />
+                  </div>
+                )}
               </aside>
             </section>
           </>
         ) : (
           <section id="dashboard" className="dashboard-shell">
-            <div className="flex h-full flex-col gap-8">
+            <div className="empty-shell">
               <div className="space-y-4">
                 <span className="eyebrow eyebrow-subtle">Not connected</span>
                 <h2 className="dashboard-title max-w-3xl">
-                  Connect GitHub before expecting any dashboard signal.
+                  Connect GitHub before expecting any real signal.
                 </h2>
                 <p className="max-w-2xl text-sm leading-7 text-muted sm:text-base">
-                  This product does not simulate activity for you. Until GitHub
-                  is connected and synced, there is nothing real to measure.
+                  This dashboard only shows synced GitHub activity. Until the account is connected
+                  and the first sync completes, there is nothing meaningful to read.
                 </p>
               </div>
 
@@ -809,22 +683,16 @@ export default async function Home({ searchParams }: HomePageProps) {
                 {CONNECT_STEPS.map((step, index) => (
                   <article key={step.title} className="onboarding-card">
                     <p className="panel-label">Step {index + 1}</p>
-                    <h3 className="mt-3 text-xl font-semibold text-foreground">
-                      {step.title}
-                    </h3>
-                    <p className="mt-3 text-sm leading-6 text-muted">
-                      {step.detail}
-                    </p>
+                    <h3 className="mt-3 text-2xl font-semibold text-foreground">{step.title}</h3>
+                    <p className="mt-3 text-sm leading-6 text-muted">{step.detail}</p>
                   </article>
                 ))}
               </div>
 
-              <section className="story-panel max-w-3xl">
+              <section className="story-panel">
                 <p className="panel-label">Current state</p>
                 <h3 className="panel-heading">{githubState.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-muted">
-                  {githubState.description}
-                </p>
+                <p className="mt-3 text-sm leading-6 text-muted">{githubState.description}</p>
                 {githubState.primaryAction ? (
                   <div className="mt-5">
                     <ConnectionAction
