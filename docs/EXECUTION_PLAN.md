@@ -4,8 +4,8 @@
 
 - Issue: [#20](https://github.com/rudrakshbhandari/vibe-tracker/issues/20)
 - Branch: `codex/fix-chart-readability`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#21](https://github.com/rudrakshbhandari/vibe-tracker/pull/21)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -15,7 +15,7 @@
 - [x] Keep additions and deletions visible with labels and explicit scaling
 - [x] Align monthly analytics buckets to real calendar month boundaries
 - [x] Run lint, tests, and build
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
 
 ## Issue #18 - Simplify homepage to focus on core dashboard metrics
 
