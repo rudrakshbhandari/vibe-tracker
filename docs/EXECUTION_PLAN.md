@@ -1,5 +1,25 @@
 # Execution Plan
 
+## Issue #28 - Add social profiles, friends, and leaderboards
+
+- Issue: [#28](https://github.com/rudrakshbhandari/vibe-tracker/issues/28)
+- Branch: `rudrakshbhandari/social-leaderboards`
+- PR: Pending
+
+- Workflow: In Progress
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Extend the Prisma schema for social visibility, friend links, invite tokens, and leaderboard snapshots
+- [x] Add social APIs for me, profile settings, friends, invites, and leaderboard queries
+- [x] Add a `/social` product surface plus public profile and invite pages
+- [x] Refresh global leaderboard snapshots after activity sync completes
+- [x] Add score/helper tests and API route coverage for the new social surface
+- [x] Run lint, tests, and build
+- [ ] Push branch and open PR
+
 ## Issue #24 - Refine dashboard layout, remove redundant setup UI, and switch to elegant light theme
 
 - Issue: [#24](https://github.com/rudrakshbhandari/vibe-tracker/issues/24)
