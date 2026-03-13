@@ -4,9 +4,9 @@
 
 - Issue: [#30](https://github.com/rudrakshbhandari/vibe-tracker/issues/30)
 - Branch: `rudrakshbhandari/worktree-bootstrap`
-- PR: Pending
+- PR: [#31](https://github.com/rudrakshbhandari/vibe-tracker/pull/31)
 
-- Workflow: In Progress
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -17,7 +17,7 @@
 - [x] Add a shared local Postgres compose service for worktree-safe local database access
 - [x] Document the worktree/bootstrap flow in README and docs
 - [x] Run lint, tests, build, and bootstrap verification
-- [ ] Push branch and open PR
+- [x] Push branch, open PR, and sync project fields/docs
 
 ## Issue #24 - Refine dashboard layout, remove redundant setup UI, and switch to elegant light theme
 
