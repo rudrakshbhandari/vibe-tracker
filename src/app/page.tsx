@@ -129,6 +129,110 @@ function ConnectionAction({
   );
 }
 
+type TimelinePoint = {
+  label: string;
+  additions: number;
+  deletions: number;
+};
+
+const CHART_WIDTH = 960;
+const CHART_HEIGHT = 320;
+const CHART_PADDING = { top: 18, right: 18, bottom: 34, left: 58 };
+
+function roundTick(value: number) {
+  if (value <= 0) {
+    return 0;
+  }
+
+  const magnitude = 10 ** Math.max(0, Math.floor(Math.log10(value)) - 1);
+  return Math.ceil(value / magnitude) * magnitude;
+}
+
+function getTickValues(maxValue: number) {
+  const roundedMax = roundTick(maxValue);
+  return [roundedMax, Math.round(roundedMax * 0.66), Math.round(roundedMax * 0.33), 0];
+}
+
+function buildChartGeometry(timeline: TimelinePoint[]) {
+  const innerWidth = CHART_WIDTH - CHART_PADDING.left - CHART_PADDING.right;
+  const innerHeight = CHART_HEIGHT - CHART_PADDING.top - CHART_PADDING.bottom;
+  const maxValue = Math.max(
+    1,
+    ...timeline.flatMap((point) => [point.additions, point.deletions]),
+  );
+
+  const toY = (value: number) => {
+    if (value <= 0) {
+      return CHART_PADDING.top + innerHeight;
+    }
+
+    const normalized = Math.sqrt(value / maxValue);
+    return CHART_PADDING.top + innerHeight - normalized * innerHeight;
+  };
+
+  const getX = (index: number) =>
+    CHART_PADDING.left +
+    (timeline.length === 1 ? innerWidth / 2 : (index / (timeline.length - 1)) * innerWidth);
+
+  const additionsPoints = timeline.map((point, index) => ({
+    x: getX(index),
+    y: toY(point.additions),
+    value: point.additions,
+    label: point.label,
+  }));
+  const deletionsPoints = timeline.map((point, index) => ({
+    x: getX(index),
+    y: toY(point.deletions),
+    value: point.deletions,
+    label: point.label,
+  }));
+
+  const linePath = (points: { x: number; y: number }[]) =>
+    points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
+
+  const areaPath = (points: { x: number; y: number }[]) => {
+    const baseline = CHART_PADDING.top + innerHeight;
+    const line = linePath(points);
+    const lastPoint = points.at(-1);
+    const firstPoint = points[0];
+
+    if (!lastPoint || !firstPoint) {
+      return "";
+    }
+
+    return `${line} L ${lastPoint.x} ${baseline} L ${firstPoint.x} ${baseline} Z`;
+  };
+
+  return {
+    ticks: getTickValues(maxValue),
+    maxValue,
+    maxAdditions: Math.max(...timeline.map((point) => point.additions), 0),
+    maxDeletions: Math.max(...timeline.map((point) => point.deletions), 0),
+    additionsPoints,
+    deletionsPoints,
+    additionsLine: linePath(additionsPoints),
+    deletionsLine: linePath(deletionsPoints),
+    additionsArea: areaPath(additionsPoints),
+    deletionsArea: areaPath(deletionsPoints),
+    baselineY: CHART_PADDING.top + innerHeight,
+    innerHeight,
+    innerWidth,
+    toY,
+  };
+}
+
+function shouldShowXAxisLabel(index: number, total: number, view: AnalyticsView) {
+  if (index === 0 || index === total - 1) {
+    return true;
+  }
+
+  if (view === "monthly") {
+    return true;
+  }
+
+  return index % 2 === 0;
+}
+
 export default async function Home({ searchParams }: HomePageProps) {
   const params = (await searchParams) ?? {};
   const view =
@@ -165,6 +269,7 @@ export default async function Home({ searchParams }: HomePageProps) {
       (repository) => repository.additions + repository.deletions,
     ) ?? [1]),
   );
+  const chartGeometry = dashboard ? buildChartGeometry(dashboard.timeline) : null;
 
   return (
     <main className="aurora-shell min-h-screen">
@@ -396,39 +501,146 @@ export default async function Home({ searchParams }: HomePageProps) {
                   <p className="panel-label text-accent">{dashboard.chartTitle}</p>
                   <h3 className="panel-heading">Activity trend</h3>
                 </div>
-                <span className="dashboard-pill">Author date lens</span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-muted">
+                    <span className="h-2 w-2 rounded-full bg-cyan-300" />
+                    Additions
+                  </span>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-muted">
+                    <span className="h-2 w-2 rounded-full bg-lime-300" />
+                    Deletions
+                  </span>
+                  <span className="dashboard-pill">Author date lens</span>
+                </div>
               </div>
 
-              <div className="timeline-shell">
-                <div className="timeline-ruler">
-                  <span>Peak</span>
-                  <span>Mid</span>
-                  <span>Now</span>
-                </div>
-                <div className="timeline-chart">
-                  {dashboard.timeline.map((point) => (
-                    <div key={point.label} className="timeline-column">
-                      <div className="timeline-bars">
-                        <div
-                          className="timeline-bar timeline-bar-additions"
-                          style={{ height: `${point.additionsHeight}%` }}
-                        />
-                        <div
-                          className="timeline-bar timeline-bar-deletions"
-                          style={{ height: `${point.deletionsHeight}%` }}
-                        />
-                      </div>
-                      <div className="timeline-meta">
-                        <p>{point.label}</p>
-                        <p className="font-mono text-foreground/80">
-                          +{formatNumber(point.additions)} / -
-                          {formatNumber(point.deletions)}
-                        </p>
-                      </div>
+              {chartGeometry ? (
+                <div className="mt-6 space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <article className="rounded-[1rem] border border-white/8 bg-white/[0.03] px-4 py-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted">
+                        Peak additions
+                      </p>
+                      <p className="mt-2 text-xl font-semibold text-foreground">
+                        +{formatNumber(chartGeometry.maxAdditions)}
+                      </p>
+                    </article>
+                    <article className="rounded-[1rem] border border-white/8 bg-white/[0.03] px-4 py-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted">
+                        Highest deletion month
+                      </p>
+                      <p className="mt-2 text-xl font-semibold text-foreground">
+                        -{formatNumber(chartGeometry.maxDeletions)}
+                      </p>
+                    </article>
+                    <article className="rounded-[1rem] border border-white/8 bg-white/[0.03] px-4 py-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted">
+                        Scaling
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-muted">
+                        Sqrt-scaled to keep smaller months visible instead of flattening them.
+                      </p>
+                    </article>
+                  </div>
+
+                  <div className="overflow-hidden rounded-[1.5rem] border border-white/8 bg-black/20 p-3 sm:p-5">
+                    <svg
+                      viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
+                      className="h-[22rem] w-full"
+                      role="img"
+                      aria-label={`${dashboard.chartTitle} additions and deletions trend`}
+                    >
+                      {chartGeometry.ticks.map((tick) => {
+                        const y = chartGeometry.toY(tick);
+
+                        return (
+                          <g key={tick}>
+                            <line
+                              x1={CHART_PADDING.left}
+                              x2={CHART_WIDTH - CHART_PADDING.right}
+                              y1={y}
+                              y2={y}
+                              stroke="rgba(255,255,255,0.08)"
+                              strokeDasharray="4 10"
+                            />
+                            <text
+                              x={CHART_PADDING.left - 12}
+                              y={y + 4}
+                              textAnchor="end"
+                              fill="rgba(255,255,255,0.58)"
+                              fontSize="12"
+                            >
+                              {tick === 0 ? "0" : formatNumber(tick)}
+                            </text>
+                          </g>
+                        );
+                      })}
+
+                      <path d={chartGeometry.deletionsArea} fill="rgba(163, 230, 53, 0.08)" />
+                      <path d={chartGeometry.additionsArea} fill="rgba(103, 232, 249, 0.08)" />
+                      <path
+                        d={chartGeometry.deletionsLine}
+                        fill="none"
+                        stroke="rgba(163, 230, 53, 0.95)"
+                        strokeWidth="3"
+                        strokeLinejoin="round"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d={chartGeometry.additionsLine}
+                        fill="none"
+                        stroke="rgba(103, 232, 249, 0.95)"
+                        strokeWidth="3"
+                        strokeLinejoin="round"
+                        strokeLinecap="round"
+                      />
+
+                      {chartGeometry.additionsPoints.map((point, index) => (
+                        <g key={point.label}>
+                          <circle cx={point.x} cy={point.y} r="4" fill="rgba(103, 232, 249, 1)" />
+                          <circle
+                            cx={chartGeometry.deletionsPoints[index]?.x}
+                            cy={chartGeometry.deletionsPoints[index]?.y}
+                            r="4"
+                            fill="rgba(163, 230, 53, 1)"
+                          />
+                          {shouldShowXAxisLabel(index, dashboard.timeline.length, view) ? (
+                            <text
+                              x={point.x}
+                              y={CHART_HEIGHT - 8}
+                              textAnchor="middle"
+                              fill="rgba(255,255,255,0.65)"
+                              fontSize="12"
+                            >
+                              {point.label}
+                            </text>
+                          ) : null}
+                        </g>
+                      ))}
+                    </svg>
+
+                    <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                      {dashboard.timeline.map((point, index) =>
+                        shouldShowXAxisLabel(index, dashboard.timeline.length, view) ? (
+                          <article
+                            key={point.label}
+                            className="rounded-[1rem] border border-white/6 bg-white/[0.03] px-3 py-2"
+                          >
+                            <p className="text-xs text-muted">{point.label}</p>
+                            <p className="mt-1 font-mono text-sm text-foreground/85">
+                              +{formatNumber(point.additions)} / -{formatNumber(point.deletions)}
+                            </p>
+                          </article>
+                        ) : null,
+                      )}
                     </div>
-                  ))}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="mt-6 rounded-[1.25rem] border border-white/8 bg-black/20 px-4 py-6 text-sm text-muted">
+                  No timeline data available yet.
+                </div>
+              )}
             </section>
 
             <section className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_360px]">
