@@ -53,6 +53,34 @@ function getViewConfig(view: AnalyticsView) {
 
 function buildTimelineBuckets(view: AnalyticsView) {
   const config = getViewConfig(view);
+
+  if (view === "monthly") {
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    return Array.from({ length: config.bucketCount }, (_, index) => {
+      const monthOffset = config.bucketCount - index - 1;
+      const bucketStart = new Date(
+        currentMonthStart.getFullYear(),
+        currentMonthStart.getMonth() - monthOffset,
+        1,
+      );
+      const bucketEnd = new Date(
+        bucketStart.getFullYear(),
+        bucketStart.getMonth() + 1,
+        1,
+      );
+
+      return {
+        label: config.formatter.format(bucketStart),
+        start: bucketStart,
+        end: bucketEnd,
+        additions: 0,
+        deletions: 0,
+      } satisfies TimelineBucket;
+    });
+  }
+
   const totalDays = config.bucketCount * config.stepDays;
   const start = new Date(Date.now() - totalDays * 24 * 60 * 60 * 1000);
 

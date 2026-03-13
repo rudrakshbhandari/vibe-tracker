@@ -1,5 +1,22 @@
 # Execution Plan
 
+## Issue #20 - Fix unreadable activity chart and align monthly buckets
+
+- Issue: [#20](https://github.com/rudrakshbhandari/vibe-tracker/issues/20)
+- Branch: `codex/fix-chart-readability`
+- PR: Pending
+- Workflow: In Progress
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Replace the unreadable timeline bars with a readable plotted chart
+- [x] Keep additions and deletions visible with labels and explicit scaling
+- [x] Align monthly analytics buckets to real calendar month boundaries
+- [x] Run lint, tests, and build
+- [ ] Push branch and open PR
+
 ## Issue #18 - Simplify homepage to focus on core dashboard metrics
 
 - Issue: [#18](https://github.com/rudrakshbhandari/vibe-tracker/issues/18)
