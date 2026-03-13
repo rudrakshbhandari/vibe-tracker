@@ -1,12 +1,5 @@
 import Link from "next/link";
-import {
-  ArrowRight,
-  CheckCircle2,
-  Github,
-  LineChart,
-  RefreshCcw,
-  Sparkles,
-} from "lucide-react";
+import { ArrowRight, CheckCircle2, Github, LineChart, RefreshCcw, TimerReset } from "lucide-react";
 
 import { ActivitySyncRefresh } from "@/components/activity-sync-refresh";
 import { formatNumber } from "@/lib/dashboard";
@@ -17,9 +10,6 @@ import { getLiveMetrics } from "@/lib/live-metrics";
 type HomePageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
-
-type GithubState = Awaited<ReturnType<typeof getGithubConnectionState>>;
-type DashboardData = NonNullable<Awaited<ReturnType<typeof getLiveMetrics>>>;
 
 const GITHUB_STATUS_COPY: Record<string, { label: string; detail?: string }> = {
   "activity-sync-started": {
@@ -90,466 +80,157 @@ const GITHUB_STATUS_COPY: Record<string, { label: string; detail?: string }> = {
 };
 
 const CONNECT_STEPS = [
-  "Connect your GitHub account.",
-  "Install the GitHub App on the user or organization you want to measure.",
-  "Run Sync my activity to load your vibe-coding totals.",
+  {
+    title: "Connect your GitHub account",
+    detail: "Start the OAuth flow and store the local session used for metrics and sync jobs.",
+  },
+  {
+    title: "Install the GitHub App",
+    detail: "Grant access to the user or organization whose repositories should count toward the dashboard.",
+  },
+  {
+    title: "Run activity sync",
+    detail: "Pull commit metadata into the local database so the dashboard can calculate real totals.",
+  },
 ];
 
-function HeroActions({
-  dashboard,
-  githubState,
-  view,
-  mode,
+function getStatusTone(status?: string) {
+  if (!status) {
+    return "status-note status-note-neutral";
+  }
+
+  if (
+    status.includes("failed") ||
+    status.includes("invalid") ||
+    status.includes("missing")
+  ) {
+    return "status-note status-note-danger";
+  }
+
+  if (status.includes("running") || status.includes("started")) {
+    return "status-note status-note-active";
+  }
+
+  return "status-note status-note-success";
+}
+
+function ConnectionAction({
+  href,
+  label,
 }: {
-  dashboard: DashboardData | null;
-  githubState: GithubState;
-  view: AnalyticsView;
-  mode: MetricMode;
+  href: string;
+  label: string;
 }) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row">
-      {githubState.primaryAction ? (
-        <Link href={githubState.primaryAction.href} className="button-primary flex-1">
-          {githubState.primaryAction.label}
-          <ArrowRight className="h-4 w-4" />
-        </Link>
-      ) : dashboard ? (
-        <Link href="#dashboard" className="button-primary flex-1">
-          Open dashboard
-          <ArrowRight className="h-4 w-4" />
-        </Link>
-      ) : null}
-
-      {dashboard ? (
-        <Link
-          href={`/api/metrics?view=${view}&mode=${mode}`}
-          className="button-secondary flex-1"
-        >
-          View metrics JSON
-          <LineChart className="h-4 w-4" />
-        </Link>
-      ) : null}
-    </div>
+    <Link href={href} className="button-primary w-full sm:w-auto">
+      {label}
+      <ArrowRight className="h-4 w-4" />
+    </Link>
   );
 }
 
-function DashboardSection({
-  dashboard,
-  githubState,
-  view,
-  mode,
-  views,
-  modes,
-}: {
-  dashboard: DashboardData;
-  githubState: GithubState;
-  view: AnalyticsView;
-  mode: MetricMode;
-  views: AnalyticsView[];
-  modes: MetricMode[];
-}) {
-  return (
-    <section className="grid gap-5">
-      <section className="glass-panel-strong ambient-ring rounded-[2rem] p-6 sm:p-8">
-        <div className="flex flex-col gap-6 border-b border-line pb-6 xl:flex-row xl:items-end xl:justify-between">
-          <div className="max-w-2xl">
-            <p className="section-label">
-              {dashboard.profile.source === "live" ? "Live dashboard" : "Sample dashboard"}
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
-              {dashboard.profile.login}
-            </h2>
-            <p className="mt-3 max-w-xl text-sm leading-7 text-muted sm:text-base">
-              {dashboard.profile.source === "live"
-                ? "These metrics are aggregated from synced GitHub commits in the local database."
-                : "Local demo data that mirrors the model we will populate from the GitHub API during sync jobs."}
-            </p>
-          </div>
+type TimelinePoint = {
+  label: string;
+  additions: number;
+  deletions: number;
+};
 
-          <div className="flex flex-col gap-3 text-sm">
-            <div className="flex flex-wrap gap-2">
-              {views.map((entry) => (
-                <Link
-                  key={entry}
-                  href={`/?view=${entry}&mode=${mode}`}
-                  className={entry === view ? "toggle-pill toggle-pill-active" : "toggle-pill"}
-                >
-                  {entry[0]?.toUpperCase()}
-                  {entry.slice(1)}
-                </Link>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {modes.map((entry) => (
-                <Link
-                  key={entry}
-                  href={`/?view=${view}&mode=${entry}`}
-                  className={entry === mode ? "toggle-pill toggle-pill-active" : "toggle-pill"}
-                >
-                  {entry === "authored" ? "Authored" : "Merged"}
-                </Link>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {dashboard.filters.map((filter) => (
-                <span
-                  key={filter}
-                  className="rounded-full border border-line px-3 py-1.5 text-sm font-medium text-muted"
-                >
-                  {filter}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
+const CHART_WIDTH = 960;
+const CHART_HEIGHT = 320;
+const CHART_PADDING = { top: 18, right: 18, bottom: 34, left: 58 };
 
-        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {dashboard.summary.map((item) => (
-            <article key={item.label} className="metric-card">
-              <p className="text-sm text-muted">{item.label}</p>
-              <p className="mt-4 text-3xl font-semibold tracking-[-0.05em]">{item.value}</p>
-              <p className="mt-2 text-sm leading-6 text-muted">{item.detail}</p>
-            </article>
-          ))}
-        </div>
+function roundTick(value: number) {
+  if (value <= 0) {
+    return 0;
+  }
 
-        <div className="mt-6 grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-          <section className="soft-note relative overflow-hidden p-5 sm:p-6">
-            <div className="absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,rgba(217,185,122,0.14),transparent_70%)]" />
-            <div className="relative">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="section-label text-accent">{dashboard.chartTitle}</p>
-                  <h3 className="mt-2 text-xl font-semibold">Additions and deletions</h3>
-                </div>
-                <span className="rounded-full border border-line bg-background/40 px-3 py-1 text-xs text-muted">
-                  Author date lens
-                </span>
-              </div>
-              <div className="mt-6 overflow-x-auto pb-2">
-                <div className="flex h-64 min-w-[42rem] items-end gap-3">
-                  {dashboard.timeline.map((point) => (
-                    <div key={point.label} className="flex min-w-0 flex-1 flex-col gap-3">
-                      <div className="flex h-48 items-end gap-1">
-                        <div
-                          className="w-1/2 rounded-t-full bg-accent"
-                          style={{ height: `${point.additionsHeight}%` }}
-                        />
-                        <div
-                          className="w-1/2 rounded-t-full bg-accent-2"
-                          style={{ height: `${point.deletionsHeight}%` }}
-                        />
-                      </div>
-                      <div className="space-y-1 text-center">
-                        <p className="text-xs text-muted">{point.label}</p>
-                        <p className="font-mono text-xs text-foreground/80">
-                          +{formatNumber(point.additions)} / -{formatNumber(point.deletions)}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="soft-note p-5 sm:p-6">
-            <p className="section-label">Repository breakdown</p>
-            <div className="mt-4 max-h-[36rem] space-y-4 overflow-y-auto pr-1">
-              {dashboard.repositories.length > 0 ? (
-                dashboard.repositories.map((repo) => (
-                  <article
-                    key={repo.name}
-                    className="rounded-[1.25rem] border border-line bg-background/35 px-4 py-4 transition-colors hover:bg-background/50"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <h3 className="font-semibold">{repo.name}</h3>
-                        <p className="mt-1 text-sm leading-6 text-muted">{repo.detail}</p>
-                      </div>
-                      <span className="rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
-                        {repo.visibility}
-                      </span>
-                    </div>
-                    <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted">
-                      <span>+{formatNumber(repo.additions)}</span>
-                      <span>-{formatNumber(repo.deletions)}</span>
-                      <span>{repo.commitCount} commits</span>
-                    </div>
-                  </article>
-                ))
-              ) : (
-                <article className="rounded-[1.25rem] border border-line bg-background/35 px-4 py-4">
-                  <h3 className="font-semibold">No synced repositories yet</h3>
-                  <p className="mt-2 text-sm leading-6 text-muted">
-                    Install the GitHub App on a user or organization, refresh repositories, then run your first activity sync.
-                  </p>
-                </article>
-              )}
-            </div>
-          </section>
-        </div>
-      </section>
-
-      <section className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
-        <section className="glass-panel rounded-[1.75rem] p-5 sm:p-6">
-          <p className="section-label">Connection</p>
-          <div className="mt-4 flex items-start justify-between gap-3">
-            <div>
-              <h3 className="text-2xl font-semibold tracking-[-0.04em]">{githubState.title}</h3>
-              <p className="mt-3 text-sm leading-6 text-muted">{githubState.description}</p>
-            </div>
-            {githubState.connected ? (
-              <CheckCircle2 className="mt-1 h-6 w-6 text-accent" />
-            ) : (
-              <Github className="mt-1 h-6 w-6 text-muted" />
-            )}
-          </div>
-
-          <div className="mt-5 flex flex-col gap-3">
-            {githubState.primaryAction ? (
-              <Link href={githubState.primaryAction.href} className="button-primary">
-                {githubState.primaryAction.label}
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            ) : null}
-            {githubState.connected ? (
-              <form action="/api/github/activity-sync" method="post">
-                <button
-                  type="submit"
-                  className="button-secondary w-full"
-                  disabled={githubState.activitySyncRunning}
-                >
-                  {githubState.activitySyncRunning ? "Sync in progress" : "Sync my activity"}
-                </button>
-              </form>
-            ) : null}
-          </div>
-        </section>
-
-        <section className="glass-panel rounded-[1.75rem] p-5 sm:p-6">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="section-label">Installations</p>
-              <h3 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">
-                {githubState.installations.length} connected scope
-                {githubState.installations.length === 1 ? "" : "s"}
-              </h3>
-            </div>
-            <RefreshCcw className="h-5 w-5 text-muted" />
-          </div>
-
-          <div className="mt-5 max-h-[28rem] space-y-4 overflow-y-auto pr-1">
-            {githubState.installations.length > 0 ? (
-              githubState.installations.map((installation) => (
-                <article
-                  key={installation.id}
-                  className="rounded-[1.25rem] border border-line bg-background/35 p-4"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h4 className="font-semibold">{installation.accountLogin}</h4>
-                      <p className="mt-1 text-sm text-muted">
-                        {installation.repositoryCount} repos indexed locally
-                      </p>
-                    </div>
-                    <span className="rounded-full border border-line px-3 py-1 text-xs text-muted">
-                      #{installation.githubInstallId}
-                    </span>
-                  </div>
-                  <p className="mt-3 break-words text-sm leading-6 text-muted">
-                    {installation.repositoryNames.length > 0
-                      ? installation.repositoryNames.join(", ")
-                      : "No repositories cached yet. Refresh repositories to pull grants."}
-                  </p>
-                  <form
-                    action={`/api/github/installations/${installation.githubInstallId}/sync`}
-                    method="post"
-                    className="mt-4"
-                  >
-                    <button type="submit" className="button-secondary px-4 py-2">
-                      Refresh repositories
-                    </button>
-                  </form>
-                </article>
-              ))
-            ) : (
-              <article className="rounded-[1.25rem] border border-line bg-background/35 p-4">
-                <h4 className="font-semibold">Nothing installed yet</h4>
-                <p className="mt-2 text-sm leading-6 text-muted">
-                  After you connect GitHub, install the app on the account you want to measure. That unlocks repository access and lets the sync job pull your activity.
-                </p>
-              </article>
-            )}
-          </div>
-        </section>
-      </section>
-    </section>
-  );
+  const magnitude = 10 ** Math.max(0, Math.floor(Math.log10(value)) - 1);
+  return Math.ceil(value / magnitude) * magnitude;
 }
 
-function DisconnectedSection({ githubState }: { githubState: GithubState }) {
-  return (
-    <section className="glass-panel-strong ambient-ring rounded-[2rem] p-6 sm:p-8">
-      <div className="max-w-2xl">
-        <p className="section-label">Not connected</p>
-        <h2 className="mt-3 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
-          Connect GitHub once. Everything else gets simpler.
-        </h2>
-        <p className="mt-4 text-base leading-8 text-muted">
-          The app is strongest when the path is obvious: connect your account, install the app on the scope you care about, then run a sync to load real totals.
-        </p>
-      </div>
-
-      <div className="surface-divider mt-8 pt-8">
-        <div className="grid gap-4 lg:grid-cols-[0.92fr_1.08fr]">
-          <section className="soft-note p-5 sm:p-6">
-            <p className="section-label">Current state</p>
-            <h3 className="mt-3 text-2xl font-semibold tracking-[-0.04em]">{githubState.title}</h3>
-            <p className="mt-3 text-sm leading-7 text-muted">{githubState.description}</p>
-            {githubState.primaryAction ? (
-              <div className="mt-6">
-                <Link href={githubState.primaryAction.href} className="button-primary">
-                  {githubState.primaryAction.label}
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-            ) : null}
-          </section>
-
-          <section className="grid gap-3">
-            {CONNECT_STEPS.map((step, index) => (
-              <article key={step} className="soft-note flex items-start gap-4 p-4 sm:p-5">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-accent/20 bg-accent/10 text-sm font-semibold text-accent">
-                  0{index + 1}
-                </div>
-                <div>
-                  <p className="section-label">Step {index + 1}</p>
-                  <p className="mt-2 text-lg font-semibold leading-7 text-foreground">{step}</p>
-                </div>
-              </article>
-            ))}
-          </section>
-        </div>
-      </div>
-    </section>
-  );
+function getTickValues(maxValue: number) {
+  const roundedMax = roundTick(maxValue);
+  return [roundedMax, Math.round(roundedMax * 0.66), Math.round(roundedMax * 0.33), 0];
 }
 
-function Sidebar({ githubState, hasInstallations }: { githubState: GithubState; hasInstallations: boolean }) {
-  return (
-    <aside className="flex flex-col gap-4">
-      <section className="glass-panel rounded-[1.75rem] p-5 sm:p-6">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="section-label">Connection summary</p>
-            <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em]">
-              {githubState.title}
-            </h2>
-          </div>
-          {githubState.connected ? (
-            <CheckCircle2 className="mt-1 h-6 w-6 text-accent" />
-          ) : (
-            <Github className="mt-1 h-6 w-6 text-muted" />
-          )}
-        </div>
-        <p className="mt-3 text-sm leading-7 text-muted">{githubState.description}</p>
-
-        {githubState.viewer ? (
-          <div className="soft-note mt-5 p-4">
-            <p className="section-label">Signed in as</p>
-            <p className="mt-2 text-lg font-semibold">{githubState.viewer.login}</p>
-            <p className="mt-1 text-sm text-muted">
-              Session expires {githubState.viewer.sessionExpiryLabel}
-            </p>
-            <p className="mt-3 text-sm text-muted">
-              Latest activity sync:{" "}
-              {githubState.activitySync
-                ? `${githubState.activitySync.status} at ${githubState.activitySync.updatedAt}`
-                : "not run yet"}
-            </p>
-          </div>
-        ) : null}
-      </section>
-
-      <section className="glass-panel rounded-[1.75rem] p-5 sm:p-6">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="section-label">Installations</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">
-              {githubState.installations.length} connected scope
-              {githubState.installations.length === 1 ? "" : "s"}
-            </h2>
-          </div>
-          <RefreshCcw className="h-5 w-5 text-muted" />
-        </div>
-
-        <div className="mt-5 max-h-[28rem] space-y-4 overflow-y-auto pr-1">
-          {hasInstallations ? (
-            githubState.installations.map((installation) => (
-              <article
-                key={installation.id}
-                className="rounded-[1.25rem] border border-line bg-background/35 p-4"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h3 className="font-semibold">{installation.accountLogin}</h3>
-                    <p className="mt-1 text-sm text-muted">
-                      {installation.repositoryCount} repos indexed locally
-                    </p>
-                  </div>
-                  <span className="rounded-full border border-line px-3 py-1 text-xs font-medium text-muted">
-                    #{installation.githubInstallId}
-                  </span>
-                </div>
-                <p className="mt-3 break-words text-sm leading-6 text-muted">
-                  {installation.repositoryNames.length > 0
-                    ? installation.repositoryNames.join(", ")
-                    : "No repositories cached yet. Refresh repositories to pull grants."}
-                </p>
-                <form
-                  action={`/api/github/installations/${installation.githubInstallId}/sync`}
-                  method="post"
-                  className="mt-4"
-                >
-                  <button type="submit" className="button-secondary px-4 py-2">
-                    Refresh repositories
-                  </button>
-                </form>
-              </article>
-            ))
-          ) : (
-            <article className="rounded-[1.25rem] border border-line bg-background/35 p-4">
-              <h3 className="font-semibold">Nothing installed yet</h3>
-              <p className="mt-2 text-sm leading-6 text-muted">
-                After you connect GitHub, install the app on the account you want to measure. That unlocks repository access and lets the sync job pull your activity.
-              </p>
-            </article>
-          )}
-        </div>
-      </section>
-
-      <section className="glass-panel rounded-[1.75rem] p-5 sm:p-6">
-        <p className="section-label">Model integrity</p>
-        <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em]">
-          One commit SHA stays one unit of work.
-        </h2>
-        <p className="mt-3 text-sm leading-7 text-muted">
-          Repositories, branches, and pull requests are attribution layers around a canonical commit record. That keeps the analytics honest as the repo graph grows.
-        </p>
-        <div className="soft-note mt-5 p-4">
-          <p className="section-label">Core rule</p>
-          <p className="mt-3 font-mono text-sm leading-7 text-foreground/85">
-            one commit SHA
-            <br />
-            = one unit of work
-            <br />
-            regardless of branch count
-          </p>
-        </div>
-      </section>
-    </aside>
+function buildChartGeometry(timeline: TimelinePoint[]) {
+  const innerWidth = CHART_WIDTH - CHART_PADDING.left - CHART_PADDING.right;
+  const innerHeight = CHART_HEIGHT - CHART_PADDING.top - CHART_PADDING.bottom;
+  const maxValue = Math.max(
+    1,
+    ...timeline.flatMap((point) => [point.additions, point.deletions]),
   );
+
+  const toY = (value: number) => {
+    if (value <= 0) {
+      return CHART_PADDING.top + innerHeight;
+    }
+
+    const normalized = Math.sqrt(value / maxValue);
+    return CHART_PADDING.top + innerHeight - normalized * innerHeight;
+  };
+
+  const getX = (index: number) =>
+    CHART_PADDING.left +
+    (timeline.length === 1 ? innerWidth / 2 : (index / (timeline.length - 1)) * innerWidth);
+
+  const additionsPoints = timeline.map((point, index) => ({
+    x: getX(index),
+    y: toY(point.additions),
+    value: point.additions,
+    label: point.label,
+  }));
+  const deletionsPoints = timeline.map((point, index) => ({
+    x: getX(index),
+    y: toY(point.deletions),
+    value: point.deletions,
+    label: point.label,
+  }));
+
+  const linePath = (points: { x: number; y: number }[]) =>
+    points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
+
+  const areaPath = (points: { x: number; y: number }[]) => {
+    const baseline = CHART_PADDING.top + innerHeight;
+    const line = linePath(points);
+    const lastPoint = points.at(-1);
+    const firstPoint = points[0];
+
+    if (!lastPoint || !firstPoint) {
+      return "";
+    }
+
+    return `${line} L ${lastPoint.x} ${baseline} L ${firstPoint.x} ${baseline} Z`;
+  };
+
+  return {
+    ticks: getTickValues(maxValue),
+    maxValue,
+    maxAdditions: Math.max(...timeline.map((point) => point.additions), 0),
+    maxDeletions: Math.max(...timeline.map((point) => point.deletions), 0),
+    additionsPoints,
+    deletionsPoints,
+    additionsLine: linePath(additionsPoints),
+    deletionsLine: linePath(deletionsPoints),
+    additionsArea: areaPath(additionsPoints),
+    deletionsArea: areaPath(deletionsPoints),
+    baselineY: CHART_PADDING.top + innerHeight,
+    innerHeight,
+    innerWidth,
+    toY,
+  };
+}
+
+function shouldShowXAxisLabel(index: number, total: number, view: AnalyticsView) {
+  if (index === 0 || index === total - 1) {
+    return true;
+  }
+
+  if (view === "monthly") {
+    return true;
+  }
+
+  return index % 2 === 0;
 }
 
 export default async function Home({ searchParams }: HomePageProps) {
@@ -564,14 +245,15 @@ export default async function Home({ searchParams }: HomePageProps) {
     ["authored", "merged"].includes(params.mode)
       ? (params.mode as MetricMode)
       : "authored";
-
   const githubState = await getGithubConnectionState();
-  const dashboard = githubState.connected ? await getLiveMetrics(view, mode) : null;
-  const githubStatus = typeof params.github === "string" ? params.github : undefined;
+  const dashboard = githubState.connected
+    ? await getLiveMetrics(view, mode)
+    : null;
+  const githubStatus =
+    typeof params.github === "string" ? params.github : undefined;
   const githubStatusCopy = githubStatus
     ? GITHUB_STATUS_COPY[githubStatus] ?? { label: githubStatus }
     : null;
-
   const views: AnalyticsView[] = ["daily", "weekly", "monthly"];
   const modes: MetricMode[] = ["authored", "merged"];
   const hasInstallations = githubState.installations.length > 0;
@@ -581,87 +263,580 @@ export default async function Home({ searchParams }: HomePageProps) {
       githubState.activitySyncRunning ||
       dashboard?.activitySyncRunning,
   );
+  const repoActivityMax = Math.max(
+    1,
+    ...(dashboard?.repositories.map(
+      (repository) => repository.additions + repository.deletions,
+    ) ?? [1]),
+  );
+  const chartGeometry = dashboard ? buildChartGeometry(dashboard.timeline) : null;
 
   return (
-    <main className="grid-lines min-h-screen">
+    <main className="aurora-shell min-h-screen">
       <ActivitySyncRefresh active={syncRefreshActive} />
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-5 sm:px-6 sm:py-8 lg:px-8">
-        <header className="hero-shell glass-panel ambient-ring rounded-[2rem] px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
-          <div className="relative flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-3xl">
-              <span className="eyebrow">Vibe Tracker</span>
-              <h1 className="display-face mt-6 max-w-4xl text-5xl leading-[0.92] sm:text-6xl lg:text-7xl">
-                Elegant signal for how much you actually shipped.
-              </h1>
-              <p className="mt-5 max-w-2xl text-base leading-8 text-muted sm:text-lg">
-                Connect GitHub once, sync your activity, and get a clean read on output across repositories without inflating the numbers with duplicate commit counts.
-              </p>
-            </div>
+      <div className="page-grid" />
+      <div className="page-noise" />
 
-            <div className="w-full max-w-md space-y-4">
-              <div className="soft-note p-5">
-                <p className="section-label">What you get</p>
-                <div className="mt-4 grid gap-3 text-sm text-muted sm:grid-cols-3">
-                  <div>
-                    <p className="text-xl font-semibold text-foreground">01</p>
-                    <p className="mt-2 leading-6">Connection state that is explicit, not noisy.</p>
-                  </div>
-                  <div>
-                    <p className="text-xl font-semibold text-foreground">02</p>
-                    <p className="mt-2 leading-6">Real commit totals with deduped attribution.</p>
-                  </div>
-                  <div>
-                    <p className="text-xl font-semibold text-foreground">03</p>
-                    <p className="mt-2 leading-6">Repo-level context when you need the detail.</p>
-                  </div>
+      <div className="relative mx-auto flex w-full max-w-[1500px] flex-col gap-5 px-4 py-4 sm:px-6 sm:py-6 lg:px-10 lg:py-8">
+        <section className="hero-panel">
+          <div className="flex w-full flex-col gap-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-muted">
+                  <span className="rounded-full border border-white/12 px-3 py-1">
+                    Vibe Tracker
+                  </span>
+                  <span className="rounded-full border border-white/12 px-3 py-1">
+                    Core dashboard
+                  </span>
+                  <span className="rounded-full border border-white/12 px-3 py-1">
+                    {githubState.connected ? "GitHub connected" : "Not connected"}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  <h1 className="max-w-3xl text-2xl font-semibold tracking-[-0.05em] text-foreground sm:text-4xl">
+                    Read the signal, not the chrome.
+                  </h1>
+                  <p className="max-w-2xl text-sm leading-6 text-muted sm:text-base">
+                    Identity, key output, trend, repositories, and sync health.
+                    The rest is gone.
+                  </p>
                 </div>
               </div>
 
-              <HeroActions
-                dashboard={dashboard}
-                githubState={githubState}
-                view={view}
-                mode={mode}
-              />
+              <div className="flex flex-wrap gap-2 lg:max-w-sm lg:justify-end">
+                {githubState.primaryAction ? (
+                  <ConnectionAction
+                    href={githubState.primaryAction.href}
+                    label={githubState.primaryAction.label}
+                  />
+                ) : null}
+                {dashboard ? (
+                  <Link
+                    href={`/api/metrics?view=${view}&mode=${mode}`}
+                    className="button-secondary w-full sm:w-auto"
+                  >
+                    Metrics JSON
+                    <LineChart className="h-4 w-4" />
+                  </Link>
+                ) : null}
+                {githubState.connected ? (
+                  <form action="/api/github/activity-sync" method="post">
+                    <button
+                      type="submit"
+                      className="button-secondary w-full sm:w-auto"
+                      disabled={githubState.activitySyncRunning}
+                    >
+                      {githubState.activitySyncRunning ? "Syncing" : "Sync now"}
+                    </button>
+                  </form>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="grid gap-3 lg:grid-cols-[1.3fr_1fr_1fr_1fr]">
+              <section className="story-panel !p-4">
+                <p className="panel-label">Identity</p>
+                <div className="mt-2 flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-2xl font-semibold tracking-[-0.05em] text-foreground">
+                      {dashboard?.profile.login ?? githubState.viewer?.login ?? "Connect GitHub"}
+                    </p>
+                    <p className="mt-1 text-sm text-muted">
+                      {dashboard
+                        ? "Live GitHub metrics in the current view."
+                        : githubState.description}
+                    </p>
+                  </div>
+                  {githubState.connected ? (
+                    <CheckCircle2 className="mt-1 h-5 w-5 text-lime-300" />
+                  ) : (
+                    <Github className="mt-1 h-5 w-5 text-muted" />
+                  )}
+                </div>
+              </section>
+
+              <section className="story-panel !p-4">
+                <p className="panel-label">Connection</p>
+                <p className="mt-2 text-lg font-semibold text-foreground">{githubState.title}</p>
+                <p className="mt-1 text-sm text-muted">
+                  {githubState.viewer
+                    ? `Session ${githubState.viewer.sessionExpiryLabel}`
+                    : "Sign in to unlock live metrics."}
+                </p>
+              </section>
+
+              <section className="story-panel !p-4">
+                <p className="panel-label">Sync</p>
+                <p className="mt-2 text-lg font-semibold text-foreground">
+                  {githubState.activitySyncRunning
+                    ? "Running"
+                    : githubState.activitySync
+                      ? githubState.activitySync.status
+                      : "Idle"}
+                </p>
+                <p className="mt-1 text-sm text-muted">
+                  {githubState.activitySync
+                    ? githubState.activitySync.updatedAt
+                    : "No sync completed yet."}
+                </p>
+              </section>
+
+              <section className="story-panel !p-4">
+                <p className="panel-label">Installations</p>
+                <p className="mt-2 text-lg font-semibold text-foreground">
+                  {githubState.installations.length} scope
+                  {githubState.installations.length === 1 ? "" : "s"}
+                </p>
+                <p className="mt-1 text-sm text-muted">
+                  {hasInstallations ? "Repository access cached locally." : "No scopes installed yet."}
+                </p>
+              </section>
             </div>
           </div>
-        </header>
+        </section>
 
         {githubStatus ? (
-          <section className="status-note ambient-ring px-5 py-4 text-sm">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <p className="flex items-center gap-2 font-medium">
-                <Sparkles className="h-4 w-4 text-accent" />
-                <span>
-                  GitHub status:{" "}
-                  <span className="font-semibold">{githubStatusCopy?.label ?? githubStatus}</span>
-                </span>
-              </p>
-              {githubStatusCopy?.detail ? (
-                <p className="max-w-2xl text-muted sm:text-right">{githubStatusCopy.detail}</p>
-              ) : null}
+          <section className={getStatusTone(githubStatus)}>
+            <div className="flex items-start gap-3">
+              <TimerReset className="mt-0.5 h-4 w-4 shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  {githubStatusCopy?.label ?? githubStatus}
+                </p>
+                {githubStatusCopy?.detail ? (
+                  <p className="mt-1 max-w-4xl text-sm leading-6 text-muted">
+                    {githubStatusCopy.detail}
+                  </p>
+                ) : null}
+              </div>
             </div>
           </section>
         ) : null}
 
-        <section id="dashboard" className="grid gap-6 xl:grid-cols-[1.22fr_0.78fr]">
-          <section className="grid gap-6">
-            {dashboard ? (
-              <DashboardSection
-                dashboard={dashboard}
-                githubState={githubState}
-                view={view}
-                mode={mode}
-                views={views}
-                modes={modes}
-              />
-            ) : (
-              <DisconnectedSection githubState={githubState} />
-            )}
-          </section>
+        {dashboard ? (
+          <>
+            <section id="dashboard" className="dashboard-shell">
+              <div className="dashboard-head">
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="eyebrow eyebrow-subtle">
+                      {dashboard.profile.source === "live"
+                        ? "Live dashboard"
+                        : "Sample dashboard"}
+                    </span>
+                    <span className="dashboard-pill">{dashboard.chartTitle}</span>
+                  </div>
+                  <div className="space-y-3">
+                    <h2 className="dashboard-title">{dashboard.profile.login}</h2>
+                    <p className="max-w-2xl text-sm leading-7 text-muted sm:text-base">
+                      {dashboard.profile.source === "live"
+                        ? "These metrics are aggregated from synced GitHub commits in the local database."
+                        : "Local demo data that mirrors the model we will populate from the GitHub API during sync jobs."}
+                    </p>
+                  </div>
+                </div>
 
-          <Sidebar githubState={githubState} hasInstallations={hasInstallations} />
-        </section>
+                <div className="control-stack">
+                  <div className="control-group">
+                    {views.map((entry) => (
+                      <Link
+                        key={entry}
+                        href={`/?view=${entry}&mode=${mode}`}
+                        className={
+                          entry === view
+                            ? "toggle-pill toggle-pill-active"
+                            : "toggle-pill"
+                        }
+                      >
+                        {entry[0]?.toUpperCase()}
+                        {entry.slice(1)}
+                      </Link>
+                    ))}
+                  </div>
+
+                  <div className="control-group">
+                    {modes.map((entry) => (
+                      <Link
+                        key={entry}
+                        href={`/?view=${view}&mode=${entry}`}
+                        className={
+                          entry === mode
+                            ? "toggle-pill toggle-pill-active"
+                            : "toggle-pill"
+                        }
+                      >
+                        {entry === "authored" ? "Authored" : "Merged"}
+                      </Link>
+                    ))}
+                  </div>
+
+                  <div className="filter-row">
+                    {dashboard.filters.map((filter) => (
+                      <span key={filter} className="filter-chip">
+                        {filter}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
+                {dashboard.summary.map((item, index) => (
+                  <article
+                    key={item.label}
+                    className={index === 0 ? "metric-card metric-card-featured" : "metric-card"}
+                  >
+                    <p className="metric-label">{item.label}</p>
+                    <p className="metric-value">{item.value}</p>
+                    <p className="metric-detail">{item.detail}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section className="story-panel">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="panel-label text-accent">{dashboard.chartTitle}</p>
+                  <h3 className="panel-heading">Activity trend</h3>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-muted">
+                    <span className="h-2 w-2 rounded-full bg-cyan-300" />
+                    Additions
+                  </span>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-muted">
+                    <span className="h-2 w-2 rounded-full bg-lime-300" />
+                    Deletions
+                  </span>
+                  <span className="dashboard-pill">Author date lens</span>
+                </div>
+              </div>
+
+              {chartGeometry ? (
+                <div className="mt-6 space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <article className="rounded-[1rem] border border-white/8 bg-white/[0.03] px-4 py-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted">
+                        Peak additions
+                      </p>
+                      <p className="mt-2 text-xl font-semibold text-foreground">
+                        +{formatNumber(chartGeometry.maxAdditions)}
+                      </p>
+                    </article>
+                    <article className="rounded-[1rem] border border-white/8 bg-white/[0.03] px-4 py-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted">
+                        Highest deletion month
+                      </p>
+                      <p className="mt-2 text-xl font-semibold text-foreground">
+                        -{formatNumber(chartGeometry.maxDeletions)}
+                      </p>
+                    </article>
+                    <article className="rounded-[1rem] border border-white/8 bg-white/[0.03] px-4 py-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted">
+                        Scaling
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-muted">
+                        Sqrt-scaled to keep smaller months visible instead of flattening them.
+                      </p>
+                    </article>
+                  </div>
+
+                  <div className="overflow-hidden rounded-[1.5rem] border border-white/8 bg-black/20 p-3 sm:p-5">
+                    <svg
+                      viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
+                      className="h-[22rem] w-full"
+                      role="img"
+                      aria-label={`${dashboard.chartTitle} additions and deletions trend`}
+                    >
+                      {chartGeometry.ticks.map((tick) => {
+                        const y = chartGeometry.toY(tick);
+
+                        return (
+                          <g key={tick}>
+                            <line
+                              x1={CHART_PADDING.left}
+                              x2={CHART_WIDTH - CHART_PADDING.right}
+                              y1={y}
+                              y2={y}
+                              stroke="rgba(255,255,255,0.08)"
+                              strokeDasharray="4 10"
+                            />
+                            <text
+                              x={CHART_PADDING.left - 12}
+                              y={y + 4}
+                              textAnchor="end"
+                              fill="rgba(255,255,255,0.58)"
+                              fontSize="12"
+                            >
+                              {tick === 0 ? "0" : formatNumber(tick)}
+                            </text>
+                          </g>
+                        );
+                      })}
+
+                      <path d={chartGeometry.deletionsArea} fill="rgba(163, 230, 53, 0.08)" />
+                      <path d={chartGeometry.additionsArea} fill="rgba(103, 232, 249, 0.08)" />
+                      <path
+                        d={chartGeometry.deletionsLine}
+                        fill="none"
+                        stroke="rgba(163, 230, 53, 0.95)"
+                        strokeWidth="3"
+                        strokeLinejoin="round"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d={chartGeometry.additionsLine}
+                        fill="none"
+                        stroke="rgba(103, 232, 249, 0.95)"
+                        strokeWidth="3"
+                        strokeLinejoin="round"
+                        strokeLinecap="round"
+                      />
+
+                      {chartGeometry.additionsPoints.map((point, index) => (
+                        <g key={point.label}>
+                          <circle cx={point.x} cy={point.y} r="4" fill="rgba(103, 232, 249, 1)" />
+                          <circle
+                            cx={chartGeometry.deletionsPoints[index]?.x}
+                            cy={chartGeometry.deletionsPoints[index]?.y}
+                            r="4"
+                            fill="rgba(163, 230, 53, 1)"
+                          />
+                          {shouldShowXAxisLabel(index, dashboard.timeline.length, view) ? (
+                            <text
+                              x={point.x}
+                              y={CHART_HEIGHT - 8}
+                              textAnchor="middle"
+                              fill="rgba(255,255,255,0.65)"
+                              fontSize="12"
+                            >
+                              {point.label}
+                            </text>
+                          ) : null}
+                        </g>
+                      ))}
+                    </svg>
+
+                    <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                      {dashboard.timeline.map((point, index) =>
+                        shouldShowXAxisLabel(index, dashboard.timeline.length, view) ? (
+                          <article
+                            key={point.label}
+                            className="rounded-[1rem] border border-white/6 bg-white/[0.03] px-3 py-2"
+                          >
+                            <p className="text-xs text-muted">{point.label}</p>
+                            <p className="mt-1 font-mono text-sm text-foreground/85">
+                              +{formatNumber(point.additions)} / -{formatNumber(point.deletions)}
+                            </p>
+                          </article>
+                        ) : null,
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-6 rounded-[1.25rem] border border-white/8 bg-black/20 px-4 py-6 text-sm text-muted">
+                  No timeline data available yet.
+                </div>
+              )}
+            </section>
+
+            <section className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_360px]">
+              <section className="story-panel">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="panel-label">Repository pressure</p>
+                    <h3 className="panel-heading">Where the work landed</h3>
+                  </div>
+                  <span className="dashboard-pill">
+                    {dashboard.repositories.length} repos
+                  </span>
+                </div>
+
+                <div className="repo-list">
+                  {dashboard.repositories.length > 0 ? (
+                    dashboard.repositories.map((repo, index) => {
+                      const totalActivity = repo.additions + repo.deletions;
+                      const width = `${Math.max(
+                        12,
+                        (totalActivity / repoActivityMax) * 100,
+                      )}%`;
+
+                      return (
+                        <article key={repo.name} className="repo-card">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-3">
+                                <span className="repo-rank">
+                                  {String(index + 1).padStart(2, "0")}
+                                </span>
+                                <h3 className="font-semibold text-foreground">
+                                  {repo.name}
+                                </h3>
+                              </div>
+                              <p className="text-sm leading-6 text-muted">
+                                {repo.detail}
+                              </p>
+                            </div>
+                            <span className="repo-visibility">{repo.visibility}</span>
+                          </div>
+
+                          <div className="mt-4 space-y-3">
+                            <div className="repo-meter">
+                              <div className="repo-meter-fill" style={{ width }} />
+                            </div>
+                            <div className="flex flex-wrap items-center gap-3 text-sm text-muted">
+                              <span>+{formatNumber(repo.additions)}</span>
+                              <span>-{formatNumber(repo.deletions)}</span>
+                              <span>{repo.commitCount} commits</span>
+                            </div>
+                          </div>
+                        </article>
+                      );
+                    })
+                  ) : (
+                    <article className="repo-card">
+                      <h3 className="font-semibold text-foreground">
+                        No synced repositories yet
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-muted">
+                        Install the GitHub App on a user or organization,
+                        refresh repositories, then run your first activity sync.
+                      </p>
+                    </article>
+                  )}
+                </div>
+              </section>
+
+              <aside className="flex flex-col gap-4">
+                <section className="story-panel !p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="panel-label">Account</p>
+                      <h3 className="panel-heading !text-[1.35rem]">
+                        {githubState.viewer?.login ?? "Not signed in"}
+                      </h3>
+                    </div>
+                    {githubState.connected ? (
+                      <CheckCircle2 className="h-5 w-5 text-lime-300" />
+                    ) : (
+                      <Github className="h-5 w-5 text-muted" />
+                    )}
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-muted">
+                    {githubState.activitySync
+                      ? `Latest sync: ${githubState.activitySync.status} at ${githubState.activitySync.updatedAt}`
+                      : "No completed sync recorded yet."}
+                  </p>
+                </section>
+
+                <section className="story-panel !p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="panel-label">Installations</p>
+                      <h3 className="panel-heading !text-[1.35rem]">
+                        {githubState.installations.length} connected scope
+                        {githubState.installations.length === 1 ? "" : "s"}
+                      </h3>
+                    </div>
+                    <RefreshCcw className="h-4 w-4 text-muted" />
+                  </div>
+
+                  <div className="mt-4 space-y-3">
+                    {hasInstallations ? (
+                      githubState.installations.map((installation) => (
+                        <article key={installation.id} className="installation-card">
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <h3 className="text-lg font-semibold text-foreground">
+                                {installation.accountLogin}
+                              </h3>
+                              <p className="mt-1 text-sm text-muted">
+                                {installation.repositoryCount} repos indexed locally
+                              </p>
+                            </div>
+                            <span className="dashboard-pill">#{installation.githubInstallId}</span>
+                          </div>
+                          <p className="mt-3 break-words text-sm leading-6 text-muted">
+                            {installation.repositoryNames.length > 0
+                              ? installation.repositoryNames.join(", ")
+                              : "No repositories cached yet. Refresh repositories to pull grants."}
+                          </p>
+                          <form
+                            action={`/api/github/installations/${installation.githubInstallId}/sync`}
+                            method="post"
+                            className="mt-4"
+                          >
+                            <button type="submit" className="button-secondary w-full">
+                              Refresh repositories
+                            </button>
+                          </form>
+                        </article>
+                      ))
+                    ) : (
+                      <article className="installation-card">
+                        <h3 className="text-lg font-semibold text-foreground">
+                          Nothing installed yet
+                        </h3>
+                        <p className="mt-2 text-sm leading-6 text-muted">
+                          Install the GitHub App on the account you want to measure to
+                          unlock repository-level metrics.
+                        </p>
+                      </article>
+                    )}
+                  </div>
+                </section>
+              </aside>
+            </section>
+          </>
+        ) : (
+          <section id="dashboard" className="dashboard-shell">
+            <div className="flex h-full flex-col gap-8">
+              <div className="space-y-4">
+                <span className="eyebrow eyebrow-subtle">Not connected</span>
+                <h2 className="dashboard-title max-w-3xl">
+                  Connect GitHub before expecting any dashboard signal.
+                </h2>
+                <p className="max-w-2xl text-sm leading-7 text-muted sm:text-base">
+                  This product does not simulate activity for you. Until GitHub
+                  is connected and synced, there is nothing real to measure.
+                </p>
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-3">
+                {CONNECT_STEPS.map((step, index) => (
+                  <article key={step.title} className="onboarding-card">
+                    <p className="panel-label">Step {index + 1}</p>
+                    <h3 className="mt-3 text-xl font-semibold text-foreground">
+                      {step.title}
+                    </h3>
+                    <p className="mt-3 text-sm leading-6 text-muted">
+                      {step.detail}
+                    </p>
+                  </article>
+                ))}
+              </div>
+
+              <section className="story-panel max-w-3xl">
+                <p className="panel-label">Current state</p>
+                <h3 className="panel-heading">{githubState.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-muted">
+                  {githubState.description}
+                </p>
+                {githubState.primaryAction ? (
+                  <div className="mt-5">
+                    <ConnectionAction
+                      href={githubState.primaryAction.href}
+                      label={githubState.primaryAction.label}
+                    />
+                  </div>
+                ) : null}
+              </section>
+            </div>
+          </section>
+        )}
       </div>
     </main>
   );

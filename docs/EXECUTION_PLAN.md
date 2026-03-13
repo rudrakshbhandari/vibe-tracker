@@ -17,6 +17,60 @@
 - [x] Run lint, tests, build, and a final Playwright verification pass
 - [x] Push branch and open PR
 
+## Issue #20 - Fix unreadable activity chart and align monthly buckets
+
+- Issue: [#20](https://github.com/rudrakshbhandari/vibe-tracker/issues/20)
+- Branch: `codex/fix-chart-readability`
+- PR: [#21](https://github.com/rudrakshbhandari/vibe-tracker/pull/21)
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Replace the unreadable timeline bars with a readable plotted chart
+- [x] Keep additions and deletions visible with labels and explicit scaling
+- [x] Align monthly analytics buckets to real calendar month boundaries
+- [x] Run lint, tests, and build
+- [x] Push branch and open PR
+
+## Issue #18 - Simplify homepage to focus on core dashboard metrics
+
+- Issue: [#18](https://github.com/rudrakshbhandari/vibe-tracker/issues/18)
+- Branch: `codex/simplify-main-screen`
+- PR: [#19](https://github.com/rudrakshbhandari/vibe-tracker/pull/19)
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Shrink the homepage header so identity and controls stay visible without a giant hero
+- [x] Keep the username, key stats, repo list, status cards, actions, and time filters
+- [x] Make the activity chart the primary full-width section
+- [x] Remove low-signal duplicate panels from the connected dashboard
+- [x] Run lint, tests, and build
+- [x] Push branch and open PR
+
+## Issue #16 - Improve dashboard UI hierarchy and visual polish
+
+- Issue: [#16](https://github.com/rudrakshbhandari/vibe-tracker/issues/16)
+- Branch: `rudrakshbhandari/improve-ui`
+- PR: [#17](https://github.com/rudrakshbhandari/vibe-tracker/pull/17)
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Create issue and project tracking for the UI refresh
+- [x] Pull the latest `main` before starting work
+- [x] Rebuild the homepage hierarchy so the hero, dashboard, and sidebar panels feel distinct
+- [x] Improve the visual system with stronger typography, color, and card treatments
+- [x] Preserve current GitHub connection, sync, and metrics actions
+- [x] Run lint, tests, and build
+- [x] Push branch and open PR
+
 ## Issue #13 - Simplify homepage to real vibe-coding dashboard and clear connect state
 
 - Issue: [#13](https://github.com/rudrakshbhandari/vibe-tracker/issues/13)
