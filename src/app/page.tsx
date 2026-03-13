@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Github, LineChart, RefreshCcw } from "lucide-react";
+import { ArrowRight, CheckCircle2, Github, LineChart, RefreshCcw, TimerReset } from "lucide-react";
 
 import { ActivitySyncRefresh } from "@/components/activity-sync-refresh";
-import type { AnalyticsView, MetricMode } from "@/lib/dashboard";
 import { formatNumber } from "@/lib/dashboard";
+import type { AnalyticsView, MetricMode } from "@/lib/dashboard";
 import { getGithubConnectionState } from "@/lib/github-state";
 import { getLiveMetrics } from "@/lib/live-metrics";
 
@@ -80,13 +80,54 @@ const GITHUB_STATUS_COPY: Record<string, { label: string; detail?: string }> = {
 };
 
 const CONNECT_STEPS = [
-  "Connect your GitHub account.",
-  "Install the GitHub App on the scope you want to track.",
-  "Run a sync to load your coding totals.",
+  {
+    title: "Connect your GitHub account",
+    detail: "Start the OAuth flow and store the local session used for metrics and sync jobs.",
+  },
+  {
+    title: "Install the GitHub App",
+    detail: "Grant access to the user or organization whose repositories should count toward the dashboard.",
+  },
+  {
+    title: "Run activity sync",
+    detail: "Pull commit metadata into the local database so the dashboard can calculate real totals.",
+  },
 ];
 
-const views: AnalyticsView[] = ["daily", "weekly", "monthly"];
-const modes: MetricMode[] = ["authored", "merged"];
+function getStatusTone(status?: string) {
+  if (!status) {
+    return "status-note status-note-neutral";
+  }
+
+  if (
+    status.includes("failed") ||
+    status.includes("invalid") ||
+    status.includes("missing")
+  ) {
+    return "status-note status-note-danger";
+  }
+
+  if (status.includes("running") || status.includes("started")) {
+    return "status-note status-note-active";
+  }
+
+  return "status-note status-note-success";
+}
+
+function ConnectionAction({
+  href,
+  label,
+}: {
+  href: string;
+  label: string;
+}) {
+  return (
+    <Link href={href} className="button-primary w-full sm:w-auto">
+      {label}
+      <ArrowRight className="h-4 w-4" />
+    </Link>
+  );
+}
 
 export default async function Home({ searchParams }: HomePageProps) {
   const params = (await searchParams) ?? {};
@@ -100,7 +141,6 @@ export default async function Home({ searchParams }: HomePageProps) {
     ["authored", "merged"].includes(params.mode)
       ? (params.mode as MetricMode)
       : "authored";
-
   const githubState = await getGithubConnectionState();
   const dashboard = githubState.connected
     ? await getLiveMetrics(view, mode)
@@ -110,6 +150,8 @@ export default async function Home({ searchParams }: HomePageProps) {
   const githubStatusCopy = githubStatus
     ? GITHUB_STATUS_COPY[githubStatus] ?? { label: githubStatus }
     : null;
+  const views: AnalyticsView[] = ["daily", "weekly", "monthly"];
+  const modes: MetricMode[] = ["authored", "merged"];
   const hasInstallations = githubState.installations.length > 0;
   const syncRefreshActive = Boolean(
     githubStatus === "activity-sync-started" ||
@@ -117,48 +159,57 @@ export default async function Home({ searchParams }: HomePageProps) {
       githubState.activitySyncRunning ||
       dashboard?.activitySyncRunning,
   );
+  const repoActivityMax = Math.max(
+    1,
+    ...(dashboard?.repositories.map(
+      (repository) => repository.additions + repository.deletions,
+    ) ?? [1]),
+  );
 
   return (
-    <main className="grid-lines min-h-screen">
+    <main className="aurora-shell min-h-screen">
       <ActivitySyncRefresh active={syncRefreshActive} />
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-5 sm:px-6 lg:px-8">
-        <header className="glass-panel rounded-[1.75rem] px-5 py-5 sm:px-6">
-          <div className="flex flex-col gap-5">
+      <div className="page-grid" />
+      <div className="page-noise" />
+
+      <div className="relative mx-auto flex w-full max-w-[1500px] flex-col gap-5 px-4 py-4 sm:px-6 sm:py-6 lg:px-10 lg:py-8">
+        <section className="hero-panel">
+          <div className="flex w-full flex-col gap-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-muted">
-                  <span className="rounded-full border border-line px-3 py-1">
+                  <span className="rounded-full border border-white/12 px-3 py-1">
                     Vibe Tracker
                   </span>
-                  <span className="rounded-full border border-line px-3 py-1">
+                  <span className="rounded-full border border-white/12 px-3 py-1">
                     Core dashboard
                   </span>
-                  <span className="rounded-full border border-line px-3 py-1">
+                  <span className="rounded-full border border-white/12 px-3 py-1">
                     {githubState.connected ? "GitHub connected" : "Not connected"}
                   </span>
                 </div>
                 <div className="space-y-2">
-                  <h1 className="max-w-3xl text-2xl font-semibold tracking-[-0.05em] sm:text-4xl">
+                  <h1 className="max-w-3xl text-2xl font-semibold tracking-[-0.05em] text-foreground sm:text-4xl">
                     Read the signal, not the chrome.
                   </h1>
                   <p className="max-w-2xl text-sm leading-6 text-muted sm:text-base">
-                    Your output, timeline, repositories, and sync state. Everything
-                    else got out of the way.
+                    Identity, key output, trend, repositories, and sync health.
+                    The rest is gone.
                   </p>
                 </div>
               </div>
 
               <div className="flex flex-wrap gap-2 lg:max-w-sm lg:justify-end">
                 {githubState.primaryAction ? (
-                  <Link href={githubState.primaryAction.href} className="button-primary">
-                    {githubState.primaryAction.label}
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
+                  <ConnectionAction
+                    href={githubState.primaryAction.href}
+                    label={githubState.primaryAction.label}
+                  />
                 ) : null}
                 {dashboard ? (
                   <Link
                     href={`/api/metrics?view=${view}&mode=${mode}`}
-                    className="button-secondary"
+                    className="button-secondary w-full sm:w-auto"
                   >
                     Metrics JSON
                     <LineChart className="h-4 w-4" />
@@ -168,7 +219,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                   <form action="/api/github/activity-sync" method="post">
                     <button
                       type="submit"
-                      className="button-secondary"
+                      className="button-secondary w-full sm:w-auto"
                       disabled={githubState.activitySyncRunning}
                     >
                       {githubState.activitySyncRunning ? "Syncing" : "Sync now"}
@@ -179,13 +230,11 @@ export default async function Home({ searchParams }: HomePageProps) {
             </div>
 
             <div className="grid gap-3 lg:grid-cols-[1.3fr_1fr_1fr_1fr]">
-              <section className="rounded-[1.25rem] border border-line bg-panel-strong px-4 py-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
-                  Identity
-                </p>
+              <section className="story-panel !p-4">
+                <p className="panel-label">Identity</p>
                 <div className="mt-2 flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-2xl font-semibold tracking-[-0.05em]">
+                    <p className="text-2xl font-semibold tracking-[-0.05em] text-foreground">
                       {dashboard?.profile.login ?? githubState.viewer?.login ?? "Connect GitHub"}
                     </p>
                     <p className="mt-1 text-sm text-muted">
@@ -195,18 +244,16 @@ export default async function Home({ searchParams }: HomePageProps) {
                     </p>
                   </div>
                   {githubState.connected ? (
-                    <CheckCircle2 className="mt-1 h-5 w-5 text-accent-2" />
+                    <CheckCircle2 className="mt-1 h-5 w-5 text-lime-300" />
                   ) : (
                     <Github className="mt-1 h-5 w-5 text-muted" />
                   )}
                 </div>
               </section>
 
-              <section className="rounded-[1.25rem] border border-line bg-panel-strong px-4 py-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
-                  Connection
-                </p>
-                <p className="mt-2 text-lg font-semibold">{githubState.title}</p>
+              <section className="story-panel !p-4">
+                <p className="panel-label">Connection</p>
+                <p className="mt-2 text-lg font-semibold text-foreground">{githubState.title}</p>
                 <p className="mt-1 text-sm text-muted">
                   {githubState.viewer
                     ? `Session ${githubState.viewer.sessionExpiryLabel}`
@@ -214,11 +261,9 @@ export default async function Home({ searchParams }: HomePageProps) {
                 </p>
               </section>
 
-              <section className="rounded-[1.25rem] border border-line bg-panel-strong px-4 py-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
-                  Sync
-                </p>
-                <p className="mt-2 text-lg font-semibold">
+              <section className="story-panel !p-4">
+                <p className="panel-label">Sync</p>
+                <p className="mt-2 text-lg font-semibold text-foreground">
                   {githubState.activitySyncRunning
                     ? "Running"
                     : githubState.activitySync
@@ -232,11 +277,9 @@ export default async function Home({ searchParams }: HomePageProps) {
                 </p>
               </section>
 
-              <section className="rounded-[1.25rem] border border-line bg-panel-strong px-4 py-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
-                  Installations
-                </p>
-                <p className="mt-2 text-lg font-semibold">
+              <section className="story-panel !p-4">
+                <p className="panel-label">Installations</p>
+                <p className="mt-2 text-lg font-semibold text-foreground">
                   {githubState.installations.length} scope
                   {githubState.installations.length === 1 ? "" : "s"}
                 </p>
@@ -246,186 +289,226 @@ export default async function Home({ searchParams }: HomePageProps) {
               </section>
             </div>
           </div>
-        </header>
+        </section>
 
         {githubStatus ? (
-          <section className="glass-panel rounded-[1.25rem] px-4 py-3 text-sm text-muted">
-            <p>
-              GitHub status:{" "}
-              <span className="font-semibold text-foreground">
-                {githubStatusCopy?.label ?? githubStatus}
-              </span>
-            </p>
-            {githubStatusCopy?.detail ? (
-              <p className="mt-1 leading-6">{githubStatusCopy.detail}</p>
-            ) : null}
+          <section className={getStatusTone(githubStatus)}>
+            <div className="flex items-start gap-3">
+              <TimerReset className="mt-0.5 h-4 w-4 shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  {githubStatusCopy?.label ?? githubStatus}
+                </p>
+                {githubStatusCopy?.detail ? (
+                  <p className="mt-1 max-w-4xl text-sm leading-6 text-muted">
+                    {githubStatusCopy.detail}
+                  </p>
+                ) : null}
+              </div>
+            </div>
           </section>
         ) : null}
 
         {dashboard ? (
           <>
-            <section className="glass-panel rounded-[1.75rem] p-5 sm:p-6">
-              <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-                <div className="space-y-3">
-                  <div className="flex flex-wrap gap-2">
+            <section id="dashboard" className="dashboard-shell">
+              <div className="dashboard-head">
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="eyebrow eyebrow-subtle">
+                      {dashboard.profile.source === "live"
+                        ? "Live dashboard"
+                        : "Sample dashboard"}
+                    </span>
+                    <span className="dashboard-pill">{dashboard.chartTitle}</span>
+                  </div>
+                  <div className="space-y-3">
+                    <h2 className="dashboard-title">{dashboard.profile.login}</h2>
+                    <p className="max-w-2xl text-sm leading-7 text-muted sm:text-base">
+                      {dashboard.profile.source === "live"
+                        ? "These metrics are aggregated from synced GitHub commits in the local database."
+                        : "Local demo data that mirrors the model we will populate from the GitHub API during sync jobs."}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="control-stack">
+                  <div className="control-group">
                     {views.map((entry) => (
                       <Link
                         key={entry}
                         href={`/?view=${entry}&mode=${mode}`}
-                        className={entry === view ? "toggle-pill toggle-pill-active" : "toggle-pill"}
+                        className={
+                          entry === view
+                            ? "toggle-pill toggle-pill-active"
+                            : "toggle-pill"
+                        }
                       >
                         {entry[0]?.toUpperCase()}
                         {entry.slice(1)}
                       </Link>
                     ))}
                   </div>
-                  <div className="flex flex-wrap gap-2">
+
+                  <div className="control-group">
                     {modes.map((entry) => (
                       <Link
                         key={entry}
                         href={`/?view=${view}&mode=${entry}`}
-                        className={entry === mode ? "toggle-pill toggle-pill-active" : "toggle-pill"}
+                        className={
+                          entry === mode
+                            ? "toggle-pill toggle-pill-active"
+                            : "toggle-pill"
+                        }
                       >
                         {entry === "authored" ? "Authored" : "Merged"}
                       </Link>
                     ))}
                   </div>
-                </div>
 
-                <div className="flex flex-wrap gap-2">
-                  {dashboard.filters.map((filter) => (
-                    <span
-                      key={filter}
-                      className="rounded-full border border-line px-3 py-1.5 text-xs font-medium uppercase tracking-[0.2em] text-muted"
-                    >
-                      {filter}
-                    </span>
-                  ))}
+                  <div className="filter-row">
+                    {dashboard.filters.map((filter) => (
+                      <span key={filter} className="filter-chip">
+                        {filter}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                {dashboard.summary.map((item) => (
+              <div className="mt-6 grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
+                {dashboard.summary.map((item, index) => (
                   <article
                     key={item.label}
-                    className="rounded-[1.25rem] border border-line bg-panel-strong px-4 py-4"
+                    className={index === 0 ? "metric-card metric-card-featured" : "metric-card"}
                   >
-                    <p className="text-sm text-muted">{item.label}</p>
-                    <p className="mt-3 text-3xl font-semibold tracking-[-0.04em]">
-                      {item.value}
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-muted">{item.detail}</p>
+                    <p className="metric-label">{item.label}</p>
+                    <p className="metric-value">{item.value}</p>
+                    <p className="metric-detail">{item.detail}</p>
                   </article>
                 ))}
               </div>
             </section>
 
-            <section className="glass-panel rounded-[1.75rem] p-5 sm:p-6">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <section className="story-panel">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.24em] text-accent">
-                    {dashboard.chartTitle}
-                  </p>
-                  <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] sm:text-3xl">
-                    Activity trend
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-muted">
-                    Additions and deletions across the selected time window.
-                  </p>
+                  <p className="panel-label text-accent">{dashboard.chartTitle}</p>
+                  <h3 className="panel-heading">Activity trend</h3>
                 </div>
-                <span className="rounded-full border border-line px-3 py-1 text-xs uppercase tracking-[0.2em] text-muted">
-                  Author date lens
-                </span>
+                <span className="dashboard-pill">Author date lens</span>
               </div>
 
-              <div className="mt-8 flex h-[22rem] items-end gap-2 sm:gap-3">
-                {dashboard.timeline.map((point) => (
-                  <div key={point.label} className="flex flex-1 flex-col gap-3">
-                    <div className="flex h-[17rem] items-end gap-1 sm:gap-1.5">
-                      <div
-                        className="w-1/2 rounded-t-full bg-accent"
-                        style={{ height: `${point.additionsHeight}%` }}
-                      />
-                      <div
-                        className="w-1/2 rounded-t-full bg-accent-2"
-                        style={{ height: `${point.deletionsHeight}%` }}
-                      />
+              <div className="timeline-shell">
+                <div className="timeline-ruler">
+                  <span>Peak</span>
+                  <span>Mid</span>
+                  <span>Now</span>
+                </div>
+                <div className="timeline-chart">
+                  {dashboard.timeline.map((point) => (
+                    <div key={point.label} className="timeline-column">
+                      <div className="timeline-bars">
+                        <div
+                          className="timeline-bar timeline-bar-additions"
+                          style={{ height: `${point.additionsHeight}%` }}
+                        />
+                        <div
+                          className="timeline-bar timeline-bar-deletions"
+                          style={{ height: `${point.deletionsHeight}%` }}
+                        />
+                      </div>
+                      <div className="timeline-meta">
+                        <p>{point.label}</p>
+                        <p className="font-mono text-foreground/80">
+                          +{formatNumber(point.additions)} / -
+                          {formatNumber(point.deletions)}
+                        </p>
+                      </div>
                     </div>
-                    <div className="space-y-1 text-center">
-                      <p className="text-xs text-muted">{point.label}</p>
-                      <p className="font-mono text-[11px] text-foreground/80 sm:text-xs">
-                        +{formatNumber(point.additions)} / -{formatNumber(point.deletions)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </section>
 
-            <section className="grid gap-5 xl:grid-cols-[1.5fr_0.9fr]">
-              <section className="glass-panel rounded-[1.75rem] p-5 sm:p-6">
-                <div className="flex items-center justify-between gap-3">
+            <section className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_360px]">
+              <section className="story-panel">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.24em] text-muted">
-                      Repository breakdown
-                    </p>
-                    <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">
-                      Where the work landed
-                    </h2>
+                    <p className="panel-label">Repository pressure</p>
+                    <h3 className="panel-heading">Where the work landed</h3>
                   </div>
-                  <span className="rounded-full border border-line px-3 py-1 text-xs uppercase tracking-[0.2em] text-muted">
+                  <span className="dashboard-pill">
                     {dashboard.repositories.length} repos
                   </span>
                 </div>
 
-                <div className="mt-5 max-h-[44rem] space-y-3 overflow-y-auto pr-1">
+                <div className="repo-list">
                   {dashboard.repositories.length > 0 ? (
-                    dashboard.repositories.map((repo) => (
-                      <article
-                        key={repo.name}
-                        className="rounded-[1.25rem] border border-line bg-panel-strong px-4 py-4"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <h3 className="text-lg font-semibold">{repo.name}</h3>
-                            <p className="mt-1 text-sm leading-6 text-muted">{repo.detail}</p>
+                    dashboard.repositories.map((repo, index) => {
+                      const totalActivity = repo.additions + repo.deletions;
+                      const width = `${Math.max(
+                        12,
+                        (totalActivity / repoActivityMax) * 100,
+                      )}%`;
+
+                      return (
+                        <article key={repo.name} className="repo-card">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-3">
+                                <span className="repo-rank">
+                                  {String(index + 1).padStart(2, "0")}
+                                </span>
+                                <h3 className="font-semibold text-foreground">
+                                  {repo.name}
+                                </h3>
+                              </div>
+                              <p className="text-sm leading-6 text-muted">
+                                {repo.detail}
+                              </p>
+                            </div>
+                            <span className="repo-visibility">{repo.visibility}</span>
                           </div>
-                          <span className="rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-accent">
-                            {repo.visibility}
-                          </span>
-                        </div>
-                        <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted">
-                          <span>+{formatNumber(repo.additions)}</span>
-                          <span>-{formatNumber(repo.deletions)}</span>
-                          <span>{repo.commitCount} commits</span>
-                        </div>
-                      </article>
-                    ))
+
+                          <div className="mt-4 space-y-3">
+                            <div className="repo-meter">
+                              <div className="repo-meter-fill" style={{ width }} />
+                            </div>
+                            <div className="flex flex-wrap items-center gap-3 text-sm text-muted">
+                              <span>+{formatNumber(repo.additions)}</span>
+                              <span>-{formatNumber(repo.deletions)}</span>
+                              <span>{repo.commitCount} commits</span>
+                            </div>
+                          </div>
+                        </article>
+                      );
+                    })
                   ) : (
-                    <article className="rounded-[1.25rem] border border-line bg-panel-strong px-4 py-4">
-                      <h3 className="font-semibold">No synced repositories yet</h3>
+                    <article className="repo-card">
+                      <h3 className="font-semibold text-foreground">
+                        No synced repositories yet
+                      </h3>
                       <p className="mt-2 text-sm leading-6 text-muted">
-                        Install the GitHub App on a user or organization, refresh repositories,
-                        then run your first activity sync.
+                        Install the GitHub App on a user or organization,
+                        refresh repositories, then run your first activity sync.
                       </p>
                     </article>
                   )}
                 </div>
               </section>
 
-              <aside className="flex flex-col gap-5">
-                <section className="glass-panel rounded-[1.75rem] p-5">
+              <aside className="flex flex-col gap-4">
+                <section className="story-panel !p-5">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.24em] text-muted">
-                        Account
-                      </p>
-                      <h2 className="mt-2 text-xl font-semibold tracking-[-0.04em]">
+                      <p className="panel-label">Account</p>
+                      <h3 className="panel-heading !text-[1.35rem]">
                         {githubState.viewer?.login ?? "Not signed in"}
-                      </h2>
+                      </h3>
                     </div>
                     {githubState.connected ? (
-                      <CheckCircle2 className="h-5 w-5 text-accent-2" />
+                      <CheckCircle2 className="h-5 w-5 text-lime-300" />
                     ) : (
                       <Github className="h-5 w-5 text-muted" />
                     )}
@@ -437,16 +520,14 @@ export default async function Home({ searchParams }: HomePageProps) {
                   </p>
                 </section>
 
-                <section className="glass-panel rounded-[1.75rem] p-5">
+                <section className="story-panel !p-5">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.24em] text-muted">
-                        Installations
-                      </p>
-                      <h2 className="mt-2 text-xl font-semibold tracking-[-0.04em]">
+                      <p className="panel-label">Installations</p>
+                      <h3 className="panel-heading !text-[1.35rem]">
                         {githubState.installations.length} connected scope
                         {githubState.installations.length === 1 ? "" : "s"}
-                      </h2>
+                      </h3>
                     </div>
                     <RefreshCcw className="h-4 w-4 text-muted" />
                   </div>
@@ -454,22 +535,19 @@ export default async function Home({ searchParams }: HomePageProps) {
                   <div className="mt-4 space-y-3">
                     {hasInstallations ? (
                       githubState.installations.map((installation) => (
-                        <article
-                          key={installation.id}
-                          className="rounded-[1.25rem] border border-line bg-panel-strong px-4 py-4"
-                        >
+                        <article key={installation.id} className="installation-card">
                           <div className="flex items-start justify-between gap-4">
                             <div>
-                              <h3 className="font-semibold">{installation.accountLogin}</h3>
+                              <h3 className="text-lg font-semibold text-foreground">
+                                {installation.accountLogin}
+                              </h3>
                               <p className="mt-1 text-sm text-muted">
                                 {installation.repositoryCount} repos indexed locally
                               </p>
                             </div>
-                            <span className="rounded-full border border-line px-3 py-1 text-[11px] font-medium text-muted">
-                              #{installation.githubInstallId}
-                            </span>
+                            <span className="dashboard-pill">#{installation.githubInstallId}</span>
                           </div>
-                          <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted">
+                          <p className="mt-3 break-words text-sm leading-6 text-muted">
                             {installation.repositoryNames.length > 0
                               ? installation.repositoryNames.join(", ")
                               : "No repositories cached yet. Refresh repositories to pull grants."}
@@ -486,11 +564,13 @@ export default async function Home({ searchParams }: HomePageProps) {
                         </article>
                       ))
                     ) : (
-                      <article className="rounded-[1.25rem] border border-line bg-panel-strong px-4 py-4">
-                        <h3 className="font-semibold">Nothing installed yet</h3>
+                      <article className="installation-card">
+                        <h3 className="text-lg font-semibold text-foreground">
+                          Nothing installed yet
+                        </h3>
                         <p className="mt-2 text-sm leading-6 text-muted">
-                          Install the GitHub App on the account you want to measure to unlock
-                          repository-level metrics.
+                          Install the GitHub App on the account you want to measure to
+                          unlock repository-level metrics.
                         </p>
                       </article>
                     )}
@@ -500,43 +580,48 @@ export default async function Home({ searchParams }: HomePageProps) {
             </section>
           </>
         ) : (
-          <section className="glass-panel rounded-[1.75rem] p-5 sm:p-6">
-            <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
-              <div>
-                <p className="text-xs uppercase tracking-[0.24em] text-muted">
-                  Not connected
-                </p>
-                <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
-                  Connect GitHub to unlock the main screen.
+          <section id="dashboard" className="dashboard-shell">
+            <div className="flex h-full flex-col gap-8">
+              <div className="space-y-4">
+                <span className="eyebrow eyebrow-subtle">Not connected</span>
+                <h2 className="dashboard-title max-w-3xl">
+                  Connect GitHub before expecting any dashboard signal.
                 </h2>
-                <p className="mt-3 max-w-2xl text-sm leading-7 text-muted">
-                  The app only shows real GitHub activity. Once connected, the homepage
-                  collapses to your identity, key stats, full-width activity trend, and
-                  repository output.
+                <p className="max-w-2xl text-sm leading-7 text-muted sm:text-base">
+                  This product does not simulate activity for you. Until GitHub
+                  is connected and synced, there is nothing real to measure.
                 </p>
-                {githubState.primaryAction ? (
-                  <div className="mt-5">
-                    <Link href={githubState.primaryAction.href} className="button-primary">
-                      {githubState.primaryAction.label}
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </div>
-                ) : null}
               </div>
 
-              <div className="grid gap-3">
+              <div className="grid gap-4 lg:grid-cols-3">
                 {CONNECT_STEPS.map((step, index) => (
-                  <article
-                    key={step}
-                    className="rounded-[1.25rem] border border-line bg-panel-strong px-4 py-4"
-                  >
-                    <p className="text-xs uppercase tracking-[0.24em] text-muted">
-                      Step {index + 1}
+                  <article key={step.title} className="onboarding-card">
+                    <p className="panel-label">Step {index + 1}</p>
+                    <h3 className="mt-3 text-xl font-semibold text-foreground">
+                      {step.title}
+                    </h3>
+                    <p className="mt-3 text-sm leading-6 text-muted">
+                      {step.detail}
                     </p>
-                    <p className="mt-2 text-lg font-semibold">{step}</p>
                   </article>
                 ))}
               </div>
+
+              <section className="story-panel max-w-3xl">
+                <p className="panel-label">Current state</p>
+                <h3 className="panel-heading">{githubState.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-muted">
+                  {githubState.description}
+                </p>
+                {githubState.primaryAction ? (
+                  <div className="mt-5">
+                    <ConnectionAction
+                      href={githubState.primaryAction.href}
+                      label={githubState.primaryAction.label}
+                    />
+                  </div>
+                ) : null}
+              </section>
             </div>
           </section>
         )}
