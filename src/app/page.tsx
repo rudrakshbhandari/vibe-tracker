@@ -278,6 +278,14 @@ export default async function Home({ searchParams }: HomePageProps) {
         <section className="top-panel">
           <div className="top-panel-copy">
             <span className="eyebrow">Vibe Tracker</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link href="/" className="toggle-pill toggle-pill-active">
+                Dashboard
+              </Link>
+              <Link href="/social" className="toggle-pill">
+                Social
+              </Link>
+            </div>
             <div className="space-y-3">
               <h1 className="page-title">Quiet, readable GitHub activity.</h1>
               <p className="page-description">
