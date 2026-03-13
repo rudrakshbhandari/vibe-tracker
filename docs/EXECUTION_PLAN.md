@@ -4,8 +4,8 @@
 
 - Issue: [#18](https://github.com/rudrakshbhandari/vibe-tracker/issues/18)
 - Branch: `codex/simplify-main-screen`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#19](https://github.com/rudrakshbhandari/vibe-tracker/pull/19)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -16,7 +16,7 @@
 - [x] Make the activity chart the primary full-width section
 - [x] Remove low-signal duplicate panels from the connected dashboard
 - [x] Run lint, tests, and build
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
 
 ## Issue #13 - Simplify homepage to real vibe-coding dashboard and clear connect state
 
