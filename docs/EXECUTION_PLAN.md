@@ -4,8 +4,8 @@
 
 - Issue: [#24](https://github.com/rudrakshbhandari/vibe-tracker/issues/24)
 - Branch: `rudrakshbhandari/light-elegant-dashboard`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#25](https://github.com/rudrakshbhandari/vibe-tracker/pull/25)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -16,7 +16,7 @@
 - [x] Replace the line chart with a bar chart and improve typography/spacing
 - [x] Stop filter changes from scrolling the page upward during refresh
 - [x] Run lint, tests, and build
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
 
 ## Issue #20 - Fix unreadable activity chart and align monthly buckets
 
