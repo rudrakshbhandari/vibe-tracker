@@ -123,28 +123,6 @@ function getStatusTone(status?: string) {
   return "status-note status-note-success";
 }
 
-function MetricCard({
-  label,
-  value,
-  detail,
-  featured = false,
-}: {
-  label: string;
-  value: string;
-  detail: string;
-  featured?: boolean;
-}) {
-  return (
-    <article
-      className={featured ? "metric-card metric-card-featured" : "metric-card"}
-    >
-      <p className="metric-label">{label}</p>
-      <p className="metric-value">{value}</p>
-      <p className="metric-detail">{detail}</p>
-    </article>
-  );
-}
-
 function ConnectionAction({
   href,
   label,
@@ -157,6 +135,55 @@ function ConnectionAction({
       {label}
       <ArrowRight className="h-4 w-4" />
     </Link>
+  );
+}
+
+function CompactMetric({
+  label,
+  value,
+  detail,
+  emphasized = false,
+}: {
+  label: string;
+  value: string;
+  detail: string;
+  emphasized?: boolean;
+}) {
+  return (
+    <article
+      className={
+        emphasized
+          ? "compact-metric compact-metric-emphasized"
+          : "compact-metric"
+      }
+    >
+      <p className="compact-metric-label">{label}</p>
+      <p className="compact-metric-value">{value}</p>
+      <p className="compact-metric-detail">{detail}</p>
+    </article>
+  );
+}
+
+function StatusChip({
+  label,
+  tone,
+}: {
+  label: string;
+  tone: "neutral" | "good" | "active";
+}) {
+  return (
+    <span
+      className={
+        tone === "good"
+          ? "status-chip status-chip-good"
+          : tone === "active"
+            ? "status-chip status-chip-active"
+            : "status-chip"
+      }
+    >
+      <span className="status-chip-dot" />
+      {label}
+    </span>
   );
 }
 
@@ -190,34 +217,48 @@ export default async function Home({ searchParams }: HomePageProps) {
       githubState.activitySyncRunning ||
       dashboard?.activitySyncRunning,
   );
-  const repoActivityMax = Math.max(
-    1,
-    ...(dashboard?.repositories.map(
-      (repository) => repository.additions + repository.deletions,
-    ) ?? [1]),
-  );
+
+  const topRepository = dashboard?.repositories[0] ?? null;
+  const peakTimelinePoint =
+    dashboard?.timeline.reduce((highest, point) => {
+      const highestTotal = highest.additions + highest.deletions;
+      const currentTotal = point.additions + point.deletions;
+      return currentTotal > highestTotal ? point : highest;
+    }) ?? null;
+  const netOutput = dashboard
+    ? dashboard.timeline.reduce(
+        (total, point) => total + point.additions - point.deletions,
+        0,
+      )
+    : 0;
+  const visibleTimelineLabelStep =
+    dashboard && dashboard.timeline.length > 8
+      ? Math.ceil(dashboard.timeline.length / 6)
+      : 1;
+  const visibleRepos = dashboard?.repositories.slice(0, 5) ?? [];
 
   return (
-    <main className="aurora-shell min-h-screen">
+    <main className="vibe-shell min-h-screen">
       <ActivitySyncRefresh active={syncRefreshActive} />
-      <div className="page-grid" />
-      <div className="page-noise" />
+      <div className="vibe-grid" />
+      <div className="vibe-ambient" />
 
-      <div className="relative mx-auto flex w-full max-w-[1500px] flex-col gap-6 px-4 py-4 sm:px-6 sm:py-6 lg:px-10 lg:py-8">
-        <section className="hero-panel">
+      <div className="relative mx-auto flex w-full max-w-[1480px] flex-col gap-6 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+        <section className="hero-frame">
           <div className="hero-copy">
             <div className="eyebrow">
               <span className="eyebrow-dot" />
               Personal GitHub telemetry
             </div>
+
             <div className="space-y-5">
               <h1 className="hero-title">
-                Stop guessing whether you shipped. Read the signal.
+                Read your actual coding signal, not a wall of decorative cards.
               </h1>
               <p className="hero-description">
-                Vibe Tracker turns your GitHub history into a live operating
-                board for authored output, sync health, and repository-level
-                momentum.
+                Vibe Tracker should feel like a concise operating board: one
+                place for output, current sync health, and repository pressure
+                without letting setup controls drown the analytics.
               </p>
             </div>
 
@@ -246,41 +287,60 @@ export default async function Home({ searchParams }: HomePageProps) {
             </div>
           </div>
 
-          <div className="hero-spotlight">
-            <div className="spotlight-ring" />
-            <div className="hero-stat-card">
-              <div className="hero-stat-chip">
+          <div className="hero-sidekick">
+            <div className="hero-sidekick-header">
+              <div className="hero-sidekick-chip">
                 <Sparkles className="h-4 w-4" />
-                Live coding pulse
+                Session signal
               </div>
-              <div className="space-y-4">
-                <div>
-                  <p className="panel-label">Current lens</p>
-                  <p className="hero-stat-value">
-                    {view[0]?.toUpperCase()}
-                    {view.slice(1)} · {mode === "authored" ? "Authored" : "Merged"}
-                  </p>
-                </div>
-                <div className="hero-stat-grid">
-                  <div>
-                    <p className="panel-label">Tracked scopes</p>
-                    <p className="panel-value">
-                      {githubState.installations.length || "0"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="panel-label">Sync state</p>
-                    <p className="panel-value">
-                      {githubState.activitySyncRunning ? "Running" : "Ready"}
-                    </p>
-                  </div>
-                </div>
-                <p className="text-sm leading-6 text-muted">
-                  The dashboard stays grounded in deduped commit records, so repo
-                  counts can grow without inflating totals.
+              <StatusChip
+                label={
+                  githubState.activitySyncRunning
+                    ? "Sync running"
+                    : githubState.connected
+                      ? "Connected"
+                      : "Needs setup"
+                }
+                tone={
+                  githubState.activitySyncRunning
+                    ? "active"
+                    : githubState.connected
+                      ? "good"
+                      : "neutral"
+                }
+              />
+            </div>
+
+            <div className="hero-sidekick-grid">
+              <div className="hero-kpi">
+                <p className="panel-label">Window</p>
+                <p className="hero-kpi-value">
+                  {view[0]?.toUpperCase()}
+                  {view.slice(1)}
+                </p>
+              </div>
+              <div className="hero-kpi">
+                <p className="panel-label">Mode</p>
+                <p className="hero-kpi-value">
+                  {mode === "authored" ? "Authored" : "Merged"}
+                </p>
+              </div>
+              <div className="hero-kpi">
+                <p className="panel-label">Installations</p>
+                <p className="hero-kpi-value">{githubState.installations.length}</p>
+              </div>
+              <div className="hero-kpi">
+                <p className="panel-label">Focus repo</p>
+                <p className="hero-kpi-value">
+                  {topRepository?.name.split("/")[1] ?? "Waiting"}
                 </p>
               </div>
             </div>
+
+            <p className="hero-sidekick-copy">
+              The page now pushes the live signal up front and moves GitHub
+              controls into a dedicated control rail so the analytics can lead.
+            </p>
           </div>
         </section>
 
@@ -304,12 +364,12 @@ export default async function Home({ searchParams }: HomePageProps) {
 
         <section
           id="dashboard"
-          className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_400px]"
+          className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_360px]"
         >
-          <section className="dashboard-shell">
+          <section className="workspace-panel">
             {dashboard ? (
               <>
-                <div className="dashboard-head">
+                <header className="workspace-header">
                   <div className="space-y-4">
                     <div className="flex flex-wrap items-center gap-3">
                       <span className="eyebrow eyebrow-subtle">
@@ -317,54 +377,57 @@ export default async function Home({ searchParams }: HomePageProps) {
                           ? "Live dashboard"
                           : "Sample dashboard"}
                       </span>
-                      <span className="dashboard-pill">
-                        {dashboard.chartTitle}
-                      </span>
+                      <span className="dashboard-tag">{dashboard.chartTitle}</span>
                     </div>
+
                     <div className="space-y-3">
-                      <h2 className="dashboard-title">
-                        {dashboard.profile.login}
-                      </h2>
+                      <h2 className="dashboard-title">{dashboard.profile.login}</h2>
                       <p className="max-w-2xl text-sm leading-7 text-muted sm:text-base">
                         {dashboard.profile.source === "live"
-                          ? "These metrics are aggregated from synced GitHub commits in the local database."
+                          ? "Synced commit records are deduped before aggregation, so this view is closer to an operating report than a vanity graph."
                           : "Local demo data that mirrors the model we will populate from the GitHub API during sync jobs."}
                       </p>
                     </div>
                   </div>
 
-                  <div className="control-stack">
-                    <div className="control-group">
-                      {views.map((entry) => (
-                        <Link
-                          key={entry}
-                          href={`/?view=${entry}&mode=${mode}`}
-                          className={
-                            entry === view
-                              ? "toggle-pill toggle-pill-active"
-                              : "toggle-pill"
-                          }
-                        >
-                          {entry[0]?.toUpperCase()}
-                          {entry.slice(1)}
-                        </Link>
-                      ))}
+                  <div className="workspace-controls">
+                    <div className="control-block">
+                      <p className="control-label">Window</p>
+                      <div className="control-group">
+                        {views.map((entry) => (
+                          <Link
+                            key={entry}
+                            href={`/?view=${entry}&mode=${mode}`}
+                            className={
+                              entry === view
+                                ? "toggle-pill toggle-pill-active"
+                                : "toggle-pill"
+                            }
+                          >
+                            {entry[0]?.toUpperCase()}
+                            {entry.slice(1)}
+                          </Link>
+                        ))}
+                      </div>
                     </div>
 
-                    <div className="control-group">
-                      {modes.map((entry) => (
-                        <Link
-                          key={entry}
-                          href={`/?view=${view}&mode=${entry}`}
-                          className={
-                            entry === mode
-                              ? "toggle-pill toggle-pill-active"
-                              : "toggle-pill"
-                          }
-                        >
-                          {entry === "authored" ? "Authored" : "Merged"}
-                        </Link>
-                      ))}
+                    <div className="control-block">
+                      <p className="control-label">Attribution</p>
+                      <div className="control-group">
+                        {modes.map((entry) => (
+                          <Link
+                            key={entry}
+                            href={`/?view=${view}&mode=${entry}`}
+                            className={
+                              entry === mode
+                                ? "toggle-pill toggle-pill-active"
+                                : "toggle-pill"
+                            }
+                          >
+                            {entry === "authored" ? "Authored" : "Merged"}
+                          </Link>
+                        ))}
+                      </div>
                     </div>
 
                     <div className="filter-row">
@@ -375,130 +438,179 @@ export default async function Home({ searchParams }: HomePageProps) {
                       ))}
                     </div>
                   </div>
-                </div>
+                </header>
 
-                <div className="mt-6 grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
+                <section className="signal-row">
                   {dashboard.summary.map((item, index) => (
-                    <MetricCard
+                    <CompactMetric
                       key={item.label}
                       label={item.label}
                       value={item.value}
                       detail={item.detail}
-                      featured={index === 0}
+                      emphasized={index === 0}
                     />
                   ))}
-                </div>
+                </section>
 
-                <div className="mt-6 grid gap-4 2xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
-                  <section className="story-panel">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="analysis-grid">
+                  <section className="analysis-panel analysis-panel-chart">
+                    <div className="panel-topline">
                       <div>
-                        <p className="panel-label text-accent">
-                          Output contour
-                        </p>
-                        <h3 className="panel-heading">
-                          Additions and deletions over time
+                        <p className="panel-label">Activity contour</p>
+                        <h3 className="section-title">
+                          Read the trend before you read the totals
                         </h3>
                       </div>
-                      <span className="dashboard-pill">Author date lens</span>
+                      <div className="legend-row">
+                        <span className="legend-chip">
+                          <span className="legend-swatch legend-swatch-additions" />
+                          Additions
+                        </span>
+                        <span className="legend-chip">
+                          <span className="legend-swatch legend-swatch-deletions" />
+                          Deletions
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="timeline-shell">
-                      <div className="timeline-ruler">
-                        <span>Peak</span>
-                        <span>Mid</span>
-                        <span>Now</span>
+                    <div className="insight-row">
+                      <div className="insight-card">
+                        <p className="panel-label">Peak window</p>
+                        <p className="insight-value">
+                          {peakTimelinePoint?.label ?? "No data"}
+                        </p>
+                        <p className="insight-copy">
+                          {peakTimelinePoint
+                            ? `${formatNumber(
+                                peakTimelinePoint.additions +
+                                  peakTimelinePoint.deletions,
+                              )} total changed lines`
+                            : "No synced activity yet."}
+                        </p>
                       </div>
-                      <div className="timeline-chart">
-                        {dashboard.timeline.map((point) => (
-                          <div key={point.label} className="timeline-column">
-                            <div className="timeline-bars">
-                              <div
-                                className="timeline-bar timeline-bar-additions"
-                                style={{ height: `${point.additionsHeight}%` }}
-                              />
-                              <div
-                                className="timeline-bar timeline-bar-deletions"
-                                style={{ height: `${point.deletionsHeight}%` }}
-                              />
-                            </div>
-                            <div className="timeline-meta">
-                              <p>{point.label}</p>
-                              <p className="font-mono text-foreground/80">
-                                +{formatNumber(point.additions)} / -
-                                {formatNumber(point.deletions)}
-                              </p>
-                            </div>
+                      <div className="insight-card">
+                        <p className="panel-label">Net output</p>
+                        <p className="insight-value">
+                          {netOutput >= 0 ? "+" : ""}
+                          {formatNumber(netOutput)}
+                        </p>
+                        <p className="insight-copy">
+                          Additions minus deletions inside this selected window.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="timeline-chart">
+                      {dashboard.timeline.map((point, index) => (
+                        <div key={point.label} className="timeline-column">
+                          <div className="timeline-bars">
+                            <div
+                              className="timeline-bar timeline-bar-additions"
+                              style={{ height: `${point.additionsHeight}%` }}
+                            />
+                            <div
+                              className="timeline-bar timeline-bar-deletions"
+                              style={{ height: `${point.deletionsHeight}%` }}
+                            />
                           </div>
-                        ))}
-                      </div>
+                          <div className="timeline-meta">
+                            <p>
+                              {index % visibleTimelineLabelStep === 0 ||
+                              index === dashboard.timeline.length - 1
+                                ? point.label
+                                : " "}
+                            </p>
+                            <p className="font-mono text-foreground/80">
+                              +{formatNumber(point.additions)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </section>
 
-                  <section className="story-panel">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
+                  <section className="analysis-panel">
+                    <div className="panel-topline">
                       <div>
                         <p className="panel-label">Repository pressure</p>
-                        <h3 className="panel-heading">Where the work landed</h3>
+                        <h3 className="section-title">
+                          Where the work actually concentrated
+                        </h3>
                       </div>
-                      <span className="dashboard-pill">
+                      <span className="dashboard-tag">
                         {dashboard.repositories.length} repos
                       </span>
                     </div>
 
-                    <div className="repo-list">
-                      {dashboard.repositories.length > 0 ? (
-                        dashboard.repositories.map((repo, index) => {
-                          const totalActivity =
-                            repo.additions + repo.deletions;
-                          const width = `${Math.max(
-                            12,
-                            (totalActivity / repoActivityMax) * 100,
-                          )}%`;
+                    {topRepository ? (
+                      <div className="repo-spotlight">
+                        <p className="panel-label">Top repository</p>
+                        <div className="repo-spotlight-row">
+                          <div>
+                            <h4 className="repo-spotlight-title">
+                              {topRepository.name}
+                            </h4>
+                            <p className="repo-spotlight-copy">
+                              {topRepository.detail}
+                            </p>
+                          </div>
+                          <span className="repo-visibility">
+                            {topRepository.visibility}
+                          </span>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    <div className="repo-stack">
+                      {visibleRepos.length > 0 ? (
+                        visibleRepos.map((repo, index) => {
+                          const totalActivity = repo.additions + repo.deletions;
+                          const percent = topRepository
+                            ? Math.round(
+                                (totalActivity /
+                                  (topRepository.additions +
+                                    topRepository.deletions || 1)) *
+                                  100,
+                              )
+                            : 0;
 
                           return (
                             <article key={repo.name} className="repo-card">
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="space-y-2">
-                                  <div className="flex items-center gap-3">
-                                    <span className="repo-rank">
-                                      {String(index + 1).padStart(2, "0")}
-                                    </span>
-                                    <h3 className="font-semibold text-foreground">
-                                      {repo.name}
-                                    </h3>
+                              <div className="repo-card-head">
+                                <div className="repo-title-group">
+                                  <span className="repo-rank">
+                                    {String(index + 1).padStart(2, "0")}
+                                  </span>
+                                  <div>
+                                    <h4 className="repo-name">{repo.name}</h4>
+                                    <p className="repo-copy">{repo.detail}</p>
                                   </div>
-                                  <p className="text-sm leading-6 text-muted">
-                                    {repo.detail}
-                                  </p>
                                 </div>
                                 <span className="repo-visibility">
                                   {repo.visibility}
                                 </span>
                               </div>
 
-                              <div className="mt-4 space-y-3">
-                                <div className="repo-meter">
-                                  <div
-                                    className="repo-meter-fill"
-                                    style={{ width }}
-                                  />
-                                </div>
-                                <div className="flex flex-wrap items-center gap-3 text-sm text-muted">
-                                  <span>+{formatNumber(repo.additions)}</span>
-                                  <span>-{formatNumber(repo.deletions)}</span>
-                                  <span>{repo.commitCount} commits</span>
-                                </div>
+                              <div className="repo-stats">
+                                <span>+{formatNumber(repo.additions)}</span>
+                                <span>-{formatNumber(repo.deletions)}</span>
+                                <span>{repo.commitCount} commits</span>
+                                <span>{percent}% of top-repo volume</span>
+                              </div>
+
+                              <div className="repo-meter">
+                                <div
+                                  className="repo-meter-fill"
+                                  style={{ width: `${Math.max(percent, 8)}%` }}
+                                />
                               </div>
                             </article>
                           );
                         })
                       ) : (
                         <article className="repo-card">
-                          <h3 className="font-semibold text-foreground">
-                            No synced repositories yet
-                          </h3>
-                          <p className="mt-2 text-sm leading-6 text-muted">
+                          <h4 className="repo-name">No synced repositories yet</h4>
+                          <p className="repo-copy">
                             Install the GitHub App on a user or organization,
                             refresh repositories, then run your first activity
                             sync.
@@ -510,37 +622,32 @@ export default async function Home({ searchParams }: HomePageProps) {
                 </div>
               </>
             ) : (
-              <div className="flex h-full flex-col gap-8">
+              <div className="empty-state-shell">
                 <div className="space-y-4">
                   <span className="eyebrow eyebrow-subtle">Not connected</span>
                   <h2 className="dashboard-title max-w-3xl">
                     Connect GitHub before expecting any dashboard signal.
                   </h2>
                   <p className="max-w-2xl text-sm leading-7 text-muted sm:text-base">
-                    This product does not simulate activity for you. Until
-                    GitHub is connected and synced, there is nothing real to
-                    measure.
+                    This page should not fake momentum. Until GitHub is
+                    connected and synced, there is nothing real to measure.
                   </p>
                 </div>
 
-                <div className="grid gap-4 lg:grid-cols-3">
+                <div className="setup-grid">
                   {CONNECT_STEPS.map((step, index) => (
-                    <article key={step.title} className="onboarding-card">
+                    <article key={step.title} className="setup-card">
                       <p className="panel-label">Step {index + 1}</p>
-                      <h3 className="mt-3 text-xl font-semibold text-foreground">
-                        {step.title}
-                      </h3>
-                      <p className="mt-3 text-sm leading-6 text-muted">
-                        {step.detail}
-                      </p>
+                      <h3 className="setup-card-title">{step.title}</h3>
+                      <p className="setup-card-copy">{step.detail}</p>
                     </article>
                   ))}
                 </div>
 
-                <section className="story-panel max-w-3xl">
+                <section className="analysis-panel">
                   <p className="panel-label">Current state</p>
-                  <h3 className="panel-heading">{githubState.title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-muted">
+                  <h3 className="section-title">{githubState.title}</h3>
+                  <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
                     {githubState.description}
                   </p>
                   {githubState.primaryAction ? (
@@ -556,13 +663,13 @@ export default async function Home({ searchParams }: HomePageProps) {
             )}
           </section>
 
-          <aside className="flex flex-col gap-6">
-            <section className="sidebar-panel">
-              <div className="flex items-center justify-between gap-3">
+          <aside className="control-rail">
+            <section className="rail-panel rail-panel-primary">
+              <div className="panel-topline">
                 <div>
-                  <p className="panel-label">Connection</p>
-                  <h2 className="panel-heading text-[1.8rem]">
-                    {githubState.title}
+                  <p className="panel-label">Control rail</p>
+                  <h2 className="section-title section-title-rail">
+                    GitHub connection and sync
                   </h2>
                 </div>
                 {githubState.connected ? (
@@ -572,18 +679,36 @@ export default async function Home({ searchParams }: HomePageProps) {
                 )}
               </div>
 
-              <p className="mt-3 text-sm leading-6 text-muted">
-                {githubState.description}
-              </p>
+              <div className="rail-status">
+                <div>
+                  <p className="rail-label">{githubState.title}</p>
+                  <p className="rail-copy">{githubState.description}</p>
+                </div>
+                <StatusChip
+                  label={
+                    githubState.activitySyncRunning
+                      ? "Sync running"
+                      : githubState.connected
+                        ? "Ready"
+                        : "Offline"
+                  }
+                  tone={
+                    githubState.activitySyncRunning
+                      ? "active"
+                      : githubState.connected
+                        ? "good"
+                        : "neutral"
+                  }
+                />
+              </div>
 
-              <div className="mt-6 flex flex-col gap-3">
+              <div className="rail-actions">
                 {githubState.primaryAction ? (
                   <ConnectionAction
                     href={githubState.primaryAction.href}
                     label={githubState.primaryAction.label}
                   />
                 ) : null}
-
                 {githubState.connected ? (
                   <form action="/api/github/activity-sync" method="post">
                     <button
@@ -600,55 +725,59 @@ export default async function Home({ searchParams }: HomePageProps) {
               </div>
 
               {githubState.viewer ? (
-                <div className="sidebar-subpanel">
+                <div className="rail-subpanel">
                   <p className="panel-label">Signed in as</p>
-                  <p className="mt-2 text-2xl font-semibold text-foreground">
-                    {githubState.viewer.login}
-                  </p>
-                  <p className="mt-2 text-sm text-muted">
-                    Session expires {githubState.viewer.sessionExpiryLabel}
-                  </p>
-                  <p className="mt-4 text-sm leading-6 text-muted">
-                    Latest activity sync:{" "}
-                    {githubState.activitySync
-                      ? `${githubState.activitySync.status} at ${githubState.activitySync.updatedAt}`
-                      : "not run yet"}
-                  </p>
+                  <p className="rail-user">{githubState.viewer.login}</p>
+                  <div className="rail-meta-grid">
+                    <div>
+                      <p className="panel-label">Session</p>
+                      <p className="rail-meta-copy">
+                        Expires {githubState.viewer.sessionExpiryLabel}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="panel-label">Latest activity sync</p>
+                      <p className="rail-meta-copy">
+                        {githubState.activitySync
+                          ? `${githubState.activitySync.status} at ${githubState.activitySync.updatedAt}`
+                          : "Not run yet"}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               ) : null}
             </section>
 
-            <section className="sidebar-panel">
-              <div className="flex items-center justify-between gap-3">
+            <section className="rail-panel">
+              <div className="panel-topline">
                 <div>
                   <p className="panel-label">Installations</p>
-                  <h2 className="panel-heading text-[1.8rem]">
-                    {githubState.installations.length} connected scope
-                    {githubState.installations.length === 1 ? "" : "s"}
+                  <h2 className="section-title section-title-rail">
+                    Connected scopes
                   </h2>
                 </div>
                 <RefreshCcw className="h-5 w-5 text-muted" />
               </div>
 
-              <div className="mt-5 max-h-[42rem] space-y-4 overflow-y-auto pr-1">
+              <div className="installation-stack">
                 {hasInstallations ? (
                   githubState.installations.map((installation) => (
                     <article key={installation.id} className="installation-card">
-                      <div className="flex items-start justify-between gap-4">
+                      <div className="installation-head">
                         <div>
-                          <h3 className="text-lg font-semibold text-foreground">
+                          <h3 className="installation-title">
                             {installation.accountLogin}
                           </h3>
-                          <p className="mt-1 text-sm text-muted">
+                          <p className="installation-copy">
                             {installation.repositoryCount} repos indexed locally
                           </p>
                         </div>
-                        <span className="dashboard-pill">
+                        <span className="dashboard-tag">
                           #{installation.githubInstallId}
                         </span>
                       </div>
 
-                      <p className="mt-4 break-words text-sm leading-6 text-muted">
+                      <p className="installation-copy installation-copy-break">
                         {installation.repositoryNames.length > 0
                           ? installation.repositoryNames.join(", ")
                           : "No repositories cached yet. Refresh repositories to pull grants."}
@@ -657,7 +786,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                       <form
                         action={`/api/github/installations/${installation.githubInstallId}/sync`}
                         method="post"
-                        className="mt-5"
+                        className="mt-4"
                       >
                         <button type="submit" className="button-secondary w-full">
                           Refresh repositories
@@ -667,38 +796,39 @@ export default async function Home({ searchParams }: HomePageProps) {
                   ))
                 ) : (
                   <article className="installation-card">
-                    <h3 className="text-lg font-semibold text-foreground">
-                      Nothing installed yet
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-muted">
-                      After you connect GitHub, install the app on the account
-                      you want to measure. That unlocks repository access and
-                      lets the sync job pull your activity.
+                    <h3 className="installation-title">Nothing installed yet</h3>
+                    <p className="installation-copy">
+                      Install the GitHub App on the account you want to measure.
+                      That unlocks repository access for sync jobs.
                     </p>
                   </article>
                 )}
               </div>
             </section>
 
-            <section className="sidebar-panel sidebar-panel-accent">
-              <div className="flex items-center justify-between gap-3">
-                <span className="eyebrow eyebrow-subtle">API sample</span>
+            <section className="rail-panel rail-panel-quiet">
+              <div className="panel-topline">
+                <div>
+                  <p className="panel-label">Model note</p>
+                  <h2 className="section-title section-title-rail">
+                    Why the totals hold up
+                  </h2>
+                </div>
                 <ArrowUpRight className="h-4 w-4 text-accent" />
               </div>
-              <h2 className="mt-4 text-2xl font-semibold tracking-[-0.04em] text-foreground">
-                Why the model scales
-              </h2>
-              <p className="mt-3 text-sm leading-6 text-muted">
+
+              <p className="rail-copy">
                 Repositories, branches, and pull requests are attribution
-                layers around one canonical commit record. That keeps the API
-                honest as repo count grows.
+                layers around one canonical commit record. That prevents repo
+                sprawl from inflating totals.
               </p>
-              <div className="api-card">
+
+              <div className="api-rule-card">
                 <p className="panel-label">Core rule</p>
-                <p className="mt-3 font-mono text-sm leading-6 text-foreground/90">
+                <p className="api-rule-copy">
                   one commit SHA
                   <br />
-                  = one unit of work
+                  equals one unit of work
                   <br />
                   regardless of branch count
                 </p>
