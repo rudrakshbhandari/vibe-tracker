@@ -1,5 +1,23 @@
 # Execution Plan
 
+## Issue #24 - Refine dashboard layout, remove redundant setup UI, and switch to elegant light theme
+
+- Issue: [#24](https://github.com/rudrakshbhandari/vibe-tracker/issues/24)
+- Branch: `rudrakshbhandari/light-elegant-dashboard`
+- PR: Pending
+- Workflow: In Progress
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Replace the dark, edgy theme with a light and more elegant visual system
+- [x] Remove low-signal setup actions and repeated account/installations panels
+- [x] Replace the line chart with a bar chart and improve typography/spacing
+- [x] Stop filter changes from scrolling the page upward during refresh
+- [x] Run lint, tests, and build
+- [ ] Push branch and open PR
+
 ## Issue #20 - Fix unreadable activity chart and align monthly buckets
 
 - Issue: [#20](https://github.com/rudrakshbhandari/vibe-tracker/issues/20)
