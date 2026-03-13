@@ -1,5 +1,24 @@
 # Execution Plan
 
+## Issue #30 - Harden worktree bootstrap and shared local dev setup
+
+- Issue: [#30](https://github.com/rudrakshbhandari/vibe-tracker/issues/30)
+- Branch: `rudrakshbhandari/worktree-bootstrap`
+- PR: [#31](https://github.com/rudrakshbhandari/vibe-tracker/pull/31)
+
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Fix local database defaults so the example env matches the Prisma Postgres datasource
+- [x] Add shared env and worktree bootstrap scripts for repeatable setup
+- [x] Add a shared local Postgres compose service for worktree-safe local database access
+- [x] Document the worktree/bootstrap flow in README and docs
+- [x] Run lint, tests, build, and bootstrap verification
+- [x] Push branch, open PR, and sync project fields/docs
+
 ## Issue #28 - Add social profiles, friends, and leaderboards
 
 - Issue: [#28](https://github.com/rudrakshbhandari/vibe-tracker/issues/28)
