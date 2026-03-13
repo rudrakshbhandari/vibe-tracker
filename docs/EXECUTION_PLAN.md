@@ -1,5 +1,23 @@
 # Execution Plan
 
+## Issue #18 - Simplify homepage to focus on core dashboard metrics
+
+- Issue: [#18](https://github.com/rudrakshbhandari/vibe-tracker/issues/18)
+- Branch: `codex/simplify-main-screen`
+- PR: Pending
+- Workflow: In Progress
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Shrink the homepage header so identity and controls stay visible without a giant hero
+- [x] Keep the username, key stats, repo list, status cards, actions, and time filters
+- [x] Make the activity chart the primary full-width section
+- [x] Remove low-signal duplicate panels from the connected dashboard
+- [x] Run lint, tests, and build
+- [ ] Push branch and open PR
+
 ## Issue #13 - Simplify homepage to real vibe-coding dashboard and clear connect state
 
 - Issue: [#13](https://github.com/rudrakshbhandari/vibe-tracker/issues/13)
