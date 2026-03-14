@@ -1,12 +1,29 @@
 # Execution Plan
 
+## Issue #38 - Audit and sync repository docs with current GitHub state
+
+- Issue: [#38](https://github.com/rudrakshbhandari/vibe-tracker/issues/38)
+- Branch: `rudrakshbhandari/sync-project-docs`
+- PR: [#40](https://github.com/rudrakshbhandari/vibe-tracker/pull/40)
+- Workflow: In Review
+- Priority: P2
+- App: multi
+
+### Checklist
+
+- [x] Create issue and project tracking for the docs audit
+- [x] Review the current README, scripts, and product flow for drift
+- [x] Update stale execution-plan issue and PR state
+- [x] Run relevant checks after docs updates
+- [x] Push branch and open PR
+
 ## Issue #34 - Set up open-source contribution system before launch
 
 - Issue: [#34](https://github.com/rudrakshbhandari/vibe-tracker/issues/34)
 - Branch: `rudrakshbhandari/open-source-contribution-system`
 - PR: [#35](https://github.com/rudrakshbhandari/vibe-tracker/pull/35)
 
-- Workflow: In Review
+- Workflow: Done
 - Priority: P1
 - App: multi
 
@@ -27,7 +44,7 @@
 - Branch: `rudrakshbhandari/shipped-work-architecture`
 - PR: [#33](https://github.com/rudrakshbhandari/vibe-tracker/pull/33)
 
-- Workflow: In Review
+- Workflow: Done
 - Priority: P1
 - App: multi
 
@@ -46,7 +63,7 @@
 - Branch: `rudrakshbhandari/worktree-bootstrap`
 - PR: [#31](https://github.com/rudrakshbhandari/vibe-tracker/pull/31)
 
-- Workflow: In Review
+- Workflow: Done
 - Priority: P1
 - App: multi
 
@@ -65,7 +82,7 @@
 - Branch: `rudrakshbhandari/social-leaderboards`
 - PR: [#29](https://github.com/rudrakshbhandari/vibe-tracker/pull/29)
 
-- Workflow: In Review
+- Workflow: Done
 - Priority: P1
 - App: multi
 
@@ -84,7 +101,7 @@
 - Branch: `rudrakshbhandari/light-elegant-dashboard`
 - PR: [#25](https://github.com/rudrakshbhandari/vibe-tracker/pull/25)
 
-- Workflow: In Review
+- Workflow: Done
 - Priority: P1
 - App: multi
 
@@ -102,7 +119,7 @@
 - Issue: [#22](https://github.com/rudrakshbhandari/vibe-tracker/issues/22)
 - Branch: `rudrakshbhandari/elegant-homepage-refresh`
 - PR: [#23](https://github.com/rudrakshbhandari/vibe-tracker/pull/23)
-- Workflow: In Review
+- Workflow: Done
 - Priority: P1
 - App: multi
 
@@ -119,7 +136,7 @@
 - Issue: [#20](https://github.com/rudrakshbhandari/vibe-tracker/issues/20)
 - Branch: `codex/fix-chart-readability`
 - PR: [#21](https://github.com/rudrakshbhandari/vibe-tracker/pull/21)
-- Workflow: In Review
+- Workflow: Done
 - Priority: P1
 - App: multi
 
@@ -136,7 +153,7 @@
 - Issue: [#18](https://github.com/rudrakshbhandari/vibe-tracker/issues/18)
 - Branch: `codex/simplify-main-screen`
 - PR: [#19](https://github.com/rudrakshbhandari/vibe-tracker/pull/19)
-- Workflow: In Review
+- Workflow: Done
 - Priority: P1
 - App: multi
 
@@ -154,7 +171,7 @@
 - Issue: [#16](https://github.com/rudrakshbhandari/vibe-tracker/issues/16)
 - Branch: `rudrakshbhandari/improve-ui`
 - PR: [#17](https://github.com/rudrakshbhandari/vibe-tracker/pull/17)
-- Workflow: In Review
+- Workflow: Done
 - Priority: P1
 - App: multi
 
@@ -173,7 +190,7 @@
 - Issue: [#13](https://github.com/rudrakshbhandari/vibe-tracker/issues/13)
 - Branch: `codex/simple-vibe-webapp`
 - PR: [#14](https://github.com/rudrakshbhandari/vibe-tracker/pull/14)
-- Workflow: In Review
+- Workflow: Done
 - Priority: P1
 - App: multi
 
@@ -210,7 +227,7 @@
 - Issue: [#6](https://github.com/rudrakshbhandari/vibe-tracker/issues/6)
 - Branch: `rudrakshbhandari/close-task-cleanup`
 - PR: [#7](https://github.com/rudrakshbhandari/vibe-tracker/pull/7)
-- Workflow: In Review
+- Workflow: Done
 - Priority: P3
 - App: multi
 
@@ -226,7 +243,7 @@
 - Issue: [#9](https://github.com/rudrakshbhandari/vibe-tracker/issues/9)
 - Branch: `codex/fix-prisma-production-build`
 - PR: [#10](https://github.com/rudrakshbhandari/vibe-tracker/pull/10)
-- Workflow: In Review
+- Workflow: Done
 - Priority: P1
 - App: multi
 
@@ -245,7 +262,7 @@
 - Issue: [#11](https://github.com/rudrakshbhandari/vibe-tracker/issues/11)
 - Branch: `codex/fix-sync-refresh-and-dashboard-layout`
 - PR: [#12](https://github.com/rudrakshbhandari/vibe-tracker/pull/12)
-- Workflow: In Review
+- Workflow: Done
 - Priority: P1
 - App: multi
 
