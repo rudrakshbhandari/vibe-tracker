@@ -108,7 +108,6 @@ describe("POST /api/github/activity-sync", () => {
 
     expect(syncUserActivityForAccountMock).toHaveBeenCalledWith({
       accountId: "account-1",
-      authorLogin: "octocat",
       userAccessToken: "user-token",
     });
   });

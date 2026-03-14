@@ -1,5 +1,24 @@
 # Execution Plan
 
+## Issue #32 - Refactor sync architecture around shipped work aggregates
+
+- Issue: [#32](https://github.com/rudrakshbhandari/vibe-tracker/issues/32)
+- Branch: `rudrakshbhandari/shipped-work-architecture`
+- PR: [#33](https://github.com/rudrakshbhandari/vibe-tracker/pull/33)
+
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Replace branch and commit crawling with merged pull request sync
+- [x] Add sync cursors and daily shipped-work aggregate storage
+- [x] Rewrite live dashboard reads around aggregate tables
+- [x] Update UI and docs to describe shipped-work semantics
+- [x] Run lint, tests, and build
+- [x] Push branch and open PR
+
 ## Issue #30 - Harden worktree bootstrap and shared local dev setup
 
 - Issue: [#30](https://github.com/rudrakshbhandari/vibe-tracker/issues/30)

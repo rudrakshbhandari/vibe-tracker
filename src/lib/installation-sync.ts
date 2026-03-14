@@ -1,22 +1,26 @@
 import { db } from "@/lib/db";
 import {
-  getAssociatedPullRequests,
-  getCommitDetail,
   getInstallationRepositories,
+  getPullRequestDetail,
   getUserInstallations,
-  listBranchCommits,
-  listRepositoryBranches,
+  listMergedPullRequests,
   type GitHubInstallation,
+  type GitHubPullRequestDetail,
 } from "@/lib/github";
 import { getStaleRepositoryIds } from "@/lib/repository-sync";
 import { refreshLeaderboardSnapshotsForAccount } from "@/lib/social";
 
-const ACTIVITY_SYNC_LOOKBACK_DAYS = 365;
+const ACTIVITY_SYNC_LOOKBACK_DAYS = 90;
+const MERGED_PULL_REQUEST_SCOPE = "merged_prs";
 
-function getActivitySyncSinceIsoString() {
+function getInitialActivitySyncSinceIsoString() {
   return new Date(
     Date.now() - ACTIVITY_SYNC_LOOKBACK_DAYS * 24 * 60 * 60 * 1000,
   ).toISOString();
+}
+
+function getUtcDay(date: Date) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 }
 
 async function upsertInstallationAndRepositories(input: {
@@ -68,9 +72,7 @@ async function syncInstallationRepositories(input: {
     accountId: input.accountId,
   });
 
-  const githubRepositories = await getInstallationRepositories(
-    input.installation.id,
-  );
+  const githubRepositories = await getInstallationRepositories(input.installation.id);
   const persistedRepositories = await db.repository.findMany({
     where: {
       installationId: installation.id,
@@ -88,44 +90,11 @@ async function syncInstallationRepositories(input: {
 
   if (staleRepositoryIds.length > 0) {
     await db.$transaction([
-      db.pullRequestCommit.deleteMany({
+      db.dailyUserRepoStats.deleteMany({
         where: {
-          OR: [
-            {
-              pullRequest: {
-                repositoryId: {
-                  in: staleRepositoryIds,
-                },
-              },
-            },
-            {
-              commit: {
-                repositoryId: {
-                  in: staleRepositoryIds,
-                },
-              },
-            },
-          ],
-        },
-      }),
-      db.commitBranch.deleteMany({
-        where: {
-          OR: [
-            {
-              commit: {
-                repositoryId: {
-                  in: staleRepositoryIds,
-                },
-              },
-            },
-            {
-              branch: {
-                repositoryId: {
-                  in: staleRepositoryIds,
-                },
-              },
-            },
-          ],
+          repositoryId: {
+            in: staleRepositoryIds,
+          },
         },
       }),
       db.pullRequest.deleteMany({
@@ -135,14 +104,7 @@ async function syncInstallationRepositories(input: {
           },
         },
       }),
-      db.commit.deleteMany({
-        where: {
-          repositoryId: {
-            in: staleRepositoryIds,
-          },
-        },
-      }),
-      db.branch.deleteMany({
+      db.syncCursor.deleteMany({
         where: {
           repositoryId: {
             in: staleRepositoryIds,
@@ -199,236 +161,257 @@ async function syncInstallationRepositories(input: {
   };
 }
 
-async function syncRepositoryActivity(input: {
+async function upsertPullRequestAuthor(detail: GitHubPullRequestDetail) {
+  if (!detail.user) {
+    return null;
+  }
+
+  return db.gitHubAccount.upsert({
+    where: {
+      githubUserId: detail.user.id,
+    },
+    update: {
+      login: detail.user.login,
+      avatarUrl: detail.user.avatar_url,
+    },
+    create: {
+      githubUserId: detail.user.id,
+      login: detail.user.login,
+      avatarUrl: detail.user.avatar_url,
+    },
+  });
+}
+
+async function applyDailyStatsDelta(input: {
+  accountId: string;
+  repositoryId: string;
+  day: Date;
+  additionsDelta: number;
+  deletionsDelta: number;
+  mergedPrCountDelta: number;
+  commitCountDelta: number;
+}) {
+  if (
+    input.additionsDelta === 0 &&
+    input.deletionsDelta === 0 &&
+    input.mergedPrCountDelta === 0 &&
+    input.commitCountDelta === 0
+  ) {
+    return;
+  }
+
+  const existing = await db.dailyUserRepoStats.findUnique({
+    where: {
+      accountId_repositoryId_day: {
+        accountId: input.accountId,
+        repositoryId: input.repositoryId,
+        day: input.day,
+      },
+    },
+  });
+
+  const nextAdditions = (existing?.additions ?? 0) + input.additionsDelta;
+  const nextDeletions = (existing?.deletions ?? 0) + input.deletionsDelta;
+  const nextMergedPrCount =
+    (existing?.mergedPrCount ?? 0) + input.mergedPrCountDelta;
+  const nextCommitCount = (existing?.commitCount ?? 0) + input.commitCountDelta;
+
+  if (
+    nextAdditions <= 0 &&
+    nextDeletions <= 0 &&
+    nextMergedPrCount <= 0 &&
+    nextCommitCount <= 0
+  ) {
+    if (existing) {
+      await db.dailyUserRepoStats.delete({
+        where: {
+          id: existing.id,
+        },
+      });
+    }
+
+    return;
+  }
+
+  await db.dailyUserRepoStats.upsert({
+    where: {
+      accountId_repositoryId_day: {
+        accountId: input.accountId,
+        repositoryId: input.repositoryId,
+        day: input.day,
+      },
+    },
+    update: {
+      additions: nextAdditions,
+      deletions: nextDeletions,
+      mergedPrCount: nextMergedPrCount,
+      commitCount: nextCommitCount,
+    },
+    create: {
+      accountId: input.accountId,
+      repositoryId: input.repositoryId,
+      day: input.day,
+      additions: nextAdditions,
+      deletions: nextDeletions,
+      mergedPrCount: nextMergedPrCount,
+      commitCount: nextCommitCount,
+    },
+  });
+}
+
+async function applyPullRequestToDailyStats(input: {
+  repositoryId: string;
+  detail: GitHubPullRequestDetail;
+}) {
+  if (!input.detail.merged_at) {
+    return;
+  }
+
+  const author = await upsertPullRequestAuthor(input.detail);
+  const mergedAt = new Date(input.detail.merged_at);
+  const day = getUtcDay(mergedAt);
+  const existing = await db.pullRequest.findUnique({
+    where: {
+      repositoryId_githubPrNumber: {
+        repositoryId: input.repositoryId,
+        githubPrNumber: input.detail.number,
+      },
+    },
+  });
+
+  if (existing?.authorId) {
+    await applyDailyStatsDelta({
+      accountId: existing.authorId,
+      repositoryId: input.repositoryId,
+      day: getUtcDay(existing.mergedAt ?? existing.openedAt),
+      additionsDelta: -existing.additions,
+      deletionsDelta: -existing.deletions,
+      mergedPrCountDelta: -1,
+      commitCountDelta: -existing.commitCount,
+    });
+  }
+
+  const pullRequest = await db.pullRequest.upsert({
+    where: {
+      repositoryId_githubPrNumber: {
+        repositoryId: input.repositoryId,
+        githubPrNumber: input.detail.number,
+      },
+    },
+    update: {
+      authorId: author?.id ?? null,
+      title: input.detail.title,
+      state: input.detail.state,
+      baseBranch: input.detail.base.ref,
+      headBranch: input.detail.head.ref,
+      additions: input.detail.additions,
+      deletions: input.detail.deletions,
+      changedFiles: input.detail.changed_files,
+      commitCount: input.detail.commits,
+      openedAt: new Date(input.detail.created_at),
+      mergedAt,
+    },
+    create: {
+      repositoryId: input.repositoryId,
+      githubPrNumber: input.detail.number,
+      authorId: author?.id ?? null,
+      title: input.detail.title,
+      state: input.detail.state,
+      baseBranch: input.detail.base.ref,
+      headBranch: input.detail.head.ref,
+      additions: input.detail.additions,
+      deletions: input.detail.deletions,
+      changedFiles: input.detail.changed_files,
+      commitCount: input.detail.commits,
+      openedAt: new Date(input.detail.created_at),
+      mergedAt,
+    },
+  });
+
+  if (!pullRequest.authorId) {
+    return;
+  }
+
+  await applyDailyStatsDelta({
+    accountId: pullRequest.authorId,
+    repositoryId: input.repositoryId,
+    day,
+    additionsDelta: pullRequest.additions,
+    deletionsDelta: pullRequest.deletions,
+    mergedPrCountDelta: 1,
+    commitCountDelta: pullRequest.commitCount,
+  });
+}
+
+async function syncMergedPullRequestsForRepository(input: {
   repositoryId: string;
   githubInstallationId: number;
   owner: string;
   repo: string;
-  defaultBranch: string;
-  authorLogin: string;
+  installationId: string;
 }) {
-  const since = getActivitySyncSinceIsoString();
-  const branches = await listRepositoryBranches({
+  const cursor = await db.syncCursor.findUnique({
+    where: {
+      repositoryId_scope: {
+        repositoryId: input.repositoryId,
+        scope: MERGED_PULL_REQUEST_SCOPE,
+      },
+    },
+  });
+
+  const mergedPullRequests = await listMergedPullRequests({
     owner: input.owner,
     repo: input.repo,
     installationId: input.githubInstallationId,
+    updatedSince: cursor?.cursorValue ?? getInitialActivitySyncSinceIsoString(),
   });
 
-  const branchRecords = await Promise.all(
-    branches.map((branch) =>
-      db.branch.upsert({
-        where: {
-          repositoryId_name: {
-            repositoryId: input.repositoryId,
-            name: branch.name,
-          },
-        },
-        update: {},
-        create: {
-          repositoryId: input.repositoryId,
-          name: branch.name,
-        },
-      }),
-    ),
-  );
+  if (mergedPullRequests.length === 0) {
+    return;
+  }
 
-  const branchMap = new Map(branchRecords.map((branch) => [branch.name, branch.id]));
-  const cachedCommitIds = new Map<string, string>();
+  let latestUpdatedAt = cursor?.cursorValue ?? null;
 
-  for (const branch of branches) {
-    const branchId = branchMap.get(branch.name);
-
-    if (!branchId) {
-      continue;
-    }
-
-    const commits = await listBranchCommits({
+  for (const pullRequest of mergedPullRequests) {
+    const detail = await getPullRequestDetail({
       owner: input.owner,
       repo: input.repo,
-      branch: branch.name,
-      since,
-      author: input.authorLogin,
+      pullNumber: pullRequest.number,
       installationId: input.githubInstallationId,
     });
 
-    for (const commit of commits) {
-      let commitId = cachedCommitIds.get(commit.sha);
+    await applyPullRequestToDailyStats({
+      repositoryId: input.repositoryId,
+      detail,
+    });
 
-      if (!commitId) {
-        const detail = await getCommitDetail({
-          owner: input.owner,
-          repo: input.repo,
-          sha: commit.sha,
-          installationId: input.githubInstallationId,
-        });
-
-        let authorId: string | undefined;
-        if (detail.author) {
-          const author = await db.gitHubAccount.upsert({
-            where: {
-              githubUserId: detail.author.id,
-            },
-            update: {
-              login: detail.author.login,
-              avatarUrl: detail.author.avatar_url,
-            },
-            create: {
-              githubUserId: detail.author.id,
-              login: detail.author.login,
-              avatarUrl: detail.author.avatar_url,
-            },
-          });
-          authorId = author.id;
-        }
-
-        const commitRecord = await db.commit.upsert({
-          where: {
-            repositoryId_sha: {
-              repositoryId: input.repositoryId,
-              sha: detail.sha,
-            },
-          },
-          update: {
-            authorId,
-            authorName: detail.commit.author?.name ?? null,
-            authorEmail: detail.commit.author?.email ?? null,
-            authoredAt: new Date(
-              detail.commit.author?.date ??
-                detail.commit.committer?.date ??
-                new Date().toISOString(),
-            ),
-            committedAt: new Date(
-              detail.commit.committer?.date ??
-                detail.commit.author?.date ??
-                new Date().toISOString(),
-            ),
-            messageHeadline: detail.commit.message.split("\n")[0] ?? detail.sha,
-            additions: detail.stats?.additions ?? 0,
-            deletions: detail.stats?.deletions ?? 0,
-            changedFiles: detail.files?.length ?? null,
-            mergedToDefaultBranch:
-              branch.name === input.defaultBranch ? true : undefined,
-          },
-          create: {
-            repositoryId: input.repositoryId,
-            sha: detail.sha,
-            authorId,
-            authorName: detail.commit.author?.name ?? null,
-            authorEmail: detail.commit.author?.email ?? null,
-            authoredAt: new Date(
-              detail.commit.author?.date ??
-                detail.commit.committer?.date ??
-                new Date().toISOString(),
-            ),
-            committedAt: new Date(
-              detail.commit.committer?.date ??
-                detail.commit.author?.date ??
-                new Date().toISOString(),
-            ),
-            messageHeadline: detail.commit.message.split("\n")[0] ?? detail.sha,
-            additions: detail.stats?.additions ?? 0,
-            deletions: detail.stats?.deletions ?? 0,
-            changedFiles: detail.files?.length ?? null,
-            mergedToDefaultBranch: branch.name === input.defaultBranch,
-          },
-        });
-
-        commitId = commitRecord.id;
-        cachedCommitIds.set(commit.sha, commitRecord.id);
-
-        const pullRequests = await getAssociatedPullRequests({
-          owner: input.owner,
-          repo: input.repo,
-          sha: detail.sha,
-          installationId: input.githubInstallationId,
-        }).catch(() => []);
-
-        for (const pullRequest of pullRequests) {
-          const pullRequestRecord = await db.pullRequest.upsert({
-            where: {
-              repositoryId_githubPrNumber: {
-                repositoryId: input.repositoryId,
-                githubPrNumber: pullRequest.number,
-              },
-            },
-            update: {
-              title: pullRequest.title,
-              state: pullRequest.state,
-              baseBranch: pullRequest.base.ref,
-              headBranch: pullRequest.head.ref,
-              openedAt: new Date(pullRequest.created_at),
-              mergedAt: pullRequest.merged_at
-                ? new Date(pullRequest.merged_at)
-                : null,
-            },
-            create: {
-              repositoryId: input.repositoryId,
-              githubPrNumber: pullRequest.number,
-              title: pullRequest.title,
-              state: pullRequest.state,
-              baseBranch: pullRequest.base.ref,
-              headBranch: pullRequest.head.ref,
-              openedAt: new Date(pullRequest.created_at),
-              mergedAt: pullRequest.merged_at
-                ? new Date(pullRequest.merged_at)
-                : null,
-            },
-          });
-
-          await db.pullRequestCommit.upsert({
-            where: {
-              pullRequestId_commitId: {
-                pullRequestId: pullRequestRecord.id,
-                commitId: commitRecord.id,
-              },
-            },
-            update: {},
-            create: {
-              pullRequestId: pullRequestRecord.id,
-              commitId: commitRecord.id,
-            },
-          });
-
-          if (
-            pullRequest.base.ref === input.defaultBranch &&
-            pullRequest.merged_at
-          ) {
-            await db.commit.update({
-              where: {
-                id: commitRecord.id,
-              },
-              data: {
-                mergedToDefaultBranch: true,
-              },
-            });
-          }
-        }
-      } else if (branch.name === input.defaultBranch) {
-        await db.commit.update({
-          where: {
-            id: commitId,
-          },
-          data: {
-            mergedToDefaultBranch: true,
-          },
-        });
-      }
-
-      await db.commitBranch.upsert({
-        where: {
-          commitId_branchId: {
-            commitId,
-            branchId,
-          },
-        },
-        update: {},
-        create: {
-          commitId,
-          branchId,
-        },
-      });
+    if (!latestUpdatedAt || new Date(detail.updated_at) > new Date(latestUpdatedAt)) {
+      latestUpdatedAt = detail.updated_at;
     }
   }
+
+  if (!latestUpdatedAt) {
+    return;
+  }
+
+  await db.syncCursor.upsert({
+    where: {
+      repositoryId_scope: {
+        repositoryId: input.repositoryId,
+        scope: MERGED_PULL_REQUEST_SCOPE,
+      },
+    },
+    update: {
+      installationId: input.installationId,
+      cursorValue: latestUpdatedAt,
+    },
+    create: {
+      installationId: input.installationId,
+      repositoryId: input.repositoryId,
+      scope: MERGED_PULL_REQUEST_SCOPE,
+      cursorValue: latestUpdatedAt,
+    },
+  });
 }
 
 export async function syncInstallationMetadataForAccount(input: {
@@ -469,7 +452,6 @@ export async function syncAllInstallationMetadataForAccount(input: {
 
 export async function syncUserActivityForAccount(input: {
   accountId: string;
-  authorLogin: string;
   userAccessToken: string;
 }) {
   const installationSyncs = await syncAllInstallationMetadataForAccount({
@@ -483,41 +465,52 @@ export async function syncUserActivityForAccount(input: {
         data: {
           installationId: installation.id,
           scope: "activity",
-          status: "running",
-          startedAt: new Date(),
+          status: "queued",
         },
       }),
     ),
   );
 
   try {
-    for (const installationSync of installationSyncs) {
+    for (const syncJob of syncJobs) {
+      await db.syncJob.update({
+        where: {
+          id: syncJob.id,
+        },
+        data: {
+          status: "running",
+          startedAt: new Date(),
+        },
+      });
+
+      const installationSync = installationSyncs.find(
+        (entry) => entry.installation.id === syncJob.installationId,
+      );
+
+      if (!installationSync) {
+        continue;
+      }
+
       for (const repository of installationSync.repositories) {
-        await syncRepositoryActivity({
+        await syncMergedPullRequestsForRepository({
           repositoryId: repository.id,
           githubInstallationId: installationSync.installation.githubInstallId,
           owner: repository.owner,
           repo: repository.name,
-          defaultBranch: repository.defaultBranch,
-          authorLogin: input.authorLogin,
+          installationId: installationSync.installation.id,
         });
       }
+
+      await db.syncJob.update({
+        where: {
+          id: syncJob.id,
+        },
+        data: {
+          status: "completed",
+          finishedAt: new Date(),
+        },
+      });
     }
-
-    await Promise.all(
-      syncJobs.map((syncJob) =>
-        db.syncJob.update({
-          where: {
-            id: syncJob.id,
-          },
-          data: {
-            status: "completed",
-            finishedAt: new Date(),
-          },
-        }),
-      ),
-    );
-
     await refreshLeaderboardSnapshotsForAccount();
   } catch (error) {
     await Promise.all(

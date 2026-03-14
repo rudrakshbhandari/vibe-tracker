@@ -1,6 +1,6 @@
 # Vibe Tracker
 
-Vibe Tracker is a web MVP for aggregating GitHub code volume for a user across repositories, branches, and pull requests without double-counting the same commit across refs.
+Vibe Tracker is a web MVP for aggregating shipped GitHub work for a user across repositories and time windows. The product now treats merged pull requests as the primary source of truth instead of crawling every branch and commit ref.
 
 The homepage is intentionally simple:
 
@@ -16,17 +16,15 @@ The homepage is intentionally simple:
 
 ## Data model
 
-The current schema is designed around commits as the canonical unit:
+The current schema is designed around shipped work and aggregate reads:
 
-- `GitHubAccount`: GitHub users who authorize the app or appear as commit authors.
+- `GitHubAccount`: GitHub users who authorize the app or appear as merged PR authors.
 - `Installation`: GitHub App installation scope.
 - `Repository`: repos granted through an installation.
-- `Branch`: tracked branch refs per repository.
-- `Commit`: canonical commit record with additions, deletions, author metadata, and merge state.
-- `CommitBranch`: branch membership for dedupe-safe branch analytics.
-- `PullRequest`: PR metadata for drilldown and filtering.
-- `PullRequestCommit`: PR-to-commit link table.
-- `SyncJob`: background sync bookkeeping.
+- `PullRequest`: merged PR metadata and shipped-work stats.
+- `DailyUserRepoStats`: aggregate shipped additions, deletions, commit counts, and merged PR counts by user, repo, and day.
+- `SyncCursor`: per-repo incremental cursor so repeated syncs only fetch recently updated PRs.
+- `SyncJob`: queued/running/completed sync bookkeeping.
 
 ## Getting started
 
@@ -66,7 +64,7 @@ Detailed instructions live in [`docs/WORKTREES.md`](docs/WORKTREES.md).
 Example:
 
 ```bash
-curl "http://localhost:3000/api/metrics?view=weekly&mode=authored"
+curl "http://localhost:3000/api/metrics?view=weekly&mode=shipped"
 ```
 
 ## GitHub App setup
@@ -105,7 +103,7 @@ The current live flow is:
 2. If they already have an accessible installation, the app syncs repository grants automatically after auth.
 3. If they do not, GitHub sends them to install the app, then returns to the setup URL.
 4. The setup URL refreshes repository grants only, so onboarding stays fast.
-5. The user can then run `Sync my activity`, which backfills authored commits, branch membership, and associated PR metadata for the last 12 months.
+5. The user can then run `Sync my activity`, which pulls merged PRs and updates daily shipped-work aggregates for the last 90 days on first sync, then incrementally from per-repo cursors afterward.
 
 Hosted note:
 
@@ -116,13 +114,14 @@ Hosted note:
 ## Usability model
 
 - Install/setup is lightweight and should return quickly.
-- Activity sync is explicit and scoped to the signed-in user’s authored commits.
+- Activity sync is explicit and scoped to shipped work attributed to the signed-in user.
+- Sync reads merged pull requests, not the full branch graph.
 - Analytics views are exposed as `daily`, `weekly`, and `monthly`.
 - The metrics API mirrors those controls through `view` and `mode`.
 
 ## Next implementation steps
 
-1. Add a real background queue so authored activity sync does not block the HTTP request.
-2. Persist sync cursors so repeat activity syncs only fetch new commits.
-3. Add webhook handling so installation changes and pushes can trigger targeted refreshes.
-4. Add drilldowns so users can inspect which repositories and commits drove each time bucket.
+1. Replace the in-process dispatch with a durable external queue.
+2. Add GitHub webhook handling for merged PRs and repository access changes.
+3. Add deeper PR drilldowns only if the product needs them.
+4. Add explicit repository selection so large installations can opt into narrower sync scope.

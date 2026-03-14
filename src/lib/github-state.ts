@@ -104,7 +104,7 @@ export async function getGithubConnectionState() {
       connected: true,
       title: "GitHub is connected",
       description:
-        "Installations are cached locally. Activity sync is separate so onboarding stays fast even if you have many repositories.",
+        "Installations are cached locally. Shipped-work sync is separate so onboarding stays fast even if you have many repositories.",
       primaryAction: {
         label: "Add another installation",
         href: "/api/github/install",

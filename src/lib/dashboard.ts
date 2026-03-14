@@ -1,115 +1,92 @@
 export type TimeWindow = "7d" | "30d" | "90d";
-export type MetricMode = "authored" | "merged";
+export type MetricMode = "shipped";
 export type AnalyticsView = "daily" | "weekly" | "monthly";
 
 export function formatNumber(value: number) {
   return new Intl.NumberFormat("en-US").format(value);
 }
 
-function getSampleSeries(view: AnalyticsView, mode: MetricMode) {
+function getSampleSeries(view: AnalyticsView) {
   if (view === "daily") {
-    return mode === "authored"
-      ? {
-          labels: ["Mar 1", "Mar 2", "Mar 3", "Mar 4", "Mar 5", "Mar 6", "Mar 7", "Mar 8", "Mar 9", "Mar 10", "Mar 11", "Mar 12", "Mar 13", "Mar 14"],
-          additions: [42, 58, 76, 24, 110, 92, 64, 38, 84, 126, 98, 72, 61, 117],
-          deletions: [16, 22, 30, 10, 48, 36, 28, 14, 32, 56, 44, 31, 24, 53],
-          chartTitle: "Daily activity",
-          filter: "Last 14 days",
-        }
-      : {
-          labels: ["Mar 1", "Mar 2", "Mar 3", "Mar 4", "Mar 5", "Mar 6", "Mar 7", "Mar 8", "Mar 9", "Mar 10", "Mar 11", "Mar 12", "Mar 13", "Mar 14"],
-          additions: [18, 24, 34, 12, 52, 60, 28, 22, 40, 74, 66, 48, 39, 68],
-          deletions: [7, 9, 12, 5, 18, 21, 11, 8, 14, 29, 24, 17, 13, 25],
-          chartTitle: "Daily shipped activity",
-          filter: "Last 14 days",
-        };
+    return {
+      labels: [
+        "Mar 1",
+        "Mar 2",
+        "Mar 3",
+        "Mar 4",
+        "Mar 5",
+        "Mar 6",
+        "Mar 7",
+        "Mar 8",
+        "Mar 9",
+        "Mar 10",
+        "Mar 11",
+        "Mar 12",
+        "Mar 13",
+        "Mar 14",
+      ],
+      additions: [18, 24, 34, 12, 52, 60, 28, 22, 40, 74, 66, 48, 39, 68],
+      deletions: [7, 9, 12, 5, 18, 21, 11, 8, 14, 29, 24, 17, 13, 25],
+      chartTitle: "Daily shipped work",
+      filter: "Last 14 days",
+    };
   }
 
   if (view === "monthly") {
-    return mode === "authored"
-      ? {
-          labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"],
-          additions: [1240, 1560, 980, 1820, 1490, 1710, 2100, 1940, 1680, 2210, 2460, 2080],
-          deletions: [410, 520, 360, 640, 510, 570, 730, 690, 580, 760, 820, 740],
-          chartTitle: "Monthly activity",
-          filter: "Last 12 months",
-        }
-      : {
-          labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"],
-          additions: [760, 980, 620, 1120, 940, 1080, 1310, 1260, 1010, 1430, 1580, 1390],
-          deletions: [240, 310, 190, 410, 320, 360, 470, 430, 350, 520, 560, 505],
-          chartTitle: "Monthly shipped activity",
-          filter: "Last 12 months",
-        };
+    return {
+      labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"],
+      additions: [760, 980, 620, 1120, 940, 1080, 1310, 1260, 1010, 1430, 1580, 1390],
+      deletions: [240, 310, 190, 410, 320, 360, 470, 430, 350, 520, 560, 505],
+      chartTitle: "Monthly shipped work",
+      filter: "Last 12 months",
+    };
   }
 
-  return mode === "authored"
-    ? {
-        labels: ["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12"],
-        additions: [180, 260, 340, 720, 460, 980, 630, 1180, 740, 910, 860, 1290],
-        deletions: [92, 124, 180, 240, 210, 440, 360, 520, 330, 410, 390, 560],
-        chartTitle: "Weekly activity",
-        filter: "Last 12 weeks",
-      }
-    : {
-        labels: ["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12"],
-        additions: [110, 150, 210, 410, 280, 560, 360, 640, 420, 510, 490, 710],
-        deletions: [50, 72, 96, 138, 120, 220, 176, 264, 184, 210, 204, 288],
-        chartTitle: "Weekly shipped activity",
-        filter: "Last 12 weeks",
-      };
+  return {
+    labels: ["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12"],
+    additions: [110, 150, 210, 410, 280, 560, 360, 640, 420, 510, 490, 710],
+    deletions: [50, 72, 96, 138, 120, 220, 176, 264, 184, 210, 204, 288],
+    chartTitle: "Weekly shipped work",
+    filter: "Last 12 weeks",
+  };
 }
 
-export function getDashboardData(
-  view: AnalyticsView = "weekly",
-  mode: MetricMode = "authored",
-) {
-  const series = getSampleSeries(view, mode);
+export function getDashboardData(view: AnalyticsView = "weekly") {
+  const series = getSampleSeries(view);
   const maxValue = Math.max(...series.additions, ...series.deletions);
   const totalAdditions = series.additions.reduce((sum, value) => sum + value, 0);
   const totalDeletions = series.deletions.reduce((sum, value) => sum + value, 0);
-  const shippedRatio =
-    mode === "merged"
-      ? "100%"
-      : `${Math.round((totalAdditions * 0.72) / Math.max(totalAdditions, 1) * 100)}%`;
+  const totalMergedPrs = series.additions.reduce(
+    (sum, value, index) => sum + Math.max(1, Math.round((value + series.deletions[index]) / 160)),
+    0,
+  );
 
   return {
     profile: {
       login: "@rudraksh",
       source: "sample" as const,
     },
-    filters: [
-      series.filter,
-      mode === "authored" ? "Authored commits" : "Merged to default branch",
-      "Deduped by SHA",
-      "All installed repos",
-    ],
+    filters: [series.filter, "Shipped work", "Merged PRs", "All installed repos"],
     summary: [
       {
-        label: "Lines added",
+        label: "Lines shipped",
         value: `+${formatNumber(totalAdditions)}`,
-        detail:
-          mode === "authored"
-            ? "From sample authored commits across installed repositories."
-            : "From sample commits that landed on the default branch.",
+        detail: "From sample merged pull requests that landed on default branches.",
       },
       {
-        label: "Lines deleted",
+        label: "Lines removed",
         value: `-${formatNumber(totalDeletions)}`,
-        detail: "Recorded once even if the commit appears on multiple branches.",
+        detail: "Measured at merge time so the dashboard stays aggregate-first.",
       },
       {
-        label: "Merged to default branch",
-        value: shippedRatio,
-        detail:
-          mode === "authored"
-            ? "Estimated share of authored work that shipped."
-            : "The shipped-code lens is active right now.",
+        label: "Merged PRs",
+        value: formatNumber(totalMergedPrs),
+        detail: "Each merged pull request contributes once to the shipped-work totals.",
       },
       {
         label: "Open sync lag",
-        value: "4m",
-        detail: "Hybrid sync keeps the dashboard fast while backfilling history.",
+        value: "3m",
+        detail: "Incremental sync keeps refresh cost low and avoids full history recrawls.",
       },
     ],
     timeline: series.additions.map((value, index) => ({
@@ -123,36 +100,27 @@ export function getDashboardData(
     repositories: [
       {
         name: "vibe-tracker/web",
-        detail:
-          mode === "authored"
-            ? "Largest source of authored changes in the selected sample window."
-            : "Most shipped work landed here in the selected sample window.",
+        detail: "Most shipped work landed here in the selected sample window.",
         visibility: "private",
-        additions: mode === "authored" ? 1_840 : 1_120,
-        deletions: mode === "authored" ? 780 : 430,
-        commitCount: mode === "authored" ? 17 : 11,
+        additions: 1120,
+        deletions: 430,
+        commitCount: 11,
       },
       {
         name: "vibe-tracker/worker",
-        detail:
-          mode === "authored"
-            ? "Sync orchestration and dedupe logic."
-            : "Background jobs and shipped sync orchestration.",
+        detail: "Background jobs and shipped-work sync orchestration.",
         visibility: "private",
-        additions: mode === "authored" ? 1_120 : 830,
-        deletions: mode === "authored" ? 490 : 320,
-        commitCount: mode === "authored" ? 11 : 8,
+        additions: 830,
+        deletions: 320,
+        commitCount: 8,
       },
       {
         name: "shared/github-client",
-        detail:
-          mode === "authored"
-            ? "GitHub installation auth and API wrappers."
-            : "Shared API wrapper updates that reached default branch.",
+        detail: "Shared API wrapper updates that reached the default branch.",
         visibility: "internal",
-        additions: mode === "authored" ? 790 : 560,
-        deletions: mode === "authored" ? 420 : 240,
-        commitCount: mode === "authored" ? 9 : 6,
+        additions: 560,
+        deletions: 240,
+        commitCount: 6,
       },
     ],
   };

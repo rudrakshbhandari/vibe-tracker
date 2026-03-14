@@ -143,19 +143,20 @@ export function calculateVibeScore(input: Omit<ScoreTotals, "vibeScore">) {
   return Math.max(0, Math.round(weightedTotal / 10));
 }
 
-function summarizeCommitActivity(
-  commits: Array<{
-    authoredAt: Date;
+function summarizeShippedActivity(
+  dailyStats: Array<{
+    day: Date;
     additions: number;
     deletions: number;
+    commitCount: number;
   }>,
 ): ScoreTotals {
   const activePeriods = new Set(
-    commits.map((commit) => commit.authoredAt.toISOString().slice(0, 10)),
+    dailyStats.map((stat) => stat.day.toISOString().slice(0, 10)),
   ).size;
-  const mergedAdditions = commits.reduce((sum, commit) => sum + commit.additions, 0);
-  const mergedDeletions = commits.reduce((sum, commit) => sum + commit.deletions, 0);
-  const mergedCommits = commits.length;
+  const mergedAdditions = dailyStats.reduce((sum, stat) => sum + stat.additions, 0);
+  const mergedDeletions = dailyStats.reduce((sum, stat) => sum + stat.deletions, 0);
+  const mergedCommits = dailyStats.reduce((sum, stat) => sum + stat.commitCount, 0);
 
   return {
     mergedAdditions,
@@ -176,23 +177,23 @@ async function getShippedTotalsForRange(
   start: Date,
   end?: Date,
 ) {
-  const commits = await db.commit.findMany({
+  const dailyStats = await db.dailyUserRepoStats.findMany({
     where: {
-      authorId: accountId,
-      mergedToDefaultBranch: true,
-      authoredAt: {
+      accountId,
+      day: {
         gte: start,
         ...(end ? { lt: end } : {}),
       },
     },
     select: {
-      authoredAt: true,
+      day: true,
       additions: true,
       deletions: true,
+      commitCount: true,
     },
   });
 
-  return summarizeCommitActivity(commits);
+  return summarizeShippedActivity(dailyStats);
 }
 
 async function getWindowTotals(accountId: string, window: SocialWindow) {
