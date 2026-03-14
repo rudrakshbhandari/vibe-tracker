@@ -1,15 +1,7 @@
 import { hasGitHubAppEnv, hasDurableDatabaseUrl } from "@/lib/env";
 import { db } from "@/lib/db";
+import { formatDate } from "@/lib/format-date";
 import { getOptionalUserSession } from "@/lib/session";
-
-function formatDate(date: Date) {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(date);
-}
 
 const reconnectAction = {
   label: "Reconnect GitHub",
@@ -113,12 +105,22 @@ export async function getGithubConnectionState() {
       },
       viewer: {
         login: session.account.login,
-        sessionExpiryLabel: formatDate(session.expiresAt),
+        sessionExpiryLabel: await formatDate(session.expiresAt, {
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        }),
       },
       activitySync: latestActivitySync
         ? {
             status: latestActivitySync.status,
-            updatedAt: formatDate(latestActivitySync.updatedAt),
+            updatedAt: await formatDate(latestActivitySync.updatedAt, {
+              month: "short",
+              day: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+            }),
           }
         : null,
       activitySyncRunning: latestActivitySync?.status === "running",

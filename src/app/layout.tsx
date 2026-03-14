@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Manrope, Newsreader } from "next/font/google";
+import { TimezoneSync } from "@/components/timezone-sync";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -37,6 +38,7 @@ export default function RootLayout({
       <body
         className={`${manrope.variable} ${newsreader.variable} ${ibmPlexMono.variable} bg-background text-foreground antialiased selection:bg-accent/20 selection:text-foreground`}
       >
+        <TimezoneSync />
         {children}
       </body>
     </html>
