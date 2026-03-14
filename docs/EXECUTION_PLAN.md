@@ -1,11 +1,28 @@
 # Execution Plan
 
+## Issue #38 - Audit and sync repository docs with current GitHub state
+
+- Issue: [#38](https://github.com/rudrakshbhandari/vibe-tracker/issues/38)
+- Branch: `rudrakshbhandari/sync-project-docs`
+- PR: Pending
+- Workflow: In Progress
+- Priority: P2
+- App: multi
+
+### Checklist
+
+- [x] Create issue and project tracking for the docs audit
+- [x] Review the current README, scripts, and product flow for drift
+- [x] Update stale execution-plan issue and PR state
+- [x] Run relevant checks after docs updates
+- [ ] Push branch and open PR
+
 ## Issue #16 - Improve dashboard UI hierarchy and visual polish
 
 - Issue: [#16](https://github.com/rudrakshbhandari/vibe-tracker/issues/16)
 - Branch: `rudrakshbhandari/improve-ui`
 - PR: [#17](https://github.com/rudrakshbhandari/vibe-tracker/pull/17)
-- Workflow: In Review
+- Workflow: Done
 - Priority: P1
 - App: multi
 
@@ -24,7 +41,7 @@
 - Issue: [#13](https://github.com/rudrakshbhandari/vibe-tracker/issues/13)
 - Branch: `codex/simple-vibe-webapp`
 - PR: [#14](https://github.com/rudrakshbhandari/vibe-tracker/pull/14)
-- Workflow: In Review
+- Workflow: Done
 - Priority: P1
 - App: multi
 
@@ -61,7 +78,7 @@
 - Issue: [#6](https://github.com/rudrakshbhandari/vibe-tracker/issues/6)
 - Branch: `rudrakshbhandari/close-task-cleanup`
 - PR: [#7](https://github.com/rudrakshbhandari/vibe-tracker/pull/7)
-- Workflow: In Review
+- Workflow: Done
 - Priority: P3
 - App: multi
 
@@ -77,7 +94,7 @@
 - Issue: [#9](https://github.com/rudrakshbhandari/vibe-tracker/issues/9)
 - Branch: `codex/fix-prisma-production-build`
 - PR: [#10](https://github.com/rudrakshbhandari/vibe-tracker/pull/10)
-- Workflow: In Review
+- Workflow: Done
 - Priority: P1
 - App: multi
 
@@ -96,7 +113,7 @@
 - Issue: [#11](https://github.com/rudrakshbhandari/vibe-tracker/issues/11)
 - Branch: `codex/fix-sync-refresh-and-dashboard-layout`
 - PR: [#12](https://github.com/rudrakshbhandari/vibe-tracker/pull/12)
-- Workflow: In Review
+- Workflow: Done
 - Priority: P1
 - App: multi
 
