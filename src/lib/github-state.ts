@@ -1,3 +1,7 @@
+import {
+  failStaleActivitySyncJobs,
+  getActiveActivitySyncWhere,
+} from "@/lib/activity-sync-jobs";
 import { hasGitHubAppEnv, hasDurableDatabaseUrl } from "@/lib/env";
 import { db } from "@/lib/db";
 import { getOptionalUserSession } from "@/lib/session";
@@ -78,6 +82,8 @@ export async function getGithubConnectionState() {
       (grant) => grant.installation.id,
     );
 
+    await failStaleActivitySyncJobs(installationIds);
+
     const latestActivitySync = installationIds.length
       ? await db.syncJob.findFirst({
           where: {
@@ -121,7 +127,16 @@ export async function getGithubConnectionState() {
             updatedAt: formatDate(latestActivitySync.updatedAt),
           }
         : null,
-      activitySyncRunning: latestActivitySync?.status === "running",
+      activitySyncRunning: installationIds.length
+        ? Boolean(
+            await db.syncJob.findFirst({
+              where: getActiveActivitySyncWhere(installationIds),
+              orderBy: {
+                updatedAt: "desc",
+              },
+            }),
+          )
+        : false,
       installations,
     };
   } catch {

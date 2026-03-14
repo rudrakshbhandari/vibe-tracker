@@ -22,6 +22,11 @@ const GITHUB_STATUS_COPY: Record<string, { label: string; detail?: string }> = {
     detail:
       "A sync is already in progress. The dashboard will refresh automatically; no extra clicks are needed.",
   },
+  "activity-sync-completed": {
+    label: "Activity sync completed",
+    detail:
+      "Shipped-work totals were refreshed. If the dashboard still looks empty, the selected scope may not contain merged PRs in the current time window.",
+  },
   connected: {
     label: "GitHub connected",
   },
