@@ -4,9 +4,9 @@
 
 - Issue: [#32](https://github.com/rudrakshbhandari/vibe-tracker/issues/32)
 - Branch: `rudrakshbhandari/shipped-work-architecture`
-- PR: Pending
+- PR: [#33](https://github.com/rudrakshbhandari/vibe-tracker/pull/33)
 
-- Workflow: In Progress
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -17,7 +17,7 @@
 - [x] Rewrite live dashboard reads around aggregate tables
 - [x] Update UI and docs to describe shipped-work semantics
 - [x] Run lint, tests, and build
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
 
 ## Issue #24 - Refine dashboard layout, remove redundant setup UI, and switch to elegant light theme
 
