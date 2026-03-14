@@ -1,5 +1,20 @@
 # Execution Plan
 
+## Issue #41 - Fix leftover globals.css merge markers blocking production deploy
+
+- Issue: [#41](https://github.com/rudrakshbhandari/vibe-tracker/issues/41)
+- Branch: `rudrakshbhandari/fix-globals-css-merge-markers`
+- PR: Pending
+- Workflow: In Progress
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Restore a clean globals.css without merge markers
+- [x] Run lint, tests, and build
+- [ ] Push branch and open PR
+
 ## Issue #37 - Fix GitHub auth recovery UI when production session/account setup fails
 
 - Issue: [#37](https://github.com/rudrakshbhandari/vibe-tracker/issues/37)
