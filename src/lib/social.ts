@@ -374,7 +374,6 @@ export async function refreshGlobalLeaderboardSnapshots(window?: SocialWindow) {
   for (const currentWindow of windows) {
     const eligibleAccounts = await db.gitHubAccount.findMany({
       where: {
-        profileVisibility: ProfileVisibility.PUBLIC,
         leaderboardVisibility: LeaderboardVisibility.PUBLIC,
       },
       select: {
@@ -496,7 +495,6 @@ export async function getSocialMe(accountId: string) {
     ranks: {
       friends: friendRank,
       global:
-        identity.profileVisibility === ProfileVisibility.PUBLIC &&
         identity.leaderboardVisibility === LeaderboardVisibility.PUBLIC
           ? globalRank
           : null,

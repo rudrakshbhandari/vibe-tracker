@@ -50,7 +50,7 @@ model GitHubAccount {
   avatarUrl                   String?
   bio                         String?
   profileVisibility           ProfileVisibility     @default(PRIVATE)
-  leaderboardVisibility       LeaderboardVisibility @default(HIDDEN)
+  leaderboardVisibility       LeaderboardVisibility @default(PUBLIC)
   socialOnboardingCompletedAt DateTime?
   createdAt                   DateTime              @default(now())
   updatedAt                   DateTime              @updatedAt

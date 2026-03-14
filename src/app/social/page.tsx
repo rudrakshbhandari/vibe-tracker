@@ -30,8 +30,8 @@ export default async function SocialPage({ searchParams }: SocialPageProps) {
                 <h1 className="page-title">Connect GitHub before you compare.</h1>
                 <p className="page-description">
                   Social features run on the same synced GitHub activity as your
-                  personal dashboard. Sign in first, then invite friends or opt
-                  into the public leaderboard.
+                  personal dashboard. Sign in first—you&apos;re on the public
+                  leaderboard by default, opt out anytime in Profile.
                 </p>
               </div>
               <div className="hero-actions">
