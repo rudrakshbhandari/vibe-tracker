@@ -4,8 +4,8 @@
 
 - Issue: [#37](https://github.com/rudrakshbhandari/vibe-tracker/issues/37)
 - Branch: `rudrakshbhandari/fix-auth-recovery-cta`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#39](https://github.com/rudrakshbhandari/vibe-tracker/pull/39)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -15,7 +15,7 @@
 - [x] Add a session reset route for broken cookies
 - [x] Improve account setup failure copy for production recovery
 - [x] Run tests, lint, and build
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
 
 ## Issue #32 - Refactor sync architecture around shipped work aggregates
 
