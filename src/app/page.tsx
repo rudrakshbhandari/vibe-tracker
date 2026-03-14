@@ -28,7 +28,7 @@ const GITHUB_STATUS_COPY: Record<string, { label: string; detail?: string }> = {
   "installation-connected": {
     label: "Installation connected",
     detail:
-      "Repository access is available now. Run an activity sync to load your coding totals.",
+      "Repository access is available now. Run a shipped-work sync to load your coding totals.",
   },
   "invalid-installation": {
     label: "Installation could not be resolved",
@@ -82,7 +82,7 @@ const GITHUB_STATUS_COPY: Record<string, { label: string; detail?: string }> = {
 const CONNECT_STEPS = [
   {
     title: "Connect your GitHub account",
-    detail: "Sign in once so the dashboard knows which commits belong to you.",
+    detail: "Sign in once so the dashboard knows which merged pull requests belong to you.",
   },
   {
     title: "Grant repository access",
@@ -90,7 +90,7 @@ const CONNECT_STEPS = [
   },
   {
     title: "Run the first sync",
-    detail: "Pull commit metadata into the local database so the totals become real.",
+    detail: "Pull merged PR metadata into the local database so the totals become real.",
   },
 ];
 
@@ -225,11 +225,7 @@ export default async function Home({ searchParams }: HomePageProps) {
     ["daily", "weekly", "monthly"].includes(params.view)
       ? (params.view as AnalyticsView)
       : "weekly";
-  const mode =
-    typeof params.mode === "string" &&
-    ["authored", "merged"].includes(params.mode)
-      ? (params.mode as MetricMode)
-      : "authored";
+  const mode: MetricMode = "shipped";
   const githubState = await getGithubConnectionState();
   const dashboard = githubState.connected ? await getLiveMetrics(view, mode) : null;
   const githubStatus = typeof params.github === "string" ? params.github : undefined;
@@ -237,7 +233,6 @@ export default async function Home({ searchParams }: HomePageProps) {
     ? GITHUB_STATUS_COPY[githubStatus] ?? { label: githubStatus }
     : null;
   const views: AnalyticsView[] = ["daily", "weekly", "monthly"];
-  const modes: MetricMode[] = ["authored", "merged"];
   const hasInstallations = githubState.installations.length > 0;
   const syncRefreshActive = Boolean(
     githubStatus === "activity-sync-started" ||
@@ -264,7 +259,7 @@ export default async function Home({ searchParams }: HomePageProps) {
   const compactFilters = dashboard
     ? [
         dashboard.filters[0],
-        mode === "authored" ? "Authored commits" : "Merged to default branch",
+        "Shipped work",
         dashboard.filters.at(-1),
       ].filter(Boolean)
     : [];
@@ -278,11 +273,19 @@ export default async function Home({ searchParams }: HomePageProps) {
         <section className="top-panel">
           <div className="top-panel-copy">
             <span className="eyebrow">Vibe Tracker</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link href="/" className="toggle-pill toggle-pill-active">
+                Dashboard
+              </Link>
+              <Link href="/social" className="toggle-pill">
+                Social
+              </Link>
+            </div>
             <div className="space-y-3">
               <h1 className="page-title">Quiet, readable GitHub activity.</h1>
               <p className="page-description">
-                Keep the live totals, recent trend, and repository breakdown.
-                Drop the extra chrome.
+                Track shipped work, recent trend, and repository impact without
+                dragging the whole branch graph into storage.
               </p>
             </div>
           </div>
@@ -309,7 +312,7 @@ export default async function Home({ searchParams }: HomePageProps) {
 
             <p className="hero-note">
               Repository permissions are cached locally. Activity sync refreshes
-              the metrics from commit history when you need a fresh snapshot.
+              merged pull request totals when you need a fresh snapshot.
             </p>
 
             <div className="hero-actions">
@@ -331,7 +334,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                     className="button-secondary w-full sm:w-auto"
                     disabled={githubState.activitySyncRunning}
                   >
-                    {githubState.activitySyncRunning ? "Syncing" : "Run sync"}
+                    {githubState.activitySyncRunning ? "Syncing" : "Run shipped-work sync"}
                   </button>
                 </form>
               ) : null}
@@ -372,8 +375,8 @@ export default async function Home({ searchParams }: HomePageProps) {
                     <h2 className="dashboard-title">{dashboard.profile.login}</h2>
                     <p className="max-w-2xl text-sm leading-7 text-muted sm:text-base">
                       {dashboard.profile.source === "live"
-                        ? "These numbers come from synced GitHub commits stored in the local database."
-                        : "This is sample data that mirrors the shape of the live metrics once GitHub activity has been synced."}
+                        ? "These numbers come from synced merged pull requests and daily shipped-work aggregates stored in the local database."
+                        : "This is sample data that mirrors the shape of the live shipped-work metrics once GitHub activity has been synced."}
                     </p>
                   </div>
                 </div>
@@ -389,19 +392,6 @@ export default async function Home({ searchParams }: HomePageProps) {
                       >
                         {entry[0]?.toUpperCase()}
                         {entry.slice(1)}
-                      </Link>
-                    ))}
-                  </div>
-
-                  <div className="control-group">
-                    {modes.map((entry) => (
-                      <Link
-                        key={entry}
-                        href={`/?view=${view}&mode=${entry}`}
-                        scroll={false}
-                        className={entry === mode ? "toggle-pill toggle-pill-active" : "toggle-pill"}
-                      >
-                        {entry === "authored" ? "Authored" : "Merged"}
                       </Link>
                     ))}
                   </div>

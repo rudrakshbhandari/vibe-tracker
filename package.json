@@ -6,12 +6,16 @@
     "node": "20.x"
   },
   "scripts": {
+    "bootstrap": "./scripts/bootstrap-worktree.sh",
     "dev": "next dev",
     "build": "prisma generate && next build",
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "db:up": "docker compose up -d db",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f db",
     "db:generate": "prisma generate",
     "db:push": "prisma db push"
   },

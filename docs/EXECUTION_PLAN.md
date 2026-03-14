@@ -5,6 +5,7 @@
 - Issue: [#34](https://github.com/rudrakshbhandari/vibe-tracker/issues/34)
 - Branch: `rudrakshbhandari/open-source-contribution-system`
 - PR: [#35](https://github.com/rudrakshbhandari/vibe-tracker/pull/35)
+
 - Workflow: In Review
 - Priority: P1
 - App: multi
@@ -20,6 +21,63 @@
 - [x] Run lint, tests, and build
 - [x] Push branch and open PR
 
+## Issue #32 - Refactor sync architecture around shipped work aggregates
+
+- Issue: [#32](https://github.com/rudrakshbhandari/vibe-tracker/issues/32)
+- Branch: `rudrakshbhandari/shipped-work-architecture`
+- PR: [#33](https://github.com/rudrakshbhandari/vibe-tracker/pull/33)
+
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Replace branch and commit crawling with merged pull request sync
+- [x] Add sync cursors and daily shipped-work aggregate storage
+- [x] Rewrite live dashboard reads around aggregate tables
+- [x] Update UI and docs to describe shipped-work semantics
+- [x] Run lint, tests, and build
+- [x] Push branch and open PR
+
+## Issue #30 - Harden worktree bootstrap and shared local dev setup
+
+- Issue: [#30](https://github.com/rudrakshbhandari/vibe-tracker/issues/30)
+- Branch: `rudrakshbhandari/worktree-bootstrap`
+- PR: [#31](https://github.com/rudrakshbhandari/vibe-tracker/pull/31)
+
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Fix local database defaults so the example env matches the Prisma Postgres datasource
+- [x] Add shared env and worktree bootstrap scripts for repeatable setup
+- [x] Add a shared local Postgres compose service for worktree-safe local database access
+- [x] Document the worktree/bootstrap flow in README and docs
+- [x] Run lint, tests, build, and bootstrap verification
+- [x] Push branch, open PR, and sync project fields/docs
+
+## Issue #28 - Add social profiles, friends, and leaderboards
+
+- Issue: [#28](https://github.com/rudrakshbhandari/vibe-tracker/issues/28)
+- Branch: `rudrakshbhandari/social-leaderboards`
+- PR: [#29](https://github.com/rudrakshbhandari/vibe-tracker/pull/29)
+
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Extend the Prisma schema for social visibility, friend links, invite tokens, and leaderboard snapshots
+- [x] Add social APIs for me, profile settings, friends, invites, and leaderboard queries
+- [x] Add a `/social` product surface plus public profile and invite pages
+- [x] Refresh global leaderboard snapshots after activity sync completes
+- [x] Add score/helper tests and API route coverage for the new social surface
+- [x] Run lint, tests, and build
+- [x] Open PR and sync the project fields/docs with the PR URL
 ## Issue #24 - Refine dashboard layout, remove redundant setup UI, and switch to elegant light theme
 
 - Issue: [#24](https://github.com/rudrakshbhandari/vibe-tracker/issues/24)
