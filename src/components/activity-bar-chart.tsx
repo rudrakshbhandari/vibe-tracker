@@ -147,7 +147,6 @@ export function ActivityBarChart({ chartGeometry, timelineLength, view, chartTit
             className="pointer-events-none"
           >
             <div
-              xmlns="http://www.w3.org/1999/xhtml"
               className="rounded-lg border border-line bg-[var(--panel-strong)] px-2.5 py-1.5 text-left shadow-lg"
               style={{ font: '12px var(--font-manrope), sans-serif' }}
             >
