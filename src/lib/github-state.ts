@@ -11,6 +11,11 @@ function formatDate(date: Date) {
   }).format(date);
 }
 
+const reconnectAction = {
+  label: "Reconnect GitHub",
+  href: "/api/github/connect",
+};
+
 export async function getGithubConnectionState() {
   if (!hasGitHubAppEnv()) {
     return {
@@ -18,7 +23,7 @@ export async function getGithubConnectionState() {
       title: "GitHub connection unavailable",
       description:
         "GitHub connection is not available right now. Please try again later.",
-      primaryAction: null,
+      primaryAction: reconnectAction,
       viewer: null,
       activitySync: null,
       activitySyncRunning: false,
@@ -38,7 +43,7 @@ export async function getGithubConnectionState() {
       title: "GitHub sync unavailable",
       description:
         "GitHub sync is temporarily unavailable. Please try again later.",
-      primaryAction: null,
+      primaryAction: reconnectAction,
       viewer: null,
       activitySync: null,
       activitySyncRunning: false,
@@ -61,10 +66,7 @@ export async function getGithubConnectionState() {
         title: "Connect your GitHub account",
         description:
           "One click starts the GitHub flow. If you already have an installation, the app will sync it automatically. If not, it will send you to install and then return here.",
-        primaryAction: {
-          label: "Continue with GitHub",
-          href: "/api/github/connect",
-        },
+        primaryAction: reconnectAction,
         viewer: null,
         activitySync: null,
         activitySyncRunning: false,
@@ -128,7 +130,7 @@ export async function getGithubConnectionState() {
       title: "GitHub sync unavailable",
       description:
         "We could not load your GitHub connection right now. Please try again later.",
-      primaryAction: null,
+      primaryAction: reconnectAction,
       viewer: null,
       activitySync: null,
       activitySyncRunning: false,

@@ -1,5 +1,22 @@
 # Execution Plan
 
+## Issue #37 - Fix GitHub auth recovery UI when production session/account setup fails
+
+- Issue: [#37](https://github.com/rudrakshbhandari/vibe-tracker/issues/37)
+- Branch: `rudrakshbhandari/fix-auth-recovery-cta`
+- PR: Pending
+- Workflow: In Progress
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Keep a visible reconnect CTA when GitHub session lookup fails
+- [x] Add a session reset route for broken cookies
+- [x] Improve account setup failure copy for production recovery
+- [x] Run tests, lint, and build
+- [ ] Push branch and open PR
+
 ## Issue #32 - Refactor sync architecture around shipped work aggregates
 
 - Issue: [#32](https://github.com/rudrakshbhandari/vibe-tracker/issues/32)
