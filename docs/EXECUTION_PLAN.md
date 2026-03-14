@@ -4,8 +4,8 @@
 
 - Issue: [#43](https://github.com/rudrakshbhandari/vibe-tracker/issues/43)
 - Branch: `rudrakshbhandari/fix-activity-sync-population`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#44](https://github.com/rudrakshbhandari/vibe-tracker/pull/44)
+- Workflow: In Review
 - Priority: P0
 - App: multi
 
@@ -16,7 +16,7 @@
 - [x] Recover automatically from stale `running` sync jobs
 - [x] Re-run production sync and verify `DailyUserRepoStats` is populated
 - [x] Run tests, lint, and build
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
 
 ## Issue #41 - Fix leftover globals.css merge markers blocking production deploy
 
