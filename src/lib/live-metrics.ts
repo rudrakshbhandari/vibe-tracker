@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { formatNumber } from "@/lib/dashboard";
 import type { AnalyticsView, MetricMode } from "@/lib/dashboard";
 import { hasDurableDatabaseUrl } from "@/lib/env";
+import { formatDate, getUserTimezone } from "@/lib/format-date";
 import { getOptionalUserSession } from "@/lib/session";
 
 type TimelineBucket = {
@@ -12,7 +13,11 @@ type TimelineBucket = {
   deletions: number;
 };
 
-function getViewConfig(view: AnalyticsView) {
+function getViewConfig(
+  view: AnalyticsView,
+  timeZone?: string,
+) {
+  const baseOpts = { ...(timeZone && { timeZone }) };
   if (view === "daily") {
     return {
       title: "Daily shipped work",
@@ -20,6 +25,7 @@ function getViewConfig(view: AnalyticsView) {
       stepDays: 1,
       filterLabel: "Last 14 days",
       formatter: new Intl.DateTimeFormat("en-US", {
+        ...baseOpts,
         month: "short",
         day: "numeric",
       }),
@@ -33,6 +39,7 @@ function getViewConfig(view: AnalyticsView) {
       stepDays: 7,
       filterLabel: "Last 12 weeks",
       formatter: new Intl.DateTimeFormat("en-US", {
+        ...baseOpts,
         month: "short",
         day: "numeric",
       }),
@@ -45,14 +52,15 @@ function getViewConfig(view: AnalyticsView) {
     stepDays: 30,
     filterLabel: "Last 12 months",
     formatter: new Intl.DateTimeFormat("en-US", {
+      ...baseOpts,
       month: "short",
       year: "2-digit",
     }),
   };
 }
 
-function buildTimelineBuckets(view: AnalyticsView) {
-  const config = getViewConfig(view);
+function buildTimelineBuckets(view: AnalyticsView, timeZone?: string) {
+  const config = getViewConfig(view, timeZone);
 
   if (view === "monthly") {
     const now = new Date();
@@ -102,8 +110,8 @@ function buildTimelineBuckets(view: AnalyticsView) {
   });
 }
 
-function getWindowStart(view: AnalyticsView) {
-  const firstBucket = buildTimelineBuckets(view)[0];
+function getWindowStart(view: AnalyticsView, timeZone?: string) {
+  const firstBucket = buildTimelineBuckets(view, timeZone)[0];
   return firstBucket?.start ?? new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
 }
 
@@ -153,13 +161,15 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
       })
     : null;
 
+  const timeZone = await getUserTimezone();
+
   if (installationIds.length === 0) {
     return {
       profile: {
         login: `@${session.account.login}`,
         source: "live" as const,
       },
-    filters: [getViewConfig(view).filterLabel, "Shipped work"],
+    filters: [getViewConfig(view, timeZone).filterLabel, "Shipped work"],
       summary: [
         {
           label: "Lines shipped",
@@ -182,7 +192,7 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
           detail: "Run the shipped-work sync once the installation is connected.",
         },
       ],
-      timeline: buildTimelineBuckets(view).map((bucket) => ({
+      timeline: buildTimelineBuckets(view, timeZone).map((bucket) => ({
         label: bucket.label,
         additions: 0,
         deletions: 0,
@@ -190,11 +200,11 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
         deletionsHeight: 0,
       })),
       repositories: [],
-      chartTitle: getViewConfig(view).title,
+      chartTitle: getViewConfig(view, timeZone).title,
     };
   }
 
-  const windowStart = getWindowStart(view);
+  const windowStart = getWindowStart(view, timeZone);
   const dailyStats = await db.dailyUserRepoStats.findMany({
     where: {
       accountId: session.accountId,
@@ -215,7 +225,7 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
     },
   });
 
-  const timeline = buildTimelineBuckets(view);
+  const timeline = buildTimelineBuckets(view, timeZone);
   const installationRepoCount = await db.repository.count({
     where: {
       installationId: {
@@ -304,7 +314,7 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
       source: "live" as const,
     },
     filters: [
-      getViewConfig(view).filterLabel,
+      getViewConfig(view, timeZone).filterLabel,
       mode === "shipped" ? "Shipped work" : "Shipped work",
       "Merged PRs only",
       `${installationRepoCount} tracked repos`,
@@ -329,12 +339,15 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
         label: "Latest sync",
         value: runningActivitySync ? "Running" : "Ready",
         detail: (runningActivitySync ?? latestActivitySync)?.updatedAt
-          ? `Updated ${new Intl.DateTimeFormat("en-US", {
-              month: "short",
-              day: "numeric",
-              hour: "numeric",
-              minute: "2-digit",
-            }).format((runningActivitySync ?? latestActivitySync)!.updatedAt)}`
+          ? `Updated ${await formatDate(
+              (runningActivitySync ?? latestActivitySync)!.updatedAt,
+              {
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+              },
+            )}`
           : "Run your first shipped-work sync to replace sample metrics.",
       },
     ],
@@ -352,7 +365,7 @@ export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
         ...repository,
         detail: `${formatNumber(repository.mergedPrCount)} merged PRs in the selected window.`,
       })),
-    chartTitle: getViewConfig(view).title,
+    chartTitle: getViewConfig(view, timeZone).title,
     latestPullRequestTitle: latestPullRequest
       ? `${latestPullRequest.repository.owner}/${latestPullRequest.repository.name}: ${latestPullRequest.title}`
       : null,
