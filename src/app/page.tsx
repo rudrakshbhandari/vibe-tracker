@@ -50,7 +50,7 @@ const GITHUB_STATUS_COPY: Record<string, { label: string; detail?: string }> = {
   "oauth-account-failed": {
     label: "GitHub connected, but account setup failed",
     detail:
-      "GitHub connected, but the app could not finish setting up your account. Please try again.",
+      "GitHub connected, but the app could not finish storing your account data. If this keeps happening, reset the session and try again.",
   },
   "oauth-installations-failed": {
     label: "GitHub connected, but installations could not be loaded",
@@ -72,6 +72,10 @@ const GITHUB_STATUS_COPY: Record<string, { label: string; detail?: string }> = {
   },
   "repositories-refreshed": {
     label: "Repositories refreshed",
+  },
+  "session-reset": {
+    label: "Session reset",
+    detail: "The saved session was cleared. Connect GitHub again to start fresh.",
   },
   "sync-failed": {
     label: "Sync failed",
@@ -127,12 +131,17 @@ function getStatusTone(status?: string) {
 function ConnectionAction({
   href,
   label,
+  tone = "primary",
 }: {
   href: string;
   label: string;
+  tone?: "primary" | "secondary";
 }) {
   return (
-    <Link href={href} className="button-primary w-full sm:w-auto">
+    <Link
+      href={href}
+      className={tone === "primary" ? "button-primary w-full sm:w-auto" : "button-secondary w-full sm:w-auto"}
+    >
       {label}
       <ArrowRight className="h-4 w-4" />
     </Link>
@@ -317,10 +326,17 @@ export default async function Home({ searchParams }: HomePageProps) {
 
             <div className="hero-actions">
               {!githubState.connected && githubState.primaryAction ? (
-                <ConnectionAction
-                  href={githubState.primaryAction.href}
-                  label={githubState.primaryAction.label}
-                />
+                <>
+                  <ConnectionAction
+                    href={githubState.primaryAction.href}
+                    label={githubState.primaryAction.label}
+                  />
+                  <ConnectionAction
+                    href="/api/session/reset"
+                    label="Reset Session"
+                    tone="secondary"
+                  />
+                </>
               ) : null}
 
               {githubState.connected && !hasInstallations ? (
@@ -684,10 +700,15 @@ export default async function Home({ searchParams }: HomePageProps) {
                 <h3 className="panel-heading">{githubState.title}</h3>
                 <p className="mt-3 text-sm leading-6 text-muted">{githubState.description}</p>
                 {githubState.primaryAction ? (
-                  <div className="mt-5">
+                  <div className="mt-5 flex flex-wrap gap-3">
                     <ConnectionAction
                       href={githubState.primaryAction.href}
                       label={githubState.primaryAction.label}
+                    />
+                    <ConnectionAction
+                      href="/api/session/reset"
+                      label="Reset Session"
+                      tone="secondary"
                     />
                   </div>
                 ) : null}
