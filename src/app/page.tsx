@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, Github, RefreshCcw, TimerReset } from "lucide-react";
 
+import { ActivityBarChart } from "@/components/activity-bar-chart";
 import { ActivitySyncRefresh } from "@/components/activity-sync-refresh";
 import { formatNumber } from "@/lib/dashboard";
 import type { AnalyticsView, MetricMode } from "@/lib/dashboard";
@@ -202,6 +203,8 @@ function buildBarChartGeometry(timeline: TimelinePoint[]) {
     return {
       label: point.label,
       centerX,
+      additionsValue: point.additions,
+      deletionsValue: point.deletions,
       additions: {
         x: centerX - barWidth - barGap / 2,
         y: baselineY - additionsHeight,
@@ -468,72 +471,12 @@ export default async function Home({ searchParams }: HomePageProps) {
                     </article>
                   </div>
 
-                  <div className="bar-chart-shell">
-                    <svg
-                      viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
-                      className="h-[24rem] w-full"
-                      role="img"
-                      aria-label={`${dashboard.chartTitle} additions and deletions bar chart`}
-                    >
-                      {chartGeometry.ticks.map((tick) => {
-                        const y = chartGeometry.toY(tick);
-
-                        return (
-                          <g key={tick}>
-                            <line
-                              x1={CHART_PADDING.left}
-                              x2={CHART_WIDTH - CHART_PADDING.right}
-                              y1={y}
-                              y2={y}
-                              stroke="rgba(89, 98, 112, 0.16)"
-                              strokeDasharray="4 10"
-                            />
-                            <text
-                              x={CHART_PADDING.left - 12}
-                              y={y + 4}
-                              textAnchor="end"
-                              fill="rgba(91, 99, 111, 0.85)"
-                              fontSize="12"
-                            >
-                              {tick === 0 ? "0" : formatNumber(tick)}
-                            </text>
-                          </g>
-                        );
-                      })}
-
-                      {chartGeometry.bars.map((bar, index) => (
-                        <g key={bar.label}>
-                          <rect
-                            x={bar.additions.x}
-                            y={bar.additions.y}
-                            width={chartGeometry.barWidth}
-                            height={bar.additions.height}
-                            rx="8"
-                            fill="#6e84ad"
-                          />
-                          <rect
-                            x={bar.deletions.x}
-                            y={bar.deletions.y}
-                            width={chartGeometry.barWidth}
-                            height={bar.deletions.height}
-                            rx="8"
-                            fill="#d4a06a"
-                          />
-                          {shouldShowXAxisLabel(index, dashboard.timeline.length, view) ? (
-                            <text
-                              x={bar.centerX}
-                              y={CHART_HEIGHT - 10}
-                              textAnchor="middle"
-                              fill="rgba(91, 99, 111, 0.85)"
-                              fontSize="12"
-                            >
-                              {bar.label}
-                            </text>
-                          ) : null}
-                        </g>
-                      ))}
-                    </svg>
-                  </div>
+                  <ActivityBarChart
+                    chartGeometry={chartGeometry}
+                    timelineLength={dashboard.timeline.length}
+                    view={view}
+                    chartTitle={dashboard.chartTitle}
+                  />
                 </div>
               ) : (
                 <div className="mt-6 rounded-[1.4rem] border border-line bg-white/70 px-4 py-6 text-sm text-muted">
