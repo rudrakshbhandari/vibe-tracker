@@ -291,7 +291,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               </Link>
             </div>
             <div className="space-y-3">
-              <h1 className="page-title">Quiet, readable GitHub activity.</h1>
+              <h1 className="page-title">Everyone is vibe coding, but how much?</h1>
               <p className="page-description">
                 Track shipped work, recent trend, and repository impact without
                 dragging the whole branch graph into storage.
@@ -677,7 +677,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               <div className="space-y-4">
                 <span className="eyebrow eyebrow-subtle">Not connected</span>
                 <h2 className="dashboard-title max-w-3xl">
-                  Connect GitHub before expecting any real signal.
+                  No GitHub, no signal.
                 </h2>
                 <p className="max-w-2xl text-sm leading-7 text-muted sm:text-base">
                   This dashboard only shows synced GitHub activity. Until the account is connected
