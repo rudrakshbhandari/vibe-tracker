@@ -8,6 +8,7 @@ import {
   type GitHubPullRequestDetail,
 } from "@/lib/github";
 import { getStaleRepositoryIds } from "@/lib/repository-sync";
+import { refreshLeaderboardSnapshotsForAccount } from "@/lib/social";
 
 const ACTIVITY_SYNC_LOOKBACK_DAYS = 90;
 const MERGED_PULL_REQUEST_SCOPE = "merged_prs";
@@ -510,6 +511,7 @@ export async function syncUserActivityForAccount(input: {
         },
       });
     }
+    await refreshLeaderboardSnapshotsForAccount();
   } catch (error) {
     await Promise.all(
       syncJobs.map((syncJob) =>

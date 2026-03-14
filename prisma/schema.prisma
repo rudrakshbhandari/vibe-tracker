@@ -8,18 +8,61 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum ProfileVisibility {
+  PRIVATE
+  PUBLIC
+}
+
+enum LeaderboardVisibility {
+  HIDDEN
+  PUBLIC
+}
+
+enum FriendConnectionStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  BLOCKED
+}
+
+enum FriendInviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+enum LeaderboardWindow {
+  DAYS_7
+  DAYS_30
+  DAYS_90
+}
+
+enum LeaderboardScope {
+  GLOBAL
+}
+
 model GitHubAccount {
-  id                 String              @id @default(cuid())
-  githubUserId       Int                 @unique
-  login              String              @unique
-  displayName        String?
-  avatarUrl          String?
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  installationGrants InstallationGrant[]
-  pullRequests       PullRequest[]
-  dailyStats         DailyUserRepoStats[]
-  sessions           UserSession[]
+  id                          String                @id @default(cuid())
+  githubUserId                Int                   @unique
+  login                       String                @unique
+  displayName                 String?
+  avatarUrl                   String?
+  bio                         String?
+  profileVisibility           ProfileVisibility     @default(PRIVATE)
+  leaderboardVisibility       LeaderboardVisibility @default(HIDDEN)
+  socialOnboardingCompletedAt DateTime?
+  createdAt                   DateTime              @default(now())
+  updatedAt                   DateTime              @updatedAt
+  installationGrants          InstallationGrant[]
+  pullRequests                PullRequest[]
+  dailyStats                  DailyUserRepoStats[]
+  sessions                    UserSession[]
+  leaderboardSnapshots        LeaderboardSnapshot[]
+  sentFriendConnections       FriendConnection[]    @relation("FriendConnectionRequester")
+  receivedFriendConnections   FriendConnection[]    @relation("FriendConnectionAddressee")
+  sentFriendInvites           FriendInvite[]        @relation("FriendInviteInviter")
+  claimedFriendInvites        FriendInvite[]        @relation("FriendInviteClaimer")
 }
 
 model Installation {
@@ -50,33 +93,33 @@ model InstallationGrant {
 }
 
 model UserSession {
-  id                         String        @id @default(cuid())
-  sessionToken               String        @unique
-  accountId                  String
-  githubAccessToken          String
-  githubAccessTokenExpiresAt DateTime?
-  githubRefreshToken         String?
+  id                          String        @id @default(cuid())
+  sessionToken                String        @unique
+  accountId                   String
+  githubAccessToken           String
+  githubAccessTokenExpiresAt  DateTime?
+  githubRefreshToken          String?
   githubRefreshTokenExpiresAt DateTime?
-  expiresAt                  DateTime
-  createdAt                  DateTime      @default(now())
-  updatedAt                  DateTime      @updatedAt
-  account                    GitHubAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  expiresAt                   DateTime
+  createdAt                   DateTime      @default(now())
+  updatedAt                   DateTime      @updatedAt
+  account                     GitHubAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
 }
 
 model Repository {
-  id             String            @id @default(cuid())
-  githubRepoId   Int               @unique
+  id             String             @id @default(cuid())
+  githubRepoId   Int                @unique
   owner          String
   name           String
   defaultBranch  String
   isPrivate      Boolean
   installationId String
-  installation   Installation      @relation(fields: [installationId], references: [id])
+  installation   Installation       @relation(fields: [installationId], references: [id])
   pullRequests   PullRequest[]
   dailyStats     DailyUserRepoStats[]
   syncCursors    SyncCursor[]
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
 
   @@index([installationId])
 }
@@ -126,15 +169,15 @@ model DailyUserRepoStats {
 }
 
 model SyncCursor {
-  id             String       @id @default(cuid())
+  id             String        @id @default(cuid())
   installationId String?
   repositoryId   String?
   installation   Installation? @relation(fields: [installationId], references: [id])
   repository     Repository?   @relation(fields: [repositoryId], references: [id])
   scope          String
   cursorValue    String
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   @@unique([repositoryId, scope])
   @@index([installationId, scope])
@@ -154,4 +197,55 @@ model SyncJob {
   updatedAt      DateTime     @updatedAt
 
   @@index([installationId, scope, status])
+}
+
+model FriendConnection {
+  id                 String                 @id @default(cuid())
+  requesterAccountId String
+  addresseeAccountId String
+  pairKey            String                 @unique
+  status             FriendConnectionStatus @default(PENDING)
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  requester          GitHubAccount          @relation("FriendConnectionRequester", fields: [requesterAccountId], references: [id], onDelete: Cascade)
+  addressee          GitHubAccount          @relation("FriendConnectionAddressee", fields: [addresseeAccountId], references: [id], onDelete: Cascade)
+
+  @@index([requesterAccountId, status])
+  @@index([addresseeAccountId, status])
+}
+
+model FriendInvite {
+  id                 String             @id @default(cuid())
+  token              String             @unique
+  inviterAccountId   String
+  claimedByAccountId String?
+  status             FriendInviteStatus @default(PENDING)
+  expiresAt          DateTime
+  claimedAt          DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  inviter            GitHubAccount      @relation("FriendInviteInviter", fields: [inviterAccountId], references: [id], onDelete: Cascade)
+  claimedBy          GitHubAccount?     @relation("FriendInviteClaimer", fields: [claimedByAccountId], references: [id], onDelete: SetNull)
+
+  @@index([inviterAccountId, status])
+}
+
+model LeaderboardSnapshot {
+  id              String           @id @default(cuid())
+  accountId       String
+  window          LeaderboardWindow
+  scope           LeaderboardScope
+  vibeScore       Int
+  mergedAdditions Int
+  mergedDeletions Int
+  mergedCommits   Int
+  activePeriods   Int
+  rank            Int
+  calculatedAt    DateTime         @default(now())
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  account         GitHubAccount    @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, window, scope])
+  @@index([window, scope, rank])
 }

@@ -37,6 +37,30 @@ npm run db:push
 npm run dev
 ```
 
+## Recommended local setup
+
+The repo now supports a shared worktree-friendly setup:
+
+1. Put your real local secrets in `~/.config/vibe-tracker/.env.shared`
+2. Allow [`direnv`](https://direnv.net/) in the repo so every worktree loads the same env automatically
+3. Start the shared Postgres dev database with `npm run db:up`
+4. Run `npm run bootstrap` inside any worktree
+
+The bootstrap script will:
+
+- symlink `.env` to the shared env file when available
+- install dependencies
+- generate the Prisma client
+- run `prisma db push` when `DATABASE_URL` and `DIRECT_URL` are available
+
+For a clean new worktree, use:
+
+```bash
+./scripts/new-worktree.sh rudrakshbhandari/<task-name>
+```
+
+Detailed instructions live in [`docs/WORKTREES.md`](docs/WORKTREES.md).
+
 Example:
 
 ```bash
@@ -65,6 +89,13 @@ Then fill in:
 - `GITHUB_APP_CLIENT_SECRET`
 - `GITHUB_APP_PRIVATE_KEY`
 - `GITHUB_APP_SLUG`
+
+Recommended shared env file example:
+
+```bash
+mkdir -p ~/.config/vibe-tracker
+cp .env.example ~/.config/vibe-tracker/.env.shared
+```
 
 The current live flow is:
 
