@@ -45,6 +45,21 @@ Example:
 curl "http://localhost:3000/api/metrics?view=weekly&mode=authored"
 ```
 
+## Contributing
+
+External contributions are welcome, but the repo uses a controlled pre-launch workflow:
+
+- Bugs, docs fixes, tests, and focused polish PRs are welcome
+- Feature work should start with an issue or discussion before code is written
+- All PRs should stay small, pass CI, and link the issue they close
+
+Start here:
+
+- [Contribution guide](.github/CONTRIBUTING.md)
+- [Code of conduct](.github/CODE_OF_CONDUCT.md)
+
+The repo runs a PR validation workflow for `lint`, `test`, and `build`.
+
 ## GitHub App setup
 
 Create a GitHub App with:
