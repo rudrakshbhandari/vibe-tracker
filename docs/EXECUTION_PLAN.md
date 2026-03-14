@@ -4,8 +4,8 @@
 
 - Issue: [#34](https://github.com/rudrakshbhandari/vibe-tracker/issues/34)
 - Branch: `rudrakshbhandari/open-source-contribution-system`
-- PR: pending
-- Workflow: In Progress
+- PR: [#35](https://github.com/rudrakshbhandari/vibe-tracker/pull/35)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -17,8 +17,8 @@
 - [x] Add issue and pull request templates
 - [x] Add GitHub Actions CI for pull requests and pushes to main
 - [x] Update README with contribution entry points
-- [ ] Run lint, tests, and build
-- [ ] Push branch and open PR
+- [x] Run lint, tests, and build
+- [x] Push branch and open PR
 
 ## Issue #24 - Refine dashboard layout, remove redundant setup UI, and switch to elegant light theme
 
