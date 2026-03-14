@@ -228,8 +228,8 @@ export function SocialShell({
           <div className="space-y-3">
             <h1 className="page-title">Bring your crew into the vibe.</h1>
             <p className="page-description">
-              Compare shipped-output momentum with friends, or opt into the
-              public leaderboard when you want the wider room to see it.
+              Compare shipped-output momentum with friends. You&apos;re on the
+              public leaderboard by default—opt out anytime from Profile.
             </p>
           </div>
           <div className="hero-actions">
