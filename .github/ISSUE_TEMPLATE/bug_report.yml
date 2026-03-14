@@ -1,0 +1,56 @@
+name: Bug report
+description: Report a broken behavior or regression
+title: "bug: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for bugs only. For feature ideas, use the feature request form.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is broken?
+      placeholder: The dashboard crashes after clicking Sync my activity.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Make the reproduction concrete.
+      placeholder: |
+        1. Connect GitHub
+        2. Install the app
+        3. Click Sync my activity
+        4. Observe the error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: Sync should start and the UI should show progress.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      placeholder: The route returns 500 and the button stays disabled.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser, OS, local or hosted, and anything else relevant
+      placeholder: macOS 14, Chrome 123, local dev
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Paste stack traces, request errors, or screenshots if you have them.
+      render: shell

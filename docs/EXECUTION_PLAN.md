@@ -1,5 +1,26 @@
 # Execution Plan
 
+## Issue #34 - Set up open-source contribution system before launch
+
+- Issue: [#34](https://github.com/rudrakshbhandari/vibe-tracker/issues/34)
+- Branch: `rudrakshbhandari/open-source-contribution-system`
+- PR: [#35](https://github.com/rudrakshbhandari/vibe-tracker/pull/35)
+
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Create issue and project tracking for the contribution system work
+- [x] Create a task-specific branch before editing files
+- [x] Add public contribution guidance and a code of conduct
+- [x] Add issue and pull request templates
+- [x] Add GitHub Actions CI for pull requests and pushes to main
+- [x] Update README with contribution entry points
+- [x] Run lint, tests, and build
+- [x] Push branch and open PR
+
 ## Issue #32 - Refactor sync architecture around shipped work aggregates
 
 - Issue: [#32](https://github.com/rudrakshbhandari/vibe-tracker/issues/32)
@@ -57,7 +78,6 @@
 - [x] Add score/helper tests and API route coverage for the new social surface
 - [x] Run lint, tests, and build
 - [x] Open PR and sync the project fields/docs with the PR URL
-
 ## Issue #24 - Refine dashboard layout, remove redundant setup UI, and switch to elegant light theme
 
 - Issue: [#24](https://github.com/rudrakshbhandari/vibe-tracker/issues/24)

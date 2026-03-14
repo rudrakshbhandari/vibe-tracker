@@ -1,0 +1,42 @@
+name: Feature request
+description: Propose a scoped improvement
+title: "feat: "
+labels:
+  - enhancement
+  - needs discussion
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Feature requests are welcome, but major product or architecture work should be discussed before a PR is opened.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user or maintainer problem does this solve?
+      placeholder: It is hard to tell which repositories drove a given weekly bucket.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Keep it concrete and scoped.
+      placeholder: Add a drilldown panel that lists repositories and merged PRs for the selected bucket.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      placeholder: Keep the current chart-only view, or expose this only in the API.
+  - type: dropdown
+    id: contribution
+    attributes:
+      label: Are you planning to work on this?
+      options:
+        - I only want to suggest it
+        - I can help implement it
+        - I already started work
+    validations:
+      required: true
