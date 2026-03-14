@@ -17,6 +17,155 @@
 - [x] Run relevant checks after docs updates
 - [x] Push branch and open PR
 
+## Issue #34 - Set up open-source contribution system before launch
+
+- Issue: [#34](https://github.com/rudrakshbhandari/vibe-tracker/issues/34)
+- Branch: `rudrakshbhandari/open-source-contribution-system`
+- PR: [#35](https://github.com/rudrakshbhandari/vibe-tracker/pull/35)
+
+- Workflow: Done
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Create issue and project tracking for the contribution system work
+- [x] Create a task-specific branch before editing files
+- [x] Add public contribution guidance and a code of conduct
+- [x] Add issue and pull request templates
+- [x] Add GitHub Actions CI for pull requests and pushes to main
+- [x] Update README with contribution entry points
+- [x] Run lint, tests, and build
+- [x] Push branch and open PR
+
+## Issue #32 - Refactor sync architecture around shipped work aggregates
+
+- Issue: [#32](https://github.com/rudrakshbhandari/vibe-tracker/issues/32)
+- Branch: `rudrakshbhandari/shipped-work-architecture`
+- PR: [#33](https://github.com/rudrakshbhandari/vibe-tracker/pull/33)
+
+- Workflow: Done
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Replace branch and commit crawling with merged pull request sync
+- [x] Add sync cursors and daily shipped-work aggregate storage
+- [x] Rewrite live dashboard reads around aggregate tables
+- [x] Update UI and docs to describe shipped-work semantics
+- [x] Run lint, tests, and build
+- [x] Push branch and open PR
+
+## Issue #30 - Harden worktree bootstrap and shared local dev setup
+
+- Issue: [#30](https://github.com/rudrakshbhandari/vibe-tracker/issues/30)
+- Branch: `rudrakshbhandari/worktree-bootstrap`
+- PR: [#31](https://github.com/rudrakshbhandari/vibe-tracker/pull/31)
+
+- Workflow: Done
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Fix local database defaults so the example env matches the Prisma Postgres datasource
+- [x] Add shared env and worktree bootstrap scripts for repeatable setup
+- [x] Add a shared local Postgres compose service for worktree-safe local database access
+- [x] Document the worktree/bootstrap flow in README and docs
+- [x] Run lint, tests, build, and bootstrap verification
+- [x] Push branch, open PR, and sync project fields/docs
+
+## Issue #28 - Add social profiles, friends, and leaderboards
+
+- Issue: [#28](https://github.com/rudrakshbhandari/vibe-tracker/issues/28)
+- Branch: `rudrakshbhandari/social-leaderboards`
+- PR: [#29](https://github.com/rudrakshbhandari/vibe-tracker/pull/29)
+
+- Workflow: Done
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Extend the Prisma schema for social visibility, friend links, invite tokens, and leaderboard snapshots
+- [x] Add social APIs for me, profile settings, friends, invites, and leaderboard queries
+- [x] Add a `/social` product surface plus public profile and invite pages
+- [x] Refresh global leaderboard snapshots after activity sync completes
+- [x] Add score/helper tests and API route coverage for the new social surface
+- [x] Run lint, tests, and build
+- [x] Open PR and sync the project fields/docs with the PR URL
+## Issue #24 - Refine dashboard layout, remove redundant setup UI, and switch to elegant light theme
+
+- Issue: [#24](https://github.com/rudrakshbhandari/vibe-tracker/issues/24)
+- Branch: `rudrakshbhandari/light-elegant-dashboard`
+- PR: [#25](https://github.com/rudrakshbhandari/vibe-tracker/pull/25)
+
+- Workflow: Done
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Replace the dark, edgy theme with a light and more elegant visual system
+- [x] Remove low-signal setup actions and repeated account/installations panels
+- [x] Replace the line chart with a bar chart and improve typography/spacing
+- [x] Stop filter changes from scrolling the page upward during refresh
+- [x] Run lint, tests, and build
+- [x] Push branch and open PR
+
+## Issue #22 - Elevate homepage UI and reduce visual congestion
+
+- Issue: [#22](https://github.com/rudrakshbhandari/vibe-tracker/issues/22)
+- Branch: `rudrakshbhandari/elegant-homepage-refresh`
+- PR: [#23](https://github.com/rudrakshbhandari/vibe-tracker/pull/23)
+- Workflow: Done
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Capture the current homepage in Playwright at desktop and mobile sizes
+- [x] Identify the main congestion problems and visual hierarchy issues
+- [x] Redesign the homepage structure for a cleaner disconnected and connected experience
+- [x] Run lint, tests, build, and a final Playwright verification pass
+- [x] Push branch and open PR
+
+## Issue #20 - Fix unreadable activity chart and align monthly buckets
+
+- Issue: [#20](https://github.com/rudrakshbhandari/vibe-tracker/issues/20)
+- Branch: `codex/fix-chart-readability`
+- PR: [#21](https://github.com/rudrakshbhandari/vibe-tracker/pull/21)
+- Workflow: Done
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Replace the unreadable timeline bars with a readable plotted chart
+- [x] Keep additions and deletions visible with labels and explicit scaling
+- [x] Align monthly analytics buckets to real calendar month boundaries
+- [x] Run lint, tests, and build
+- [x] Push branch and open PR
+
+## Issue #18 - Simplify homepage to focus on core dashboard metrics
+
+- Issue: [#18](https://github.com/rudrakshbhandari/vibe-tracker/issues/18)
+- Branch: `codex/simplify-main-screen`
+- PR: [#19](https://github.com/rudrakshbhandari/vibe-tracker/pull/19)
+- Workflow: Done
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Shrink the homepage header so identity and controls stay visible without a giant hero
+- [x] Keep the username, key stats, repo list, status cards, actions, and time filters
+- [x] Make the activity chart the primary full-width section
+- [x] Remove low-signal duplicate panels from the connected dashboard
+- [x] Run lint, tests, and build
+- [x] Push branch and open PR
+
 ## Issue #16 - Improve dashboard UI hierarchy and visual polish
 
 - Issue: [#16](https://github.com/rudrakshbhandari/vibe-tracker/issues/16)

@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
+import { IBM_Plex_Mono, Manrope, Newsreader } from "next/font/google";
 import "./globals.css";
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
   subsets: ["latin"],
   display: "swap",
 });
@@ -18,7 +24,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Vibe Tracker",
   description:
-    "Track additions and deletions authored by a GitHub user across repositories and time windows.",
+    "Track shipped additions and deletions from merged pull requests across repositories and time windows.",
 };
 
 export default function RootLayout({
@@ -27,9 +33,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" style={{ colorScheme: "dark" }}>
+    <html lang="en" style={{ colorScheme: "light" }}>
       <body
-        className={`${spaceGrotesk.variable} ${ibmPlexMono.variable} bg-background text-foreground antialiased selection:bg-accent/30 selection:text-white`}
+        className={`${manrope.variable} ${newsreader.variable} ${ibmPlexMono.variable} bg-background text-foreground antialiased selection:bg-accent/20 selection:text-foreground`}
       >
         {children}
       </body>
