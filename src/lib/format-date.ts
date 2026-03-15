@@ -3,17 +3,31 @@ import { cookies, headers } from "next/headers";
 const TZ_COOKIE = "tz";
 
 /**
+ * Validate that a timezone string is supported by Intl.
+ * Vercel's x-vercel-ip-timezone or edge cases can return invalid values
+ * that cause RangeError and crash the server.
+ */
+function isSupportedTimezone(tz: string): boolean {
+  try {
+    Intl.DateTimeFormat("en-US", { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Get the user's timezone for server-side date formatting.
  * Priority: tz cookie (set by client) > x-vercel-ip-timezone header (Vercel) > undefined.
  */
 export async function getUserTimezone(): Promise<string | undefined> {
   const cookieStore = await cookies();
   const tzCookie = cookieStore.get(TZ_COOKIE)?.value;
-  if (tzCookie) return tzCookie;
+  if (tzCookie && isSupportedTimezone(tzCookie)) return tzCookie;
 
   const headersList = await headers();
   const vercelTz = headersList.get("x-vercel-ip-timezone");
-  if (vercelTz) return vercelTz;
+  if (vercelTz && isSupportedTimezone(vercelTz)) return vercelTz;
 
   return undefined;
 }
