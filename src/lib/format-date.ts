@@ -43,27 +43,38 @@ type FormatDateOptions = {
 /**
  * Format a date in the user's local timezone when available.
  * Falls back to runtime default (often UTC on server) when timezone is unknown.
+ * Wraps Intl usage in try/catch so any RangeError (e.g. invalid tz edge cases)
+ * does not crash the server.
  */
 export async function formatDate(
   date: Date,
   options: FormatDateOptions = {},
 ): Promise<string> {
-  const tz = await getUserTimezone();
-  return new Intl.DateTimeFormat("en-US", {
-    ...options,
-    ...(tz && { timeZone: tz }),
-  }).format(date);
+  try {
+    const tz = await getUserTimezone();
+    return new Intl.DateTimeFormat("en-US", {
+      ...options,
+      ...(tz && { timeZone: tz }),
+    }).format(date);
+  } catch {
+    return new Intl.DateTimeFormat("en-US", options).format(date);
+  }
 }
 
 /**
  * Create an Intl.DateTimeFormat formatter with user's timezone for server use.
+ * Falls back to formatter without timezone if Intl throws (e.g. invalid tz).
  */
 export async function createDateFormatter(
   options: Intl.DateTimeFormatOptions,
 ): Promise<Intl.DateTimeFormat> {
-  const tz = await getUserTimezone();
-  return new Intl.DateTimeFormat("en-US", {
-    ...options,
-    ...(tz && { timeZone: tz }),
-  });
+  try {
+    const tz = await getUserTimezone();
+    return new Intl.DateTimeFormat("en-US", {
+      ...options,
+      ...(tz && { timeZone: tz }),
+    });
+  } catch {
+    return new Intl.DateTimeFormat("en-US", options);
+  }
 }
