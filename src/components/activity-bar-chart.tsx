@@ -72,7 +72,7 @@ export function ActivityBarChart({ chartGeometry, timelineLength, view, chartTit
       <svg
         ref={svgRef}
         viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
-        className="h-[24rem] w-full"
+        className="h-[14rem] w-full sm:h-[20rem] md:h-[24rem]"
         role="img"
         aria-label={`${chartTitle} additions and deletions bar chart`}
       >
@@ -111,7 +111,7 @@ export function ActivityBarChart({ chartGeometry, timelineLength, view, chartTit
               y={bar.additions.y}
               width={chartGeometry.barWidth}
               height={bar.additions.height}
-              rx="0"
+              rx="3"
               fill="#6e84ad"
               onMouseEnter={(e) => handleBarMouseEnter(bar.label, "additions", bar.additionsValue, e)}
               onMouseLeave={handleBarMouseLeave}
@@ -122,7 +122,7 @@ export function ActivityBarChart({ chartGeometry, timelineLength, view, chartTit
               y={bar.deletions.y}
               width={chartGeometry.barWidth}
               height={bar.deletions.height}
-              rx="0"
+              rx="3"
               fill="#d4a06a"
               onMouseEnter={(e) => handleBarMouseEnter(bar.label, "deletions", bar.deletionsValue, e)}
               onMouseLeave={handleBarMouseLeave}
