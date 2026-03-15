@@ -13,6 +13,17 @@ type TimelineBucket = {
   deletions: number;
 };
 
+function createFormatter(
+  opts: Intl.DateTimeFormatOptions,
+  withTimezone: Record<string, unknown>,
+): Intl.DateTimeFormat {
+  try {
+    return new Intl.DateTimeFormat("en-US", { ...opts, ...withTimezone });
+  } catch {
+    return new Intl.DateTimeFormat("en-US", opts);
+  }
+}
+
 function getViewConfig(
   view: AnalyticsView,
   timeZone?: string,
@@ -24,11 +35,10 @@ function getViewConfig(
       bucketCount: 14,
       stepDays: 1,
       filterLabel: "Last 14 days",
-      formatter: new Intl.DateTimeFormat("en-US", {
-        ...baseOpts,
-        month: "short",
-        day: "numeric",
-      }),
+      formatter: createFormatter(
+        { month: "short", day: "numeric" },
+        baseOpts,
+      ),
     };
   }
 
@@ -38,11 +48,10 @@ function getViewConfig(
       bucketCount: 12,
       stepDays: 7,
       filterLabel: "Last 12 weeks",
-      formatter: new Intl.DateTimeFormat("en-US", {
-        ...baseOpts,
-        month: "short",
-        day: "numeric",
-      }),
+      formatter: createFormatter(
+        { month: "short", day: "numeric" },
+        baseOpts,
+      ),
     };
   }
 
@@ -51,11 +60,10 @@ function getViewConfig(
     bucketCount: 12,
     stepDays: 30,
     filterLabel: "Last 12 months",
-    formatter: new Intl.DateTimeFormat("en-US", {
-      ...baseOpts,
-      month: "short",
-      year: "2-digit",
-    }),
+    formatter: createFormatter(
+      { month: "short", year: "2-digit" },
+      baseOpts,
+    ),
   };
 }
 
