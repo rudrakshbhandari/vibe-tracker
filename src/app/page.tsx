@@ -230,6 +230,23 @@ function buildBarChartGeometry(timeline: TimelinePoint[]) {
   };
 }
 
+const FALLBACK_GITHUB_STATE = {
+  connected: false,
+  title: "Something went wrong",
+  description: "We could not load your connection state. Please try again.",
+  primaryAction: { label: "Reconnect GitHub", href: "/api/github/connect" },
+  viewer: null,
+  activitySync: null,
+  activitySyncRunning: false,
+  installations: [] as Array<{
+    id: string;
+    githubInstallId: number;
+    accountLogin: string;
+    repositoryCount: number;
+    repositoryNames: string[];
+  }>,
+};
+
 export default async function Home({ searchParams }: HomePageProps) {
   const params = (await searchParams) ?? {};
   const view =
@@ -238,9 +255,17 @@ export default async function Home({ searchParams }: HomePageProps) {
       ? (params.view as AnalyticsView)
       : "weekly";
   const mode: MetricMode = "shipped";
-  const githubState = await getGithubConnectionState();
-  const dashboard = githubState.connected ? await getLiveMetrics(view, mode) : null;
   const githubStatus = typeof params.github === "string" ? params.github : undefined;
+
+  let githubState;
+  let dashboard: Awaited<ReturnType<typeof getLiveMetrics>> = null;
+  try {
+    githubState = await getGithubConnectionState();
+    dashboard = githubState.connected ? await getLiveMetrics(view, mode) : null;
+  } catch {
+    githubState = FALLBACK_GITHUB_STATE;
+    dashboard = null;
+  }
   const githubStatusCopy = githubStatus
     ? GITHUB_STATUS_COPY[githubStatus] ?? { label: githubStatus }
     : null;

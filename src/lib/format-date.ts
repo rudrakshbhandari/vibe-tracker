@@ -19,16 +19,20 @@ function isSupportedTimezone(tz: string): boolean {
 /**
  * Get the user's timezone for server-side date formatting.
  * Priority: tz cookie (set by client) > x-vercel-ip-timezone header (Vercel) > undefined.
+ * Wraps cookies()/headers() in try/catch — they can throw outside request scope (e.g. prerender).
  */
 export async function getUserTimezone(): Promise<string | undefined> {
-  const cookieStore = await cookies();
-  const tzCookie = cookieStore.get(TZ_COOKIE)?.value;
-  if (tzCookie && isSupportedTimezone(tzCookie)) return tzCookie;
+  try {
+    const cookieStore = await cookies();
+    const tzCookie = cookieStore.get(TZ_COOKIE)?.value;
+    if (tzCookie && isSupportedTimezone(tzCookie)) return tzCookie;
 
-  const headersList = await headers();
-  const vercelTz = headersList.get("x-vercel-ip-timezone");
-  if (vercelTz && isSupportedTimezone(vercelTz)) return vercelTz;
-
+    const headersList = await headers();
+    const vercelTz = headersList.get("x-vercel-ip-timezone");
+    if (vercelTz && isSupportedTimezone(vercelTz)) return vercelTz;
+  } catch {
+    // cookies()/headers() can throw outside request scope
+  }
   return undefined;
 }
 
