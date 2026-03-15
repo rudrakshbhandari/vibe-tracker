@@ -225,8 +225,8 @@ function buildBarChartGeometry(timeline: TimelinePoint[]) {
     bars,
     baselineY,
     barWidth,
-    toY: (value: number) =>
-      baselineY - (value <= 0 ? 0 : (value / maxValue) * innerHeight),
+    maxValue,
+    innerHeight,
   };
 }
 
