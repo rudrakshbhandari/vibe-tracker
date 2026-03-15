@@ -66,8 +66,14 @@ export async function createUserSession(input: {
 }
 
 export async function getOptionalUserSession() {
-  const cookieStore = await cookies();
-  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  let sessionToken: string | undefined;
+  try {
+    const cookieStore = await cookies();
+    sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  } catch {
+    // cookies() can throw outside request scope (e.g. prerender, edge)
+    return null;
+  }
 
   if (!sessionToken) {
     return null;
