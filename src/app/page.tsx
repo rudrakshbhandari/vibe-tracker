@@ -163,18 +163,6 @@ function getTickValues(maxValue: number) {
   return [roundedMax, Math.round(roundedMax * 0.66), Math.round(roundedMax * 0.33), 0];
 }
 
-function shouldShowXAxisLabel(index: number, total: number, view: AnalyticsView) {
-  if (index === 0 || index === total - 1) {
-    return true;
-  }
-
-  if (view === "monthly") {
-    return true;
-  }
-
-  return index % 2 === 0;
-}
-
 function buildBarChartGeometry(timeline: TimelinePoint[]) {
   const innerWidth = CHART_WIDTH - CHART_PADDING.left - CHART_PADDING.right;
   const innerHeight = CHART_HEIGHT - CHART_PADDING.top - CHART_PADDING.bottom;
@@ -228,6 +216,172 @@ function buildBarChartGeometry(timeline: TimelinePoint[]) {
     maxValue,
     innerHeight,
   };
+}
+
+function DashboardMetrics({
+  summary,
+}: {
+  summary: Array<{ label: string; value: string; detail: string }>;
+}) {
+  return (
+    <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {summary.map((item) => (
+        <article key={item.label} className="metric-card">
+          <p className="metric-label">{item.label}</p>
+          <p className="metric-value">{item.value}</p>
+          <p className="metric-detail">{item.detail}</p>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+type GithubStateInstallation = {
+  id: string;
+  githubInstallId: number;
+  accountLogin: string;
+  repositoryCount: number;
+  repositoryNames: string[];
+};
+
+type RepoSummary = {
+  name: string;
+  detail: string;
+  visibility: string;
+  additions: number;
+  deletions: number;
+  commitCount: number;
+};
+
+function RepoSection({
+  repositories,
+  repoActivityMax,
+  installations,
+  connected,
+  hasInstallations,
+  accessibleRepositoryCount,
+}: {
+  repositories: RepoSummary[];
+  repoActivityMax: number;
+  installations: GithubStateInstallation[];
+  connected: boolean;
+  hasInstallations: boolean;
+  accessibleRepositoryCount: number;
+}) {
+  return (
+    <section className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_360px]">
+      <section className="story-panel">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="panel-label">Repository pressure</p>
+            <h3 className="panel-heading">Where the work landed</h3>
+          </div>
+          <span className="dashboard-pill">{repositories.length} repos</span>
+        </div>
+
+        <div className="repo-list">
+          {repositories.length > 0 ? (
+            repositories.map((repo, index) => {
+              const totalActivity = repo.additions + repo.deletions;
+              const width = `${Math.max(12, (totalActivity / repoActivityMax) * 100)}%`;
+              return (
+                <article key={repo.name} className="repo-card">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3">
+                        <span className="repo-rank">{String(index + 1).padStart(2, "0")}</span>
+                        <h3 className="text-lg font-semibold text-foreground">{repo.name}</h3>
+                      </div>
+                      <p className="text-sm leading-6 text-muted">{repo.detail}</p>
+                    </div>
+                    <span className="repo-visibility">{repo.visibility}</span>
+                  </div>
+                  <div className="mt-4 space-y-3">
+                    <div className="repo-meter">
+                      <div className="repo-meter-fill" style={{ width }} />
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 text-sm text-muted">
+                      <span>+{formatNumber(repo.additions)}</span>
+                      <span>-{formatNumber(repo.deletions)}</span>
+                      <span>{repo.commitCount} commits</span>
+                    </div>
+                  </div>
+                </article>
+              );
+            })
+          ) : (
+            <article className="repo-card">
+              <h3 className="text-lg font-semibold text-foreground">No synced repositories yet</h3>
+              <p className="mt-2 text-sm leading-6 text-muted">
+                Install the GitHub App, then run the first sync to populate repository metrics.
+              </p>
+            </article>
+          )}
+        </div>
+      </section>
+
+      <aside className="sidebar-panel">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="panel-label">Connected scope</p>
+            <h3 className="panel-heading">
+              {hasInstallations
+                ? `${installations.length} GitHub App installation${installations.length === 1 ? "" : "s"}`
+                : "No installation yet"}
+            </h3>
+          </div>
+          {connected ? (
+            <CheckCircle2 className="mt-1 h-5 w-5 text-[var(--success)]" />
+          ) : (
+            <Github className="mt-1 h-5 w-5 text-muted" />
+          )}
+        </div>
+
+        <p className="scope-summary">
+          {hasInstallations
+            ? `${formatNumber(accessibleRepositoryCount)} repositories are available in the current scope.`
+            : "Install the GitHub App on the account you want to measure to unlock repository-level metrics."}
+        </p>
+
+        {hasInstallations ? (
+          <div className="scope-list">
+            {installations.map((installation, index) => (
+              <article key={installation.id} className="scope-item">
+                <div className="scope-item-head">
+                  <div>
+                    <p className="scope-item-title">
+                      {installations.length === 1 ? "Primary scope" : installation.accountLogin}
+                    </p>
+                    <p className="scope-item-meta">{installation.repositoryCount} cached repos</p>
+                  </div>
+                  <form
+                    action={`/api/github/installations/${installation.githubInstallId}/sync`}
+                    method="post"
+                  >
+                    <button type="submit" className="button-secondary button-compact">
+                      <RefreshCcw className="h-4 w-4" />
+                      Refresh
+                    </button>
+                  </form>
+                </div>
+                <p className="scope-copy">
+                  {installation.repositoryNames.length > 0
+                    ? installation.repositoryNames.join(", ")
+                    : index === 0
+                      ? "Repository names will appear here after the next refresh."
+                      : "No repositories cached yet for this scope."}
+                </p>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-5">
+            <ConnectionAction href="/api/github/install" label="Install GitHub App" />
+          </div>
+        )}
+      </aside>
+    </section>
+  );
 }
 
 const FALLBACK_GITHUB_STATE = {
@@ -450,15 +604,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                 </div>
               </div>
 
-              <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                {dashboard.summary.map((item) => (
-                  <article key={item.label} className="metric-card">
-                    <p className="metric-label">{item.label}</p>
-                    <p className="metric-value">{item.value}</p>
-                    <p className="metric-detail">{item.detail}</p>
-                  </article>
-                ))}
-              </div>
+              <DashboardMetrics summary={dashboard.summary} />
             </section>
 
             <section className="story-panel">
@@ -510,134 +656,14 @@ export default async function Home({ searchParams }: HomePageProps) {
               )}
             </section>
 
-            <section className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_360px]">
-              <section className="story-panel">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <p className="panel-label">Repository pressure</p>
-                    <h3 className="panel-heading">Where the work landed</h3>
-                  </div>
-                  <span className="dashboard-pill">
-                    {dashboard.repositories.length} repos
-                  </span>
-                </div>
-
-                <div className="repo-list">
-                  {dashboard.repositories.length > 0 ? (
-                    dashboard.repositories.map((repo, index) => {
-                      const totalActivity = repo.additions + repo.deletions;
-                      const width = `${Math.max(12, (totalActivity / repoActivityMax) * 100)}%`;
-
-                      return (
-                        <article key={repo.name} className="repo-card">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-3">
-                                <span className="repo-rank">
-                                  {String(index + 1).padStart(2, "0")}
-                                </span>
-                                <h3 className="text-lg font-semibold text-foreground">
-                                  {repo.name}
-                                </h3>
-                              </div>
-                              <p className="text-sm leading-6 text-muted">{repo.detail}</p>
-                            </div>
-                            <span className="repo-visibility">{repo.visibility}</span>
-                          </div>
-
-                          <div className="mt-4 space-y-3">
-                            <div className="repo-meter">
-                              <div className="repo-meter-fill" style={{ width }} />
-                            </div>
-                            <div className="flex flex-wrap items-center gap-3 text-sm text-muted">
-                              <span>+{formatNumber(repo.additions)}</span>
-                              <span>-{formatNumber(repo.deletions)}</span>
-                              <span>{repo.commitCount} commits</span>
-                            </div>
-                          </div>
-                        </article>
-                      );
-                    })
-                  ) : (
-                    <article className="repo-card">
-                      <h3 className="text-lg font-semibold text-foreground">
-                        No synced repositories yet
-                      </h3>
-                      <p className="mt-2 text-sm leading-6 text-muted">
-                        Install the GitHub App, then run the first sync to populate repository metrics.
-                      </p>
-                    </article>
-                  )}
-                </div>
-              </section>
-
-              <aside className="sidebar-panel">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="panel-label">Connected scope</p>
-                    <h3 className="panel-heading">
-                      {hasInstallations
-                        ? `${githubState.installations.length} GitHub App installation${
-                            githubState.installations.length === 1 ? "" : "s"
-                          }`
-                        : "No installation yet"}
-                    </h3>
-                  </div>
-                  {githubState.connected ? (
-                    <CheckCircle2 className="mt-1 h-5 w-5 text-[var(--success)]" />
-                  ) : (
-                    <Github className="mt-1 h-5 w-5 text-muted" />
-                  )}
-                </div>
-
-                <p className="scope-summary">
-                  {hasInstallations
-                    ? `${formatNumber(accessibleRepositoryCount)} repositories are available in the current scope.`
-                    : "Install the GitHub App on the account you want to measure to unlock repository-level metrics."}
-                </p>
-
-                {hasInstallations ? (
-                  <div className="scope-list">
-                    {githubState.installations.map((installation, index) => (
-                      <article key={installation.id} className="scope-item">
-                        <div className="scope-item-head">
-                          <div>
-                            <p className="scope-item-title">
-                              {githubState.installations.length === 1
-                                ? "Primary scope"
-                                : installation.accountLogin}
-                            </p>
-                            <p className="scope-item-meta">
-                              {installation.repositoryCount} cached repos
-                            </p>
-                          </div>
-                          <form
-                            action={`/api/github/installations/${installation.githubInstallId}/sync`}
-                            method="post"
-                          >
-                            <button type="submit" className="button-secondary button-compact">
-                              <RefreshCcw className="h-4 w-4" />
-                              Refresh
-                            </button>
-                          </form>
-                        </div>
-                        <p className="scope-copy">
-                          {installation.repositoryNames.length > 0
-                            ? installation.repositoryNames.join(", ")
-                            : index === 0
-                              ? "Repository names will appear here after the next refresh."
-                              : "No repositories cached yet for this scope."}
-                        </p>
-                      </article>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="mt-5">
-                    <ConnectionAction href="/api/github/install" label="Install GitHub App" />
-                  </div>
-                )}
-              </aside>
-            </section>
+            <RepoSection
+              repositories={dashboard.repositories}
+              repoActivityMax={repoActivityMax}
+              installations={githubState.installations}
+              connected={githubState.connected}
+              hasInstallations={hasInstallations}
+              accessibleRepositoryCount={accessibleRepositoryCount}
+            />
           </>
         ) : (
           <section id="dashboard" className="dashboard-shell">
