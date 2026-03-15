@@ -123,11 +123,24 @@ function getWindowStart(view: AnalyticsView, timeZone?: string) {
   return firstBucket?.start ?? new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
 }
 
-export async function getLiveMetrics(view: AnalyticsView, mode: MetricMode) {
+export async function getLiveMetrics(
+  view: AnalyticsView,
+  mode: MetricMode,
+): Promise<Awaited<ReturnType<typeof getLiveMetricsInner>> | null> {
   if (!hasDurableDatabaseUrl()) {
     return null;
   }
+  try {
+    return await getLiveMetricsInner(view, mode);
+  } catch {
+    return null;
+  }
+}
 
+async function getLiveMetricsInner(
+  view: AnalyticsView,
+  mode: MetricMode,
+) {
   const session = await getOptionalUserSession();
 
   if (!session) {
