@@ -20,7 +20,9 @@ type BarGeometry = {
     deletions: { x: number; y: number; height: number };
   }>;
   barWidth: number;
-  toY: (value: number) => number;
+  maxValue: number;
+  innerHeight: number;
+  baselineY: number;
 };
 
 type ActivityBarChartProps = {
@@ -75,7 +77,9 @@ export function ActivityBarChart({ chartGeometry, timelineLength, view, chartTit
         aria-label={`${chartTitle} additions and deletions bar chart`}
       >
         {chartGeometry.ticks.map((tick) => {
-          const y = chartGeometry.toY(tick);
+          const y =
+            chartGeometry.baselineY -
+            (tick <= 0 ? 0 : (tick / chartGeometry.maxValue) * chartGeometry.innerHeight);
           return (
             <g key={tick}>
               <line
