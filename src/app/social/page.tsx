@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { SocialShell } from "@/components/social-shell";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { getOptionalUserSession } from "@/lib/session";
 import {
   getSocialFriends,
@@ -41,6 +42,7 @@ export default async function SocialPage({ searchParams }: SocialPageProps) {
                 <Link href="/" className="button-secondary">
                   Back home
                 </Link>
+                <ThemeToggle />
               </div>
             </div>
           </section>

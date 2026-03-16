@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { Globe2, Link2, Trophy, Users } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 import type {
   FriendSummary,
@@ -245,6 +246,7 @@ export function SocialShell({
               <Link2 className="h-4 w-4" />
               Create invite
             </button>
+            <ThemeToggle />
           </div>
         </div>
 
