@@ -3,6 +3,7 @@ import { ArrowRight, CheckCircle2, Github, RefreshCcw, ShieldCheck, TimerReset }
 
 import { ActivityBarChart } from "@/components/activity-bar-chart";
 import { ActivitySyncRefresh } from "@/components/activity-sync-refresh";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { formatNumber } from "@/lib/dashboard";
 import type { AnalyticsView, MetricMode } from "@/lib/dashboard";
 import { getGithubConnectionState } from "@/lib/github-state";
@@ -22,6 +23,11 @@ const GITHUB_STATUS_COPY: Record<string, { label: string; detail?: string }> = {
     label: "Activity sync is already running",
     detail:
       "A sync is already in progress. The dashboard will refresh automatically; no extra clicks are needed.",
+  },
+  "activity-sync-completed": {
+    label: "Activity sync completed",
+    detail:
+      "Shipped-work totals were refreshed. If the dashboard still looks empty, the selected scope may not contain merged PRs in the current time window.",
   },
   connected: {
     label: "GitHub connected",
@@ -514,7 +520,7 @@ export default async function Home({ searchParams }: HomePageProps) {
       <ActivitySyncRefresh active={syncRefreshActive} />
       <div className="page-wash" />
 
-      <div className="relative mx-auto flex w-full max-w-[1320px] flex-col gap-5 px-4 py-5 sm:px-6 sm:py-8 lg:px-10 lg:py-10">
+      <div className="relative mx-auto flex w-full max-w-[1280px] flex-col gap-4 px-4 py-4 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
         <section className="top-panel">
           <div className="top-panel-copy">
             <span className="eyebrow">Vibe Tracker</span>
@@ -525,6 +531,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               <Link href="/social" className="toggle-pill">
                 Social
               </Link>
+              <ThemeToggle />
             </div>
             <div className="space-y-3">
               <h1 className="page-title">Everyone is vibe coding, but how much?</h1>
@@ -683,7 +690,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               </div>
 
               {chartGeometry ? (
-                <div className="mt-6 space-y-5">
+                <div className="mt-5 space-y-4">
                   <div className="chart-stat-row">
                     <article className="chart-stat-card">
                       <p className="panel-label">Peak additions</p>

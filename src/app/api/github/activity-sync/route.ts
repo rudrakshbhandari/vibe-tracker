@@ -1,7 +1,10 @@
-import { after, NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
+import {
+  failStaleActivitySyncJobs,
+  getActiveActivitySyncWhere,
+} from "@/lib/activity-sync-jobs";
 import { canEnableHostedGitHubSync } from "@/lib/env";
-import { dispatchActivitySync } from "@/lib/activity-sync-dispatch";
 import { db } from "@/lib/db";
 import { syncUserActivityForAccount } from "@/lib/installation-sync";
 import { getValidUserAccessToken } from "@/lib/session";
@@ -20,15 +23,12 @@ export async function POST(request: NextRequest) {
   const installationIds = session.session.account.installationGrants.map(
     (grant) => grant.installation.id,
   );
+
+  await failStaleActivitySyncJobs(installationIds);
+
   const runningSync = installationIds.length
     ? await db.syncJob.findFirst({
-        where: {
-          installationId: {
-            in: installationIds,
-          },
-          scope: "activity",
-          status: "running",
-        },
+        where: getActiveActivitySyncWhere(installationIds),
       })
     : null;
 
@@ -38,12 +38,17 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  dispatchActivitySync(after, async () => {
+  try {
     await syncUserActivityForAccount({
       accountId: session.session.accountId,
       userAccessToken: session.accessToken,
     });
-  });
+  } catch (error) {
+    console.error("Activity sync failed", error);
+    return NextResponse.redirect(new URL("/?github=sync-failed", request.url));
+  }
 
-  return NextResponse.redirect(new URL("/?github=activity-sync-started", request.url));
+  return NextResponse.redirect(
+    new URL("/?github=activity-sync-completed", request.url),
+  );
 }

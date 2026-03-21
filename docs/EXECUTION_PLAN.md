@@ -17,6 +17,40 @@
 - [x] Add an in-product privacy breakdown before GitHub connection
 - [x] Run lint, tests, and build
 - [x] Push branch and open PR
+## Issue #43 - Fix production activity sync population
+
+- Issue: [#43](https://github.com/rudrakshbhandari/vibe-tracker/issues/43)
+- Branch: `rudrakshbhandari/fix-activity-sync-population`
+- PR: [#44](https://github.com/rudrakshbhandari/vibe-tracker/pull/44)
+- Workflow: Done
+- Priority: P0
+- App: multi
+
+### Checklist
+
+- [x] Diagnose the live sync path against production data
+- [x] Replace the unreliable background `after(...)` sync trigger with a request-scoped sync
+- [x] Recover automatically from stale `running` sync jobs
+- [x] Re-run production sync and verify `DailyUserRepoStats` is populated
+- [x] Run tests, lint, and build
+- [x] Push branch and open PR
+
+## Issue #26 - Refine dashboard spacing, typography, and chart hover details
+
+- Issue: [#26](https://github.com/rudrakshbhandari/vibe-tracker/issues/26)
+- Branch: `rudrakshbhandari/fix-dashboard-typography-tooltips`
+- PR: [#27](https://github.com/rudrakshbhandari/vibe-tracker/pull/27)
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Create issue and move the task onto a matching branch
+- [x] Tighten dashboard spacing and rebalance typography hierarchy
+- [x] Make chart bars hoverable with x/y value tooltips
+- [x] Run lint, tests, and build
+- [x] Push branch and open PR
 
 ## Issue #41 - Fix leftover globals.css merge markers blocking production deploy
 
