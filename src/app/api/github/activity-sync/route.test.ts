@@ -3,27 +3,18 @@ import type { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
-  afterMock,
   canEnableHostedGitHubSyncMock,
   dbSyncJobFindFirstMock,
+  failStaleActivitySyncJobsMock,
   getValidUserAccessTokenMock,
   syncUserActivityForAccountMock,
 } = vi.hoisted(() => ({
-  afterMock: vi.fn(),
   canEnableHostedGitHubSyncMock: vi.fn(),
   dbSyncJobFindFirstMock: vi.fn(),
+  failStaleActivitySyncJobsMock: vi.fn(),
   getValidUserAccessTokenMock: vi.fn(),
   syncUserActivityForAccountMock: vi.fn(),
 }));
-
-vi.mock("next/server", async () => {
-  const actual = await vi.importActual<typeof import("next/server")>("next/server");
-
-  return {
-    ...actual,
-    after: afterMock,
-  };
-});
 
 vi.mock("@/lib/session", () => ({
   getValidUserAccessToken: getValidUserAccessTokenMock,
@@ -41,6 +32,22 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
+vi.mock("@/lib/activity-sync-jobs", () => ({
+  failStaleActivitySyncJobs: failStaleActivitySyncJobsMock,
+  getActiveActivitySyncWhere: vi.fn((installationIds: string[]) => ({
+    installationId: {
+      in: installationIds,
+    },
+    scope: "activity",
+    status: {
+      in: ["queued", "running"],
+    },
+    updatedAt: {
+      gte: new Date("2026-01-01T00:00:00.000Z"),
+    },
+  })),
+}));
+
 vi.mock("@/lib/installation-sync", () => ({
   syncUserActivityForAccount: syncUserActivityForAccountMock,
 }));
@@ -49,13 +56,14 @@ import { POST } from "@/app/api/github/activity-sync/route";
 
 describe("POST /api/github/activity-sync", () => {
   beforeEach(() => {
-    afterMock.mockReset();
     canEnableHostedGitHubSyncMock.mockReset();
     dbSyncJobFindFirstMock.mockReset();
+    failStaleActivitySyncJobsMock.mockReset();
     getValidUserAccessTokenMock.mockReset();
     syncUserActivityForAccountMock.mockReset();
     canEnableHostedGitHubSyncMock.mockReturnValue(true);
     dbSyncJobFindFirstMock.mockResolvedValue(null);
+    failStaleActivitySyncJobsMock.mockResolvedValue(undefined);
   });
 
   it("redirects unauthenticated users", async () => {
@@ -68,12 +76,10 @@ describe("POST /api/github/activity-sync", () => {
     expect(response.headers.get("location")).toBe(
       "https://example.com/?github=not-connected",
     );
-    expect(afterMock).not.toHaveBeenCalled();
+    expect(failStaleActivitySyncJobsMock).not.toHaveBeenCalled();
   });
 
-  it("schedules the sync after the response instead of awaiting it", async () => {
-    const scheduledTasks: Array<() => Promise<void>> = [];
-
+  it("awaits the sync before redirecting to completed", async () => {
     getValidUserAccessTokenMock.mockResolvedValue({
       accessToken: "user-token",
       session: {
@@ -90,22 +96,15 @@ describe("POST /api/github/activity-sync", () => {
         },
       },
     });
-    afterMock.mockImplementation((task: () => Promise<void>) => {
-      scheduledTasks.push(task);
-    });
 
     const response = await POST({
       url: "https://example.com/api/github/activity-sync",
     } as NextRequest);
 
     expect(response.headers.get("location")).toBe(
-      "https://example.com/?github=activity-sync-started",
+      "https://example.com/?github=activity-sync-completed",
     );
-    expect(afterMock).toHaveBeenCalledOnce();
-    expect(syncUserActivityForAccountMock).not.toHaveBeenCalled();
-
-    await scheduledTasks[0]?.();
-
+    expect(failStaleActivitySyncJobsMock).toHaveBeenCalledWith(["installation-1"]);
     expect(syncUserActivityForAccountMock).toHaveBeenCalledWith({
       accountId: "account-1",
       userAccessToken: "user-token",
@@ -141,7 +140,35 @@ describe("POST /api/github/activity-sync", () => {
     expect(response.headers.get("location")).toBe(
       "https://example.com/?github=activity-sync-running",
     );
-    expect(afterMock).not.toHaveBeenCalled();
+    expect(failStaleActivitySyncJobsMock).toHaveBeenCalledWith(["installation-1"]);
     expect(syncUserActivityForAccountMock).not.toHaveBeenCalled();
+  });
+
+  it("redirects with sync-failed when the sync throws", async () => {
+    getValidUserAccessTokenMock.mockResolvedValue({
+      accessToken: "user-token",
+      session: {
+        accountId: "account-1",
+        account: {
+          login: "octocat",
+          installationGrants: [
+            {
+              installation: {
+                id: "installation-1",
+              },
+            },
+          ],
+        },
+      },
+    });
+    syncUserActivityForAccountMock.mockRejectedValue(new Error("boom"));
+
+    const response = await POST({
+      url: "https://example.com/api/github/activity-sync",
+    } as NextRequest);
+
+    expect(response.headers.get("location")).toBe(
+      "https://example.com/?github=sync-failed",
+    );
   });
 });
