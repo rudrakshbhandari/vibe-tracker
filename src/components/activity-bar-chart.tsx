@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import { formatNumber } from "@/lib/dashboard";
 
 const CHART_WIDTH = 960;
@@ -38,6 +38,10 @@ function shouldShowXAxisLabel(index: number, total: number, view: "daily" | "wee
   return index % 2 === 0;
 }
 
+function getBarTooltip(label: string, series: "Additions" | "Deletions", value: number) {
+  return `${label} ${series}: ${value === 0 ? "0" : formatNumber(value)}`;
+}
+
 export function ActivityBarChart({ chartGeometry, timelineLength, view, chartTitle }: ActivityBarChartProps) {
   const [tooltip, setTooltip] = useState<{
     label: string;
@@ -48,21 +52,38 @@ export function ActivityBarChart({ chartGeometry, timelineLength, view, chartTit
   } | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
+  const handleBarEnter = (
+    label: string,
+    type: "additions" | "deletions",
+    value: number,
+    x: number,
+    y: number,
+  ) => {
+    setTooltip({ label, type, value, x, y });
+  };
+
   const handleBarMouseEnter = (
     label: string,
     type: "additions" | "deletions",
     value: number,
-    e: React.MouseEvent
+    e: React.MouseEvent,
   ) => {
     const svg = svgRef.current;
     if (!svg) return;
     const rect = svg.getBoundingClientRect();
     const scaleX = rect.width / CHART_WIDTH;
     const scaleY = rect.height / CHART_HEIGHT;
-    // Use mouse position relative to SVG for tooltip placement
-    const x = (e.clientX - rect.left) / scaleX;
-    const y = (e.clientY - rect.top) / scaleY;
-    setTooltip({ label, type, value, x, y });
+    handleBarEnter(label, type, value, (e.clientX - rect.left) / scaleX, (e.clientY - rect.top) / scaleY);
+  };
+
+  const handleBarFocus = (
+    label: string,
+    type: "additions" | "deletions",
+    value: number,
+    x: number,
+    y: number,
+  ) => {
+    handleBarEnter(label, type, value, x, y);
   };
 
   const handleBarMouseLeave = () => setTooltip(null);
@@ -105,29 +126,64 @@ export function ActivityBarChart({ chartGeometry, timelineLength, view, chartTit
 
         {chartGeometry.bars.map((bar, index) => (
           <g key={bar.label}>
-            {/* Additions bar - rx 2 for subtle corner, not overly rounded */}
-            <rect
-              x={bar.additions.x}
-              y={bar.additions.y}
-              width={chartGeometry.barWidth}
-              height={bar.additions.height}
-              rx="3"
-              fill="#6e84ad"
-              onMouseEnter={(e) => handleBarMouseEnter(bar.label, "additions", bar.additionsValue, e)}
-              onMouseLeave={handleBarMouseLeave}
-              className="cursor-pointer transition-opacity hover:opacity-90"
-            />
-            <rect
-              x={bar.deletions.x}
-              y={bar.deletions.y}
-              width={chartGeometry.barWidth}
-              height={bar.deletions.height}
-              rx="3"
-              fill="#d4a06a"
-              onMouseEnter={(e) => handleBarMouseEnter(bar.label, "deletions", bar.deletionsValue, e)}
-              onMouseLeave={handleBarMouseLeave}
-              className="cursor-pointer transition-opacity hover:opacity-90"
-            />
+            <g
+              className="chart-bar-group"
+              tabIndex={0}
+              role="img"
+              aria-label={getBarTooltip(bar.label, "Additions", bar.additionsValue)}
+              onFocus={() =>
+                handleBarFocus(
+                  bar.label,
+                  "additions",
+                  bar.additionsValue,
+                  bar.additions.x + chartGeometry.barWidth / 2,
+                  Math.max(CHART_PADDING.top, bar.additions.y - 12),
+                )
+              }
+              onBlur={handleBarMouseLeave}
+            >
+              <title>{getBarTooltip(bar.label, "Additions", bar.additionsValue)}</title>
+              <rect
+                x={bar.additions.x}
+                y={bar.additions.y}
+                width={chartGeometry.barWidth}
+                height={bar.additions.height}
+                rx="3"
+                fill="#6e84ad"
+                onMouseEnter={(e) => handleBarMouseEnter(bar.label, "additions", bar.additionsValue, e)}
+                onMouseLeave={handleBarMouseLeave}
+                className="chart-bar chart-bar-additions"
+              />
+            </g>
+            <g
+              className="chart-bar-group"
+              tabIndex={0}
+              role="img"
+              aria-label={getBarTooltip(bar.label, "Deletions", bar.deletionsValue)}
+              onFocus={() =>
+                handleBarFocus(
+                  bar.label,
+                  "deletions",
+                  bar.deletionsValue,
+                  bar.deletions.x + chartGeometry.barWidth / 2,
+                  Math.max(CHART_PADDING.top, bar.deletions.y - 12),
+                )
+              }
+              onBlur={handleBarMouseLeave}
+            >
+              <title>{getBarTooltip(bar.label, "Deletions", bar.deletionsValue)}</title>
+              <rect
+                x={bar.deletions.x}
+                y={bar.deletions.y}
+                width={chartGeometry.barWidth}
+                height={bar.deletions.height}
+                rx="3"
+                fill="#d4a06a"
+                onMouseEnter={(e) => handleBarMouseEnter(bar.label, "deletions", bar.deletionsValue, e)}
+                onMouseLeave={handleBarMouseLeave}
+                className="chart-bar chart-bar-deletions"
+              />
+            </g>
             {shouldShowXAxisLabel(index, timelineLength, view) ? (
               <text
                 x={bar.centerX}

@@ -466,7 +466,7 @@ export default async function Home({ searchParams }: HomePageProps) {
       <ActivitySyncRefresh active={syncRefreshActive} />
       <div className="page-wash" />
 
-      <div className="relative mx-auto flex w-full max-w-[1320px] flex-col gap-5 px-4 py-5 sm:px-6 sm:py-8 lg:px-10 lg:py-10">
+      <div className="relative mx-auto flex w-full max-w-[1280px] flex-col gap-4 px-4 py-4 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
         <section className="top-panel">
           <div className="top-panel-copy">
             <span className="eyebrow">Vibe Tracker</span>
@@ -612,6 +612,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               </div>
 
               <DashboardMetrics summary={dashboard.summary} />
+              <DashboardMetrics summary={dashboard.summary} />
             </section>
 
             <section className="story-panel">
@@ -633,7 +634,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               </div>
 
               {chartGeometry ? (
-                <div className="mt-6 space-y-5">
+                <div className="mt-5 space-y-4">
                   <div className="chart-stat-row">
                     <article className="chart-stat-card">
                       <p className="panel-label">Peak additions</p>
@@ -649,6 +650,12 @@ export default async function Home({ searchParams }: HomePageProps) {
                     </article>
                   </div>
 
+                  <ActivityBarChart
+                    chartGeometry={chartGeometry}
+                    timelineLength={dashboard.timeline.length}
+                    view={view}
+                    chartTitle={dashboard.chartTitle}
+                  />
                   <ActivityBarChart
                     chartGeometry={chartGeometry}
                     timelineLength={dashboard.timeline.length}
