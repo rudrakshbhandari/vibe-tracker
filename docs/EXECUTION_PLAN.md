@@ -4,8 +4,8 @@
 
 - Issue: [#59](https://github.com/rudrakshbhandari/vibe-tracker/issues/59)
 - Branch: `rudrakshbhandari/production-ready-landing-page`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#60](https://github.com/rudrakshbhandari/vibe-tracker/pull/60)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -15,7 +15,7 @@
 - [x] Reposition the homepage around the Spotify Wrapped for developers concept
 - [x] Add clear trust/privacy messaging about no source code access
 - [x] Run lint, tests, and build
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
 
 ## Issue #41 - Fix leftover globals.css merge markers blocking production deploy
 
