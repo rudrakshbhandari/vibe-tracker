@@ -17,6 +17,24 @@
 - [x] Add an in-product privacy breakdown before GitHub connection
 - [x] Run lint, tests, and build
 - [x] Push branch and open PR
+
+## Issue #57 - Fix mixed light/dark theme styling on initial page load
+
+- Issue: [#57](https://github.com/rudrakshbhandari/vibe-tracker/issues/57)
+- Branch: `rudrakshbhandari/fix-theme-first-load-flash`
+- PR: [#58](https://github.com/rudrakshbhandari/vibe-tracker/pull/58)
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Create issue and move the fix onto a matching task branch
+- [x] Align the pre-hydration dark fallback with the explicit dark theme selectors
+- [x] Make `color-scheme` follow the active theme to avoid mixed browser/UI treatment on first paint
+- [x] Run lint, tests, and build
+- [x] Push branch and open PR
+
 ## Issue #43 - Fix production activity sync population
 
 - Issue: [#43](https://github.com/rudrakshbhandari/vibe-tracker/issues/43)
