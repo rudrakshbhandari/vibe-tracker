@@ -42,19 +42,12 @@ export type GitHubRepository = {
 
 export type GitHubPullRequestListItem = {
   number: number;
-  title: string;
   state: string;
   user: {
     id: number;
     login: string;
     avatar_url: string;
   } | null;
-  base: {
-    ref: string;
-  };
-  head: {
-    ref: string;
-  };
   created_at: string;
   updated_at: string;
   merged_at: string | null;
@@ -63,20 +56,12 @@ export type GitHubPullRequestListItem = {
 export type GitHubPullRequestDetail = GitHubPullRequestListItem & {
   additions: number;
   deletions: number;
-  changed_files: number;
   commits: number;
 };
 
 export type GitHubAssociatedPullRequest = {
   number: number;
-  title: string;
   state: string;
-  base: {
-    ref: string;
-  };
-  head: {
-    ref: string;
-  };
   created_at: string;
   merged_at: string | null;
 };

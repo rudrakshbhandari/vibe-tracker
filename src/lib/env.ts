@@ -7,6 +7,11 @@ const githubEnvSchema = z.object({
   GITHUB_APP_CLIENT_SECRET: z.string().min(1),
   GITHUB_APP_PRIVATE_KEY: z.string().min(1),
   GITHUB_APP_SLUG: z.string().min(1),
+  SESSION_ENCRYPTION_KEY: z.string().min(1),
+});
+
+const sessionEncryptionSchema = z.object({
+  SESSION_ENCRYPTION_KEY: z.string().min(1),
 });
 
 export function hasGitHubAppEnv() {
@@ -19,6 +24,10 @@ export function getGitHubAppEnv() {
 
 export function normalizePrivateKey(privateKey: string) {
   return privateKey.replace(/\\n/g, "\n");
+}
+
+export function getSessionEncryptionKey() {
+  return sessionEncryptionSchema.parse(process.env).SESSION_ENCRYPTION_KEY;
 }
 
 export function hasDurableDatabaseUrl() {

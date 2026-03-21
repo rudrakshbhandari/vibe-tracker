@@ -131,13 +131,9 @@ model PullRequest {
   repository     Repository     @relation(fields: [repositoryId], references: [id])
   authorId       String?
   author         GitHubAccount? @relation(fields: [authorId], references: [id])
-  title          String
   state          String
-  baseBranch     String
-  headBranch     String
   additions      Int            @default(0)
   deletions      Int            @default(0)
-  changedFiles   Int?
   commitCount    Int            @default(0)
   openedAt       DateTime
   mergedAt       DateTime?

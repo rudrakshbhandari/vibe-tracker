@@ -487,6 +487,22 @@ a {
   word-break: break-word;
 }
 
+.trust-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+}
+
+.trust-dot {
+  margin-top: 0.55rem;
+  height: 0.55rem;
+  width: 0.55rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, var(--accent-2), var(--accent-strong));
+  box-shadow: 0 0 0 4px rgba(110, 132, 173, 0.12);
+}
+
 .empty-shell {
   display: flex;
   flex-direction: column;

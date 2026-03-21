@@ -7,14 +7,11 @@ import Link from "next/link";
  * Prevents the generic "Application error" screen; offers recovery.
  */
 export default function Error({
-  error: _error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  void _error;
-
   return (
     <main className="page-shell min-h-screen flex flex-col items-center justify-center px-4">
       <div className="max-w-md space-y-4 text-center">

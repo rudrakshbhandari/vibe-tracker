@@ -1,5 +1,22 @@
 # Execution Plan
 
+## Issue #55 - Public launch privacy readiness
+
+- Issue: [#55](https://github.com/rudrakshbhandari/vibe-tracker/issues/55)
+- Branch: `rudrakshbhandari/public-launch-privacy-readiness`
+- PR: [#56](https://github.com/rudrakshbhandari/vibe-tracker/pull/56)
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Create issue and project tracking for launch privacy work
+- [x] Remove unnecessary repo-content access from the documented GitHub App scope
+- [x] Minimize stored PR/session data to the fields the dashboard actually needs
+- [x] Add an in-product privacy breakdown before GitHub connection
+- [x] Run lint, tests, and build
+- [x] Push branch and open PR
 ## Issue #43 - Fix production activity sync population
 
 - Issue: [#43](https://github.com/rudrakshbhandari/vibe-tracker/issues/43)
