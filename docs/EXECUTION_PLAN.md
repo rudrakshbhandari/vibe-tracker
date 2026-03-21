@@ -1,5 +1,22 @@
 # Execution Plan
 
+## Issue #59 - Build production-ready Spotify Wrapped style landing page
+
+- Issue: [#59](https://github.com/rudrakshbhandari/vibe-tracker/issues/59)
+- Branch: `rudrakshbhandari/production-ready-landing-page`
+- PR: [#60](https://github.com/rudrakshbhandari/vibe-tracker/pull/60)
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Create issue and project tracking for the landing page work
+- [x] Reposition the homepage around the Spotify Wrapped for developers concept
+- [x] Add clear trust/privacy messaging about no source code access
+- [x] Run lint, tests, and build
+- [x] Push branch and open PR
+
 ## Issue #55 - Public launch privacy readiness
 
 - Issue: [#55](https://github.com/rudrakshbhandari/vibe-tracker/issues/55)
