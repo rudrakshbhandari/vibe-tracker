@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 
 import { db } from "@/lib/db";
 import { getGitHubTokenExpiry, refreshUserToken } from "@/lib/github";
+import { decryptSecret, encryptSecret } from "@/lib/secret-box";
 import {
   getSessionTokenLookupValues,
   hashSessionToken,
@@ -47,9 +48,9 @@ export async function createUserSession(input: {
     data: {
       sessionToken: sessionTokenHash,
       accountId: input.accountId,
-      githubAccessToken: input.accessToken,
+      githubAccessToken: encryptSecret(input.accessToken),
       githubAccessTokenExpiresAt: getGitHubTokenExpiry(input.expiresIn),
-      githubRefreshToken: input.refreshToken,
+      githubRefreshToken: input.refreshToken ? encryptSecret(input.refreshToken) : null,
       githubRefreshTokenExpiresAt: getGitHubTokenExpiry(input.refreshTokenExpiresIn),
       expiresAt,
     },
@@ -160,28 +161,30 @@ export async function getValidUserAccessToken() {
     session.githubAccessTokenExpiresAt > new Date(Date.now() + 60_000)
   ) {
     return {
-      accessToken: session.githubAccessToken,
+      accessToken: decryptSecret(session.githubAccessToken),
       session,
     };
   }
 
   if (!session.githubRefreshToken) {
     return {
-      accessToken: session.githubAccessToken,
+      accessToken: decryptSecret(session.githubAccessToken),
       session,
     };
   }
 
-  const refreshed = await refreshUserToken(session.githubRefreshToken);
+  const refreshed = await refreshUserToken(decryptSecret(session.githubRefreshToken));
 
   const updated = await db.userSession.update({
     where: {
       id: session.id,
     },
     data: {
-      githubAccessToken: refreshed.access_token,
+      githubAccessToken: encryptSecret(refreshed.access_token),
       githubAccessTokenExpiresAt: getGitHubTokenExpiry(refreshed.expires_in),
-      githubRefreshToken: refreshed.refresh_token ?? session.githubRefreshToken,
+      githubRefreshToken: refreshed.refresh_token
+        ? encryptSecret(refreshed.refresh_token)
+        : session.githubRefreshToken,
       githubRefreshTokenExpiresAt:
         getGitHubTokenExpiry(refreshed.refresh_token_expires_in) ??
         session.githubRefreshTokenExpiresAt,
@@ -204,7 +207,7 @@ export async function getValidUserAccessToken() {
   });
 
   return {
-    accessToken: updated.githubAccessToken,
+    accessToken: decryptSecret(updated.githubAccessToken),
     session: updated,
   };
 }

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Github, RefreshCcw, TimerReset } from "lucide-react";
+import { ArrowRight, CheckCircle2, Github, RefreshCcw, ShieldCheck, TimerReset } from "lucide-react";
 
 import { ActivityBarChart } from "@/components/activity-bar-chart";
 import { ActivitySyncRefresh } from "@/components/activity-sync-refresh";
@@ -95,7 +95,25 @@ const CONNECT_STEPS = [
   },
   {
     title: "Run the first sync",
-    detail: "Pull merged PR metadata into the local database so the totals become real.",
+    detail: "Pull merged PR counts and line stats into the local database so the totals become real.",
+  },
+];
+
+const TRUST_ITEMS = [
+  {
+    title: "Reads metric inputs, not repo files",
+    detail:
+      "The current sync reads repository scope plus merged pull request stats needed for shipped-work analytics.",
+  },
+  {
+    title: "Stores less than before",
+    detail:
+      "GitHub session tokens are stored encrypted, and the dashboard no longer needs PR titles or branch names in the database.",
+  },
+  {
+    title: "Makes the permission model explicit",
+    detail:
+      "Users can inspect the privacy page before connecting GitHub instead of guessing what the app can access.",
   },
 ];
 
@@ -384,6 +402,42 @@ function RepoSection({
   );
 }
 
+function TrustSection() {
+  return (
+    <section className="story-panel">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="max-w-2xl">
+          <p className="panel-label">Launch trust</p>
+          <h3 className="panel-heading">What the app reads and what it does not</h3>
+          <p className="mt-3 text-sm leading-6 text-muted sm:text-base">
+            Users are right to be skeptical. The product needs a plain-English data story before
+            asking for GitHub access.
+          </p>
+        </div>
+
+        <Link href="/privacy" className="button-secondary w-full sm:w-auto">
+          Read privacy breakdown
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
+
+      <div className="mt-6 grid gap-4 lg:grid-cols-3">
+        {TRUST_ITEMS.map((item) => (
+          <article key={item.title} className="onboarding-card">
+            <div className="flex items-start gap-3">
+              <ShieldCheck className="mt-1 h-5 w-5 text-[var(--success)]" />
+              <div>
+                <h3 className="text-xl font-semibold text-foreground">{item.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-muted">{item.detail}</p>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 const FALLBACK_GITHUB_STATE = {
   connected: false,
   title: "Something went wrong",
@@ -502,11 +556,12 @@ export default async function Home({ searchParams }: HomePageProps) {
             </div>
 
             <p className="hero-note">
-              Repository permissions are cached locally. Activity sync refreshes
-              merged pull request totals when you need a fresh snapshot.
+              Repository access is cached locally. Activity sync refreshes merged pull request
+              totals when you need a fresh snapshot without cloning repository code into the app.
             </p>
 
             <div className="hero-actions">
+              <ConnectionAction href="/privacy" label="Read privacy breakdown" tone="secondary" />
               {!githubState.connected && githubState.primaryAction ? (
                 <>
                   <ConnectionAction
@@ -560,6 +615,8 @@ export default async function Home({ searchParams }: HomePageProps) {
 
         {dashboard ? (
           <>
+            <TrustSection />
+
             <section id="dashboard" className="dashboard-shell">
               <div className="dashboard-head">
                 <div className="space-y-4">
@@ -573,7 +630,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                     <h2 className="dashboard-title">{dashboard.profile.login}</h2>
                     <p className="max-w-2xl text-sm leading-7 text-muted sm:text-base">
                       {dashboard.profile.source === "live"
-                        ? "These numbers come from synced merged pull requests and daily shipped-work aggregates stored in the local database."
+                        ? "These numbers come from synced merged pull request stats and daily shipped-work aggregates stored in the local database."
                         : "This is sample data that mirrors the shape of the live shipped-work metrics once GitHub activity has been synced."}
                     </p>
                   </div>
@@ -695,6 +752,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                 <p className="mt-3 text-sm leading-6 text-muted">{githubState.description}</p>
                 {githubState.primaryAction ? (
                   <div className="mt-5 flex flex-wrap gap-3">
+                    <ConnectionAction href="/privacy" label="Read privacy breakdown" tone="secondary" />
                     <ConnectionAction
                       href={githubState.primaryAction.href}
                       label={githubState.primaryAction.label}
@@ -707,6 +765,8 @@ export default async function Home({ searchParams }: HomePageProps) {
                   </div>
                 ) : null}
               </section>
+
+              <TrustSection />
             </div>
           </section>
         )}

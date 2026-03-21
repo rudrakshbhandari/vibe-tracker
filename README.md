@@ -21,7 +21,7 @@ The current schema is designed around shipped work and aggregate reads:
 - `GitHubAccount`: GitHub users who authorize the app or appear as merged PR authors.
 - `Installation`: GitHub App installation scope.
 - `Repository`: repos granted through an installation.
-- `PullRequest`: merged PR metadata and shipped-work stats.
+- `PullRequest`: merged PR counters and shipped-work stats.
 - `DailyUserRepoStats`: aggregate shipped additions, deletions, commit counts, and merged PR counts by user, repo, and day.
 - `SyncCursor`: per-repo incremental cursor so repeated syncs only fetch recently updated PRs.
 - `SyncJob`: queued/running/completed sync bookkeeping.
@@ -90,7 +90,6 @@ Create a GitHub App with:
 - Setup URL: `http://localhost:3000/api/github/setup`
 - Permissions:
   - Repository metadata: read-only
-  - Contents: read-only
   - Pull requests: read-only
 - Where can this GitHub App be installed: any account you want to analyze
 
@@ -104,12 +103,19 @@ Then fill in:
 - `GITHUB_APP_CLIENT_SECRET`
 - `GITHUB_APP_PRIVATE_KEY`
 - `GITHUB_APP_SLUG`
+- `SESSION_ENCRYPTION_KEY`
 
 Recommended shared env file example:
 
 ```bash
 mkdir -p ~/.config/vibe-tracker
 cp .env.example ~/.config/vibe-tracker/.env.shared
+```
+
+Generate a launch-safe session encryption key with:
+
+```bash
+openssl rand -base64 32
 ```
 
 The current live flow is:
@@ -133,6 +139,13 @@ Hosted note:
 - Sync reads merged pull requests, not the full branch graph.
 - Analytics views are exposed as `daily`, `weekly`, and `monthly`.
 - The metrics API mirrors those controls through `view` and `mode`.
+
+## Privacy model
+
+- The app reads GitHub identity, installation scope, repository metadata, and merged pull request stats required for shipped-work metrics.
+- The app stores encrypted GitHub session tokens server-side so OAuth sessions can be refreshed safely.
+- The app stores repository scope plus merged pull request counters and daily shipped-work aggregates.
+- The app does not clone repositories or ingest source files for the current dashboard.
 
 ## Next implementation steps
 

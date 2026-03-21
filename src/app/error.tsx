@@ -7,7 +7,6 @@ import Link from "next/link";
  * Prevents the generic "Application error" screen; offers recovery.
  */
 export default function Error({
-  error,
   reset,
 }: {
   error: Error & { digest?: string };
