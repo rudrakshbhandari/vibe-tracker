@@ -4,8 +4,8 @@
 
 - Issue: [#55](https://github.com/rudrakshbhandari/vibe-tracker/issues/55)
 - Branch: `rudrakshbhandari/public-launch-privacy-readiness`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#56](https://github.com/rudrakshbhandari/vibe-tracker/pull/56)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -16,7 +16,7 @@
 - [x] Minimize stored PR/session data to the fields the dashboard actually needs
 - [x] Add an in-product privacy breakdown before GitHub connection
 - [x] Run lint, tests, and build
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
 
 ## Issue #41 - Fix leftover globals.css merge markers blocking production deploy
 
