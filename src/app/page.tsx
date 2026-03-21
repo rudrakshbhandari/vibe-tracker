@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { ActivitySyncRefresh } from "@/components/activity-sync-refresh";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { formatNumber } from "@/lib/dashboard";
 import { getGithubConnectionState } from "@/lib/github-state";
 import { getLiveMetrics } from "@/lib/live-metrics";
@@ -29,6 +30,10 @@ const GITHUB_STATUS_COPY: Record<string, { label: string; detail?: string }> = {
   "activity-sync-running": {
     label: "Wrapped sync already running",
     detail: "A refresh is already in progress. No extra clicks needed.",
+  },
+  "activity-sync-completed": {
+    label: "Wrapped refreshed",
+    detail: "Your shipped-work snapshot was refreshed successfully.",
   },
   connected: {
     label: "GitHub connected",
@@ -139,7 +144,7 @@ const FAQS = [
   {
     question: "Can I keep my wrapped private?",
     answer:
-      "Yes. Profiles and recaps should stay private by default, and sharing is always opt-in.",
+      "Yes. Profiles and recaps stay private by default, and sharing is always opt-in.",
   },
   {
     question: "Why would I post this?",
@@ -214,7 +219,6 @@ export default async function Home({ searchParams }: HomePageProps) {
         repositoryNames: string[];
       }>,
     };
-    liveMetrics = null;
   }
 
   const githubStatusCopy = githubStatus
@@ -234,10 +238,14 @@ export default async function Home({ searchParams }: HomePageProps) {
     { label: "Peak month", value: "September", detail: "Main character energy." },
     { label: "Signature", value: "Consistency > Chaos", detail: "Steady shipping wins." },
   ];
+  const syncRefreshActive =
+    githubState.activitySyncRunning ||
+    githubStatus === "activity-sync-started" ||
+    githubStatus === "activity-sync-running";
 
   return (
     <main className="page-shell landing-shell min-h-screen">
-      <ActivitySyncRefresh active={githubState.activitySyncRunning} />
+      <ActivitySyncRefresh active={syncRefreshActive} />
       <div className="page-wash" />
 
       <div className="relative mx-auto flex w-full max-w-[1280px] flex-col gap-6 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
@@ -254,6 +262,7 @@ export default async function Home({ searchParams }: HomePageProps) {
           </nav>
 
           <div className="landing-nav-actions">
+            <ThemeToggle />
             {githubState.connected ? (
               <span className="landing-nav-chip">
                 <CheckCircle2 className="h-4 w-4" />
@@ -501,7 +510,7 @@ export default async function Home({ searchParams }: HomePageProps) {
             </div>
           </article>
 
-          <article className="landing-privacy-panel landing-faq-panel">
+          <article className="landing-privacy-panel">
             <p className="panel-label">FAQ</p>
             <div className="landing-faq-list">
               {FAQS.map((item) => (

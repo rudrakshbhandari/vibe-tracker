@@ -1,3 +1,7 @@
+import {
+  failStaleActivitySyncJobs,
+  getActiveActivitySyncWhere,
+} from "@/lib/activity-sync-jobs";
 import { db } from "@/lib/db";
 import { formatNumber } from "@/lib/dashboard";
 import type { AnalyticsView, MetricMode } from "@/lib/dashboard";
@@ -151,17 +155,11 @@ async function getLiveMetricsInner(
     (grant) => grant.installation.id,
   );
 
+  await failStaleActivitySyncJobs(installationIds);
+
   const runningActivitySync = installationIds.length
     ? await db.syncJob.findFirst({
-        where: {
-          installationId: {
-            in: installationIds,
-          },
-          scope: "activity",
-          status: {
-            in: ["queued", "running"],
-          },
-        },
+        where: getActiveActivitySyncWhere(installationIds),
         orderBy: {
           updatedAt: "desc",
         },
@@ -309,26 +307,6 @@ async function getLiveMetricsInner(
     ...timeline.flatMap((item) => [item.additions, item.deletions]),
   );
 
-  const latestPullRequest = await db.pullRequest.findFirst({
-    where: {
-      authorId: session.accountId,
-      repository: {
-        installationId: {
-          in: installationIds,
-        },
-      },
-      mergedAt: {
-        gte: windowStart,
-      },
-    },
-    include: {
-      repository: true,
-    },
-    orderBy: {
-      mergedAt: "desc",
-    },
-  });
-
   return {
     profile: {
       login: `@${session.account.login}`,
@@ -387,9 +365,6 @@ async function getLiveMetricsInner(
         detail: `${formatNumber(repository.mergedPrCount)} merged PRs in the selected window.`,
       })),
     chartTitle: getViewConfig(view, timeZone).title,
-    latestPullRequestTitle: latestPullRequest
-      ? `${latestPullRequest.repository.owner}/${latestPullRequest.repository.name}: ${latestPullRequest.title}`
-      : null,
     activitySyncRunning: Boolean(runningActivitySync),
   };
 }

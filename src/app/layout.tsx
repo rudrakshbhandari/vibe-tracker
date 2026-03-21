@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, Manrope, Newsreader } from "next/font/google";
+import { Manrope, Newsreader } from "next/font/google";
 import { TimezoneSync } from "@/components/timezone-sync";
 import "./globals.css";
+
+// Inline script: runs before first paint to set data-theme from localStorage (or system preference),
+// eliminating flash of wrong theme on page load.
+const ANTI_FLASH_SCRIPT = `(function(){try{var t=localStorage.getItem('vt-theme');document.documentElement.setAttribute('data-theme',t==='dark'||t==='light'?t:window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch(e){}})()` as const;
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -15,12 +19,6 @@ const newsreader = Newsreader({
   display: "swap",
 });
 
-const ibmPlexMono = IBM_Plex_Mono({
-  variable: "--font-ibm-plex-mono",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "Vibe Tracker",
@@ -34,9 +32,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" style={{ colorScheme: "light" }}>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: ANTI_FLASH_SCRIPT }} />
+      </head>
       <body
-        className={`${manrope.variable} ${newsreader.variable} ${ibmPlexMono.variable} bg-background text-foreground antialiased selection:bg-accent/20 selection:text-foreground`}
+        className={`${manrope.variable} ${newsreader.variable} bg-background text-foreground antialiased selection:bg-accent/20 selection:text-foreground`}
       >
         <TimezoneSync />
         {children}

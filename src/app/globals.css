@@ -1070,3 +1070,174 @@ a {
   flex-wrap: wrap;
   gap: 0.8rem;
 }
+
+/* ============================================================
+   DARK MODE
+   Two-trigger system:
+     1. @media fallback — applies CSS vars when system is dark and JS
+        has not yet run (or JS is disabled). Blocked by [data-theme="light"].
+     2. [data-theme="dark"] — JS-controlled; set immediately by the
+        anti-flash inline script in layout.tsx, and toggled by ThemeToggle.
+   ============================================================ */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --background: #1a1714;
+    --foreground: #e8e0d5;
+    --panel: rgba(30, 26, 22, 0.94);
+    --panel-strong: rgba(36, 31, 26, 0.98);
+    --panel-soft: rgba(40, 34, 28, 0.9);
+    --muted: #8c8078;
+    --line: rgba(200, 185, 165, 0.12);
+    --line-strong: rgba(200, 185, 165, 0.2);
+    --accent: #8fa3c8;
+    --accent-strong: #7d94ba;
+    --accent-2: #c89a6a;
+    --danger: #c47c78;
+    --warning: #c89a5e;
+    --success: #7aa888;
+    --button-primary-fg: #f0e8de;
+    --button-secondary-bg: rgba(44, 38, 32, 0.92);
+  }
+
+  :root:not([data-theme="light"]) body {
+    background:
+      radial-gradient(circle at top left, rgba(60, 50, 40, 0.6), transparent 34%),
+      radial-gradient(circle at bottom right, rgba(160, 100, 50, 0.1), transparent 30%),
+      linear-gradient(180deg, #1a1714 0%, #15120f 100%);
+  }
+
+  :root:not([data-theme="light"]) .page-wash {
+    background:
+      radial-gradient(circle at 8% 12%, rgba(60, 50, 40, 0.4), transparent 26%),
+      radial-gradient(circle at 92% 18%, rgba(110, 132, 173, 0.08), transparent 24%),
+      radial-gradient(circle at 72% 92%, rgba(160, 100, 50, 0.08), transparent 26%);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #1a1714;
+  --foreground: #e8e0d5;
+  --panel: rgba(30, 26, 22, 0.94);
+  --panel-strong: rgba(36, 31, 26, 0.98);
+  --panel-soft: rgba(40, 34, 28, 0.9);
+  --muted: #8c8078;
+  --line: rgba(200, 185, 165, 0.12);
+  --line-strong: rgba(200, 185, 165, 0.2);
+  --accent: #8fa3c8;
+  --accent-strong: #7d94ba;
+  --accent-2: #c89a6a;
+  --danger: #c47c78;
+  --warning: #c89a5e;
+  --success: #7aa888;
+  --button-primary-fg: #f0e8de;
+  --button-secondary-bg: rgba(44, 38, 32, 0.92);
+}
+
+:root[data-theme="dark"] body {
+  background:
+    radial-gradient(circle at top left, rgba(60, 50, 40, 0.6), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(160, 100, 50, 0.1), transparent 30%),
+    linear-gradient(180deg, #1a1714 0%, #15120f 100%);
+}
+
+:root[data-theme="dark"] .page-wash {
+  background:
+    radial-gradient(circle at 8% 12%, rgba(60, 50, 40, 0.4), transparent 26%),
+    radial-gradient(circle at 92% 18%, rgba(110, 132, 173, 0.08), transparent 24%),
+    radial-gradient(circle at 72% 92%, rgba(160, 100, 50, 0.08), transparent 26%);
+}
+
+:root[data-theme="dark"] .top-panel,
+:root[data-theme="dark"] .dashboard-shell,
+:root[data-theme="dark"] .story-panel,
+:root[data-theme="dark"] .sidebar-panel,
+:root[data-theme="dark"] .metric-card,
+:root[data-theme="dark"] .onboarding-card,
+:root[data-theme="dark"] .status-note,
+:root[data-theme="dark"] .landing-nav,
+:root[data-theme="dark"] .landing-band,
+:root[data-theme="dark"] .landing-story-panel,
+:root[data-theme="dark"] .landing-metrics-panel,
+:root[data-theme="dark"] .landing-privacy-panel,
+:root[data-theme="dark"] .landing-final-cta,
+:root[data-theme="dark"] .landing-proof-card,
+:root[data-theme="dark"] .landing-band-card,
+:root[data-theme="dark"] .landing-step-card,
+:root[data-theme="dark"] .landing-summary-card,
+:root[data-theme="dark"] .landing-faq-item {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 18px 48px rgba(0, 0, 0, 0.3);
+}
+
+:root[data-theme="dark"] .landing-shell {
+  background:
+    radial-gradient(circle at top right, rgba(195, 104, 74, 0.18), transparent 24%),
+    radial-gradient(circle at 20% 10%, rgba(82, 118, 184, 0.14), transparent 22%),
+    linear-gradient(180deg, #1b1714 0%, #15120f 46%, #13100d 100%);
+}
+
+:root[data-theme="dark"] .landing-nav,
+:root[data-theme="dark"] .landing-band,
+:root[data-theme="dark"] .landing-story-panel,
+:root[data-theme="dark"] .landing-metrics-panel,
+:root[data-theme="dark"] .landing-privacy-panel,
+:root[data-theme="dark"] .landing-final-cta {
+  background: linear-gradient(180deg, rgba(33, 28, 24, 0.95), rgba(27, 23, 19, 0.92));
+}
+
+:root[data-theme="dark"] .landing-brand-mark {
+  background: linear-gradient(135deg, #d78a71, #7d94ba);
+  color: #15120f;
+}
+
+:root[data-theme="dark"] .landing-nav-chip,
+:root[data-theme="dark"] .landing-trust-chip,
+:root[data-theme="dark"] .landing-signal-chip,
+:root[data-theme="dark"] .landing-privacy-list span {
+  border-color: rgba(200, 185, 165, 0.14);
+  background: rgba(36, 31, 26, 0.72);
+  color: var(--foreground);
+}
+
+:root[data-theme="dark"] .landing-proof-card,
+:root[data-theme="dark"] .landing-band-card,
+:root[data-theme="dark"] .landing-step-card,
+:root[data-theme="dark"] .landing-summary-card,
+:root[data-theme="dark"] .landing-faq-item {
+  background: rgba(31, 26, 22, 0.84);
+}
+
+:root[data-theme="dark"] .landing-description,
+:root[data-theme="dark"] .landing-panel-copy,
+:root[data-theme="dark"] .landing-proof-copy,
+:root[data-theme="dark"] .landing-summary-copy,
+:root[data-theme="dark"] .landing-band-card p,
+:root[data-theme="dark"] .landing-step-card p,
+:root[data-theme="dark"] .landing-faq-item p,
+:root[data-theme="dark"] .landing-nav-links a {
+  color: rgba(232, 224, 213, 0.78);
+}
+
+:root[data-theme="dark"] .landing-proof-label,
+:root[data-theme="dark"] .wrapped-stage-label,
+:root[data-theme="dark"] .wrapped-mini-kicker {
+  color: rgba(232, 224, 213, 0.58);
+}
+
+:root[data-theme="dark"] .landing-pill {
+  background: rgba(143, 163, 200, 0.14);
+  border-color: rgba(143, 163, 200, 0.18);
+  color: var(--foreground);
+}
+
+:root[data-theme="dark"] .button-primary:focus-visible,
+:root[data-theme="dark"] .button-secondary:focus-visible,
+:root[data-theme="dark"] .toggle-pill:focus-visible {
+  box-shadow:
+    0 0 0 3px rgba(26, 22, 18, 0.96),
+    0 0 0 5px rgba(143, 163, 200, 0.4);
+}
