@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   --background: #f5efe6;
   --foreground: #1f2733;
   --panel: rgba(255, 251, 246, 0.94);
@@ -672,6 +672,7 @@ a {
 /* --- CSS variables: system dark fallback (pre-JS) --- */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
+    color-scheme: dark;
     --background: #1a1714;
     --foreground: #e8e0d5;
     --panel: rgba(30, 26, 22, 0.94);
@@ -689,10 +690,149 @@ a {
     --button-primary-fg: #f0e8de;
     --button-secondary-bg: rgba(44, 38, 32, 0.92);
   }
+
+  :root:not([data-theme="light"]) body {
+    background:
+      radial-gradient(circle at top left, rgba(60, 50, 40, 0.6), transparent 34%),
+      radial-gradient(circle at bottom right, rgba(160, 100, 50, 0.10), transparent 30%),
+      linear-gradient(180deg, #1a1714 0%, #15120f 100%);
+  }
+
+  :root:not([data-theme="light"]) .page-wash {
+    background:
+      radial-gradient(circle at 8% 12%, rgba(60, 50, 40, 0.40), transparent 26%),
+      radial-gradient(circle at 92% 18%, rgba(110, 132, 173, 0.08), transparent 24%),
+      radial-gradient(circle at 72% 92%, rgba(160, 100, 50, 0.08), transparent 26%);
+  }
+
+  :root:not([data-theme="light"]) .top-panel,
+  :root:not([data-theme="light"]) .dashboard-shell,
+  :root:not([data-theme="light"]) .story-panel,
+  :root:not([data-theme="light"]) .sidebar-panel,
+  :root:not([data-theme="light"]) .metric-card,
+  :root:not([data-theme="light"]) .onboarding-card,
+  :root:not([data-theme="light"]) .status-note {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 18px 48px rgba(0, 0, 0, 0.30);
+  }
+
+  :root:not([data-theme="light"]) .top-panel-meta {
+    background: rgba(26, 22, 18, 0.84);
+  }
+
+  :root:not([data-theme="light"]) .meta-row {
+    border-bottom-color: rgba(200, 185, 165, 0.10);
+  }
+
+  :root:not([data-theme="light"]) .eyebrow-subtle {
+    border-color: rgba(200, 185, 165, 0.14);
+    background: rgba(36, 31, 26, 0.5);
+  }
+
+  :root:not([data-theme="light"]) .eyebrow {
+    border-color: rgba(143, 163, 200, 0.22);
+    background: rgba(143, 163, 200, 0.12);
+  }
+
+  :root:not([data-theme="light"]) .dashboard-pill,
+  :root:not([data-theme="light"]) .filter-chip,
+  :root:not([data-theme="light"]) .repo-visibility,
+  :root:not([data-theme="light"]) .repo-rank,
+  :root:not([data-theme="light"]) .legend-pill {
+    border-color: rgba(200, 185, 165, 0.12);
+    background: rgba(26, 22, 18, 0.90);
+  }
+
+  :root:not([data-theme="light"]) .bar-chart-shell {
+    border-color: rgba(200, 185, 165, 0.10);
+    background:
+      linear-gradient(to top, rgba(110, 132, 173, 0.08) 1px, transparent 1px),
+      linear-gradient(180deg, rgba(30, 26, 22, 0.92), rgba(24, 20, 16, 0.92));
+  }
+
+  :root:not([data-theme="light"]) .bar-chart-shell line {
+    stroke: rgba(200, 185, 165, 0.14);
+  }
+
+  :root:not([data-theme="light"]) .bar-chart-shell text {
+    fill: rgba(180, 165, 145, 0.85);
+  }
+
+  :root:not([data-theme="light"]) .chart-stat-card {
+    background: rgba(26, 22, 18, 0.72);
+  }
+
+  :root:not([data-theme="light"]) .repo-card,
+  :root:not([data-theme="light"]) .scope-item {
+    border-color: rgba(200, 185, 165, 0.10);
+    background: rgba(26, 22, 18, 0.72);
+  }
+
+  :root:not([data-theme="light"]) .repo-meter {
+    background: rgba(200, 185, 165, 0.10);
+  }
+
+  :root:not([data-theme="light"]) .sidebar-panel {
+    background: linear-gradient(180deg, rgba(34, 29, 24, 0.98), rgba(28, 23, 18, 0.94));
+  }
+
+  :root:not([data-theme="light"]) .status-note-active {
+    border-color: rgba(110, 132, 173, 0.22);
+    background: linear-gradient(180deg, rgba(110, 132, 173, 0.16), rgba(30, 26, 22, 0.92));
+  }
+
+  :root:not([data-theme="light"]) .status-note-success {
+    border-color: rgba(102, 143, 115, 0.24);
+    background: linear-gradient(180deg, rgba(102, 143, 115, 0.14), rgba(30, 26, 22, 0.92));
+  }
+
+  :root:not([data-theme="light"]) .status-note-danger {
+    border-color: rgba(186, 108, 103, 0.22);
+    background: linear-gradient(180deg, rgba(186, 108, 103, 0.14), rgba(30, 26, 22, 0.92));
+  }
+
+  :root:not([data-theme="light"]) .button-secondary:hover {
+    border-color: rgba(143, 163, 200, 0.22);
+    background: rgba(52, 44, 36, 0.98);
+  }
+
+  :root:not([data-theme="light"]) .toggle-pill {
+    border-color: rgba(200, 185, 165, 0.12);
+    background: rgba(36, 31, 26, 0.54);
+  }
+
+  :root:not([data-theme="light"]) .toggle-pill-active {
+    border-color: rgba(143, 163, 200, 0.30);
+    background: rgba(143, 163, 200, 0.18);
+    color: var(--accent-strong);
+    box-shadow: inset 0 0 0 1px rgba(143, 163, 200, 0.10);
+  }
+
+  :root:not([data-theme="light"]) .button-primary:focus-visible,
+  :root:not([data-theme="light"]) .button-secondary:focus-visible,
+  :root:not([data-theme="light"]) .toggle-pill:focus-visible {
+    box-shadow:
+      0 0 0 3px rgba(26, 22, 18, 0.96),
+      0 0 0 5px rgba(143, 163, 200, 0.40);
+  }
+
+  :root:not([data-theme="light"]) .bg-white\/70 {
+    background-color: rgba(30, 26, 22, 0.70) !important;
+  }
+
+  :root:not([data-theme="light"]) .bg-white\/65 {
+    background-color: rgba(30, 26, 22, 0.65) !important;
+  }
+
+  :root:not([data-theme="light"]) .bg-white {
+    background-color: #1e1a16 !important;
+  }
 }
 
 /* --- CSS variables: explicit dark (JS toggle) --- */
 :root[data-theme="dark"] {
+  color-scheme: dark;
   --background: #1a1714;
   --foreground: #e8e0d5;
   --panel: rgba(30, 26, 22, 0.94);
