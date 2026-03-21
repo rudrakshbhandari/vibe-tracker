@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, Github, RefreshCcw, TimerReset } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 import { ActivityBarChart } from "@/components/activity-bar-chart";
 import { ActivitySyncRefresh } from "@/components/activity-sync-refresh";
@@ -476,6 +477,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               <Link href="/social" className="toggle-pill">
                 Social
               </Link>
+              <ThemeToggle />
             </div>
             <div className="space-y-3">
               <h1 className="page-title">Everyone is vibe coding, but how much?</h1>
