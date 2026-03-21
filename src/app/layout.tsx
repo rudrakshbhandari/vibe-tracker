@@ -25,7 +25,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Vibe Tracker",
   description:
-    "Track shipped additions and deletions from merged pull requests across repositories and time windows.",
+    "Spotify Wrapped for developers. Turn GitHub pull request activity into a beautiful recap without reading your source code.",
 };
 
 export default function RootLayout({
