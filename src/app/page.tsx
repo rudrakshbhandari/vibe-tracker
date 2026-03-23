@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 
 import { ActivitySyncRefresh } from "@/components/activity-sync-refresh";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { formatNumber } from "@/lib/dashboard";
 import { getGithubConnectionState } from "@/lib/github-state";
 import { getLiveMetrics } from "@/lib/live-metrics";
@@ -262,7 +261,6 @@ export default async function Home({ searchParams }: HomePageProps) {
           </nav>
 
           <div className="landing-nav-actions">
-            <ThemeToggle />
             {githubState.connected ? (
               <span className="landing-nav-chip">
                 <CheckCircle2 className="h-4 w-4" />
@@ -277,7 +275,7 @@ export default async function Home({ searchParams }: HomePageProps) {
         </header>
 
         {githubStatus ? (
-          <section className={getStatusTone(githubStatus)}>
+          <section className={`landing-status-note ${getStatusTone(githubStatus)}`}>
             <div className="flex items-start gap-3">
               <TimerReset className="mt-0.5 h-4 w-4 shrink-0" />
               <div>
