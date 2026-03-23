@@ -4,8 +4,8 @@
 
 - Issue: [#63](https://github.com/rudrakshbhandari/vibe-tracker/issues/63)
 - Branch: `rudrakshbhandari/revert-pr-60`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#64](https://github.com/rudrakshbhandari/vibe-tracker/pull/64)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -14,7 +14,7 @@
 - [x] Create issue and move the rollback onto a matching branch
 - [x] Restore the files changed by PR 60 to their pre-merge state
 - [x] Run lint, tests, and build
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
 
 ## Issue #55 - Public launch privacy readiness
 
