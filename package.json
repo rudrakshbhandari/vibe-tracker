@@ -8,7 +8,7 @@
   "scripts": {
     "bootstrap": "./scripts/bootstrap-worktree.sh",
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "node scripts/validate-hosted-env.mjs && prisma generate && next build",
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
