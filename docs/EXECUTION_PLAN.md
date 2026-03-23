@@ -4,8 +4,8 @@
 
 - Issue: [#61](https://github.com/rudrakshbhandari/vibe-tracker/issues/61)
 - Branch: `rudrakshbhandari/revert-landing-theme`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#62](https://github.com/rudrakshbhandari/vibe-tracker/pull/62)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -15,7 +15,7 @@
 - [x] Remove the landing-page theme toggle and restore the launch palette on the homepage
 - [x] Verify the homepage still looks correct with GitHub status messaging and a stored dark preference
 - [x] Run lint, tests, and build
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
 
 ## Issue #59 - Build production-ready Spotify Wrapped style landing page
 
