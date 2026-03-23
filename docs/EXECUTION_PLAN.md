@@ -4,8 +4,8 @@
 
 - Issue: [#65](https://github.com/rudrakshbhandari/vibe-tracker/issues/65)
 - Branch: `rudrakshbhandari/fix-production-github-connection`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#66](https://github.com/rudrakshbhandari/vibe-tracker/pull/66)
+- Workflow: In Review
 - Priority: P0
 - App: multi
 
@@ -15,7 +15,7 @@
 - [x] Restore hosted database env detection for Vercel-style Postgres aliases
 - [x] Add regression coverage for the connect route and env helpers
 - [x] Run lint, tests, and build
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
 
 ## Issue #61 - Revert landing page dark theme regression
 
