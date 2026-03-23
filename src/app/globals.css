@@ -620,10 +620,18 @@ a {
 }
 
 .landing-shell {
+  color: #1f2733;
   background:
     radial-gradient(circle at top right, rgba(195, 104, 74, 0.16), transparent 24%),
     radial-gradient(circle at 20% 10%, rgba(82, 118, 184, 0.12), transparent 22%),
     linear-gradient(180deg, #f8efe4 0%, #f2e6d8 44%, #efe6dc 100%);
+}
+
+.landing-shell .page-wash {
+  background:
+    radial-gradient(circle at 8% 12%, rgba(255, 255, 255, 0.7), transparent 26%),
+    radial-gradient(circle at 92% 18%, rgba(110, 132, 173, 0.12), transparent 24%),
+    radial-gradient(circle at 72% 92%, rgba(212, 160, 106, 0.12), transparent 26%);
 }
 
 .landing-nav,
@@ -712,6 +720,22 @@ a {
   font-size: 0.82rem;
   font-weight: 700;
   color: #12213a;
+}
+
+.landing-status-note {
+  border-radius: 1.75rem;
+  background: linear-gradient(180deg, rgba(255, 251, 247, 0.96), rgba(251, 245, 238, 0.92));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.74),
+    0 18px 55px rgba(91, 60, 31, 0.08);
+}
+
+.landing-status-note .text-foreground {
+  color: #12213a;
+}
+
+.landing-status-note .text-muted {
+  color: rgba(31, 39, 51, 0.72);
 }
 
 .landing-hero {
@@ -1174,10 +1198,18 @@ a {
 }
 
 :root[data-theme="dark"] .landing-shell {
+  color: #1f2733;
   background:
-    radial-gradient(circle at top right, rgba(195, 104, 74, 0.18), transparent 24%),
-    radial-gradient(circle at 20% 10%, rgba(82, 118, 184, 0.14), transparent 22%),
-    linear-gradient(180deg, #1b1714 0%, #15120f 46%, #13100d 100%);
+    radial-gradient(circle at top right, rgba(195, 104, 74, 0.16), transparent 24%),
+    radial-gradient(circle at 20% 10%, rgba(82, 118, 184, 0.12), transparent 22%),
+    linear-gradient(180deg, #f8efe4 0%, #f2e6d8 44%, #efe6dc 100%);
+}
+
+:root[data-theme="dark"] .landing-shell .page-wash {
+  background:
+    radial-gradient(circle at 8% 12%, rgba(255, 255, 255, 0.7), transparent 26%),
+    radial-gradient(circle at 92% 18%, rgba(110, 132, 173, 0.12), transparent 24%),
+    radial-gradient(circle at 72% 92%, rgba(212, 160, 106, 0.12), transparent 26%);
 }
 
 :root[data-theme="dark"] .landing-nav,
@@ -1185,22 +1217,23 @@ a {
 :root[data-theme="dark"] .landing-story-panel,
 :root[data-theme="dark"] .landing-metrics-panel,
 :root[data-theme="dark"] .landing-privacy-panel,
-:root[data-theme="dark"] .landing-final-cta {
-  background: linear-gradient(180deg, rgba(33, 28, 24, 0.95), rgba(27, 23, 19, 0.92));
+:root[data-theme="dark"] .landing-final-cta,
+:root[data-theme="dark"] .landing-status-note {
+  background: linear-gradient(180deg, rgba(255, 251, 247, 0.95), rgba(251, 245, 238, 0.92));
 }
 
 :root[data-theme="dark"] .landing-brand-mark {
-  background: linear-gradient(135deg, #d78a71, #7d94ba);
-  color: #15120f;
+  background: linear-gradient(135deg, #12213a, #c7694e);
+  color: #fff7ef;
 }
 
 :root[data-theme="dark"] .landing-nav-chip,
 :root[data-theme="dark"] .landing-trust-chip,
 :root[data-theme="dark"] .landing-signal-chip,
 :root[data-theme="dark"] .landing-privacy-list span {
-  border-color: rgba(200, 185, 165, 0.14);
-  background: rgba(36, 31, 26, 0.72);
-  color: var(--foreground);
+  border-color: rgba(18, 33, 58, 0.09);
+  background: rgba(255, 255, 255, 0.6);
+  color: #12213a;
 }
 
 :root[data-theme="dark"] .landing-proof-card,
@@ -1208,7 +1241,7 @@ a {
 :root[data-theme="dark"] .landing-step-card,
 :root[data-theme="dark"] .landing-summary-card,
 :root[data-theme="dark"] .landing-faq-item {
-  background: rgba(31, 26, 22, 0.84);
+  background: rgba(255, 250, 245, 0.84);
 }
 
 :root[data-theme="dark"] .landing-description,
@@ -1218,20 +1251,25 @@ a {
 :root[data-theme="dark"] .landing-band-card p,
 :root[data-theme="dark"] .landing-step-card p,
 :root[data-theme="dark"] .landing-faq-item p,
-:root[data-theme="dark"] .landing-nav-links a {
-  color: rgba(232, 224, 213, 0.78);
+:root[data-theme="dark"] .landing-nav-links a,
+:root[data-theme="dark"] .landing-status-note .text-muted {
+  color: rgba(31, 39, 51, 0.78);
 }
 
 :root[data-theme="dark"] .landing-proof-label,
 :root[data-theme="dark"] .wrapped-stage-label,
 :root[data-theme="dark"] .wrapped-mini-kicker {
-  color: rgba(232, 224, 213, 0.58);
+  color: rgba(31, 39, 51, 0.58);
 }
 
 :root[data-theme="dark"] .landing-pill {
-  background: rgba(143, 163, 200, 0.14);
-  border-color: rgba(143, 163, 200, 0.18);
-  color: var(--foreground);
+  background: rgba(18, 33, 58, 0.08);
+  border-color: rgba(18, 33, 58, 0.08);
+  color: #12213a;
+}
+
+:root[data-theme="dark"] .landing-status-note .text-foreground {
+  color: #12213a;
 }
 
 :root[data-theme="dark"] .button-primary:focus-visible,
