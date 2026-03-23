@@ -23,7 +23,7 @@ const newsreader = Newsreader({
 export const metadata: Metadata = {
   title: "Vibe Tracker",
   description:
-    "Spotify Wrapped for developers. Turn GitHub pull request activity into a beautiful recap without reading your source code.",
+    "Track shipped additions and deletions from merged pull requests across repositories and time windows.",
 };
 
 export default function RootLayout({

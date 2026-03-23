@@ -1,5 +1,21 @@
 # Execution Plan
 
+## Issue #63 - Revert PR 60 landing page rollout
+
+- Issue: [#63](https://github.com/rudrakshbhandari/vibe-tracker/issues/63)
+- Branch: `rudrakshbhandari/revert-pr-60`
+- PR: [#64](https://github.com/rudrakshbhandari/vibe-tracker/pull/64)
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Create issue and move the rollback onto a matching branch
+- [x] Restore the files changed by PR 60 to their pre-merge state
+- [x] Run lint, tests, and build
+- [x] Push branch and open PR
+
 ## Issue #61 - Revert landing page dark theme regression
 
 - Issue: [#61](https://github.com/rudrakshbhandari/vibe-tracker/issues/61)
@@ -14,23 +30,6 @@
 - [x] Create issue and move the fix onto a matching branch
 - [x] Remove the landing-page theme toggle and restore the launch palette on the homepage
 - [x] Verify the homepage still looks correct with GitHub status messaging and a stored dark preference
-- [x] Run lint, tests, and build
-- [x] Push branch and open PR
-
-## Issue #59 - Build production-ready Spotify Wrapped style landing page
-
-- Issue: [#59](https://github.com/rudrakshbhandari/vibe-tracker/issues/59)
-- Branch: `rudrakshbhandari/production-ready-landing-page`
-- PR: [#60](https://github.com/rudrakshbhandari/vibe-tracker/pull/60)
-- Workflow: In Review
-- Priority: P1
-- App: multi
-
-### Checklist
-
-- [x] Create issue and project tracking for the landing page work
-- [x] Reposition the homepage around the Spotify Wrapped for developers concept
-- [x] Add clear trust/privacy messaging about no source code access
 - [x] Run lint, tests, and build
 - [x] Push branch and open PR
 
