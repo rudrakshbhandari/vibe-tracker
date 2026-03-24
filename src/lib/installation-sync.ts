@@ -300,6 +300,7 @@ async function applyPullRequestToDailyStats(input: {
     },
     update: {
       authorId: author?.id ?? null,
+      title: input.detail.title,
       state: input.detail.state,
       additions: input.detail.additions,
       deletions: input.detail.deletions,
@@ -311,6 +312,7 @@ async function applyPullRequestToDailyStats(input: {
       repositoryId: input.repositoryId,
       githubPrNumber: input.detail.number,
       authorId: author?.id ?? null,
+      title: input.detail.title,
       state: input.detail.state,
       additions: input.detail.additions,
       deletions: input.detail.deletions,

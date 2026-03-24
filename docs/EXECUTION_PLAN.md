@@ -1,5 +1,22 @@
 # Execution Plan
 
+## Issue #68 - Fix production activity sync null title failure
+
+- Issue: [#68](https://github.com/rudrakshbhandari/vibe-tracker/issues/68)
+- Branch: `rudrakshbhandari/fix-activity-sync-title`
+- PR: Pending
+- Workflow: In Progress
+- Priority: P0
+- App: multi
+
+### Checklist
+
+- [x] Reproduce the live production sync failure from Vercel logs
+- [x] Restore `PullRequest.title` to the Prisma model and activity sync writes
+- [x] Add regression coverage for syncing pull request titles
+- [x] Run lint, tests, and build
+- [ ] Push branch and open PR
+
 ## Issue #65 - Fix production GitHub connection missing-config regression
 
 - Issue: [#65](https://github.com/rudrakshbhandari/vibe-tracker/issues/65)
