@@ -4,8 +4,8 @@
 
 - Issue: [#72](https://github.com/rudrakshbhandari/vibe-tracker/issues/72)
 - Branch: `rudrakshbhandari/fix-sync-branch-fields`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#73](https://github.com/rudrakshbhandari/vibe-tracker/pull/73)
+- Workflow: In Review
 - Priority: P0
 - App: multi
 
@@ -15,7 +15,7 @@
 - [x] Restore required branch-field persistence in the Prisma model and both sync write paths
 - [x] Add regression coverage for required pull request branch fields
 - [x] Run lint, tests, and build
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
 
 ## Issue #70 - Set up sandbox GitHub sync smoke testing and deploy gate
 
