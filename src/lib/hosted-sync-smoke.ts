@@ -174,6 +174,8 @@ export async function runHostedSyncSmokeTest() {
         update: {
           authorId: author?.id ?? null,
           title: detail.title,
+          baseBranch: detail.base.ref,
+          headBranch: detail.head.ref,
           state: detail.state,
           additions: detail.additions,
           deletions: detail.deletions,
@@ -186,6 +188,8 @@ export async function runHostedSyncSmokeTest() {
           githubPrNumber: detail.number,
           authorId: author?.id ?? null,
           title: detail.title,
+          baseBranch: detail.base.ref,
+          headBranch: detail.head.ref,
           state: detail.state,
           additions: detail.additions,
           deletions: detail.deletions,

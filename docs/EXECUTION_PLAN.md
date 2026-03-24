@@ -1,11 +1,28 @@
 # Execution Plan
 
+## Issue #72 - Fix pull request branch-field sync regressions
+
+- Issue: [#72](https://github.com/rudrakshbhandari/vibe-tracker/issues/72)
+- Branch: `rudrakshbhandari/fix-sync-branch-fields`
+- PR: [#73](https://github.com/rudrakshbhandari/vibe-tracker/pull/73)
+- Workflow: In Review
+- Priority: P0
+- App: multi
+
+### Checklist
+
+- [x] Reproduce the hosted smoke failure from the new main-branch workflow run
+- [x] Restore required branch-field persistence in the Prisma model and both sync write paths
+- [x] Add regression coverage for required pull request branch fields
+- [x] Run lint, tests, and build
+- [x] Push branch and open PR
+
 ## Issue #70 - Set up sandbox GitHub sync smoke testing and deploy gate
 
 - Issue: [#70](https://github.com/rudrakshbhandari/vibe-tracker/issues/70)
 - Branch: `rudrakshbhandari/setup-sync-smoke-gate`
 - PR: [#71](https://github.com/rudrakshbhandari/vibe-tracker/pull/71)
-- Workflow: In Review
+- Workflow: Done
 - Priority: P0
 - App: multi
 

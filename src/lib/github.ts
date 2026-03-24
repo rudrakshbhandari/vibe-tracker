@@ -58,6 +58,12 @@ export type GitHubPullRequestDetail = GitHubPullRequestListItem & {
   additions: number;
   deletions: number;
   commits: number;
+  base: {
+    ref: string;
+  };
+  head: {
+    ref: string;
+  };
 };
 
 export type GitHubAssociatedPullRequest = {
