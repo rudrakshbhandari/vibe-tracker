@@ -134,6 +134,20 @@ Hosted note:
 - Vercel Postgres aliases are also supported at runtime: `POSTGRES_PRISMA_URL` or `POSTGRES_URL` for `DATABASE_URL`, plus `POSTGRES_URL_NON_POOLING` for `DIRECT_URL`.
 - Production Vercel builds now fail fast if the hosted GitHub sync env contract is incomplete, instead of shipping a broken `missing-config` state.
 
+## Hosted smoke test
+
+The repo now supports a protected hosted smoke check for GitHub sync at `/api/smoke/github-sync`.
+
+- It requires `SMOKE_TEST_SECRET` in the hosted environment and the same value in the GitHub Actions secret `VIBE_TRACKER_SMOKE_TEST_SECRET`.
+- By default the smoke route uses the latest previously synced merged pull request already stored in the database, so it can validate the real GitHub App + Prisma write path without a browser login.
+- Optional overrides are available if you want a dedicated sandbox target later:
+  - `SMOKE_TEST_INSTALLATION_ID`
+  - `SMOKE_TEST_REPO_OWNER`
+  - `SMOKE_TEST_REPO_NAME`
+  - `SMOKE_TEST_PR_NUMBER`
+
+The `Hosted Smoke` GitHub Action waits for the Vercel production deploy on `main`, then hits the smoke route against `https://vibe-tracker-max.vercel.app`.
+
 ## Usability model
 
 - Install/setup is lightweight and should return quickly.

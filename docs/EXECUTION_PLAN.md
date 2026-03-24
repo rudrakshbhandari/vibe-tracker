@@ -1,5 +1,23 @@
 # Execution Plan
 
+## Issue #70 - Set up sandbox GitHub sync smoke testing and deploy gate
+
+- Issue: [#70](https://github.com/rudrakshbhandari/vibe-tracker/issues/70)
+- Branch: `rudrakshbhandari/setup-sync-smoke-gate`
+- PR: Pending
+- Workflow: In Progress
+- Priority: P0
+- App: multi
+
+### Checklist
+
+- [x] Define a hosted smoke-test path that validates real GitHub sync behavior without personal-account sharing
+- [x] Add a protected smoke endpoint and CLI smoke runner for hosted deploy verification
+- [x] Add a post-deploy GitHub Action that waits for Vercel and runs the hosted smoke check
+- [x] Configure the shared smoke secret in Vercel and GitHub Actions
+- [x] Run lint, tests, and build
+- [ ] Push branch and open PR
+
 ## Issue #65 - Fix production GitHub connection missing-config regression
 
 - Issue: [#65](https://github.com/rudrakshbhandari/vibe-tracker/issues/65)

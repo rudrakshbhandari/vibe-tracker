@@ -43,6 +43,7 @@ export type GitHubRepository = {
 export type GitHubPullRequestListItem = {
   number: number;
   state: string;
+  title: string;
   user: {
     id: number;
     login: string;
