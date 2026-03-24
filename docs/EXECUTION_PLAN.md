@@ -4,8 +4,8 @@
 
 - Issue: [#76](https://github.com/rudrakshbhandari/vibe-tracker/issues/76)
 - Branch: `rudrakshbhandari/default-daily-view`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#77](https://github.com/rudrakshbhandari/vibe-tracker/pull/77)
+- Workflow: In Review
 - Priority: P2
 - App: multi
 
@@ -14,7 +14,7 @@
 - [x] Identify the server and fallback defaults that still land on weekly
 - [x] Change the page, metrics schema, and dashboard fallback defaults to `daily`
 - [x] Run tests
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
 
 ## Issue #74 - Update GitHub Actions workflows for Node 24 compatibility
 
