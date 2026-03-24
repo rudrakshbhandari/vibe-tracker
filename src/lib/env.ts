@@ -14,6 +14,10 @@ const sessionEncryptionSchema = z.object({
   SESSION_ENCRYPTION_KEY: z.string().min(1),
 });
 
+const smokeTestSchema = z.object({
+  SMOKE_TEST_SECRET: z.string().min(1),
+});
+
 const databaseUrlEnvKeys = [
   "DATABASE_URL",
   "POSTGRES_PRISMA_URL",
@@ -52,6 +56,14 @@ export function normalizePrivateKey(privateKey: string) {
 
 export function getSessionEncryptionKey() {
   return sessionEncryptionSchema.parse(process.env).SESSION_ENCRYPTION_KEY;
+}
+
+export function getSmokeTestSecret() {
+  return smokeTestSchema.parse(process.env).SMOKE_TEST_SECRET;
+}
+
+export function hasSmokeTestSecret() {
+  return smokeTestSchema.safeParse(process.env).success;
 }
 
 export function getDatabaseUrl() {
