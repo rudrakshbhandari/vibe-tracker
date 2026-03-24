@@ -175,6 +175,12 @@ describe("installation sync", () => {
       number: 42,
       state: "closed",
       title: "Ship the fix",
+      base: {
+        ref: "main",
+      },
+      head: {
+        ref: "feature/ship-the-fix",
+      },
       user: {
         id: 77,
         login: "octocat",
@@ -190,7 +196,7 @@ describe("installation sync", () => {
     refreshLeaderboardSnapshotsForAccountMock.mockResolvedValue(undefined);
   });
 
-  it("persists pull request titles during activity sync", async () => {
+  it("persists required pull request fields during activity sync", async () => {
     await syncUserActivityForAccount({
       accountId: "account-db-1",
       userAccessToken: "user-token",
@@ -199,9 +205,13 @@ describe("installation sync", () => {
     expect(dbMock.pullRequest.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         create: expect.objectContaining({
+          baseBranch: "main",
+          headBranch: "feature/ship-the-fix",
           title: "Ship the fix",
         }),
         update: expect.objectContaining({
+          baseBranch: "main",
+          headBranch: "feature/ship-the-fix",
           title: "Ship the fix",
         }),
       }),

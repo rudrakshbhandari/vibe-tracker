@@ -301,6 +301,8 @@ async function applyPullRequestToDailyStats(input: {
     update: {
       authorId: author?.id ?? null,
       title: input.detail.title,
+      baseBranch: input.detail.base.ref,
+      headBranch: input.detail.head.ref,
       state: input.detail.state,
       additions: input.detail.additions,
       deletions: input.detail.deletions,
@@ -313,6 +315,8 @@ async function applyPullRequestToDailyStats(input: {
       githubPrNumber: input.detail.number,
       authorId: author?.id ?? null,
       title: input.detail.title,
+      baseBranch: input.detail.base.ref,
+      headBranch: input.detail.head.ref,
       state: input.detail.state,
       additions: input.detail.additions,
       deletions: input.detail.deletions,
