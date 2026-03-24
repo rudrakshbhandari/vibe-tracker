@@ -131,6 +131,8 @@ Hosted note:
 - Production deploys must run `prisma generate` so the Prisma client matches the checked-in schema.
 - `DATABASE_URL` should point at the runtime Postgres connection.
 - `DIRECT_URL` should point at the direct Postgres connection Prisma uses for schema operations.
+- Vercel Postgres aliases are also supported at runtime: `POSTGRES_PRISMA_URL` or `POSTGRES_URL` for `DATABASE_URL`, plus `POSTGRES_URL_NON_POOLING` for `DIRECT_URL`.
+- Production Vercel builds now fail fast if the hosted GitHub sync env contract is incomplete, instead of shipping a broken `missing-config` state.
 
 ## Usability model
 

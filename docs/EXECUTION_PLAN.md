@@ -1,5 +1,22 @@
 # Execution Plan
 
+## Issue #65 - Fix production GitHub connection missing-config regression
+
+- Issue: [#65](https://github.com/rudrakshbhandari/vibe-tracker/issues/65)
+- Branch: `rudrakshbhandari/fix-production-github-connection`
+- PR: [#66](https://github.com/rudrakshbhandari/vibe-tracker/pull/66)
+- Workflow: In Review
+- Priority: P0
+- App: multi
+
+### Checklist
+
+- [x] Reproduce the live `/?github=missing-config` regression from the production GitHub connect route
+- [x] Restore hosted database env detection for Vercel-style Postgres aliases
+- [x] Add regression coverage for the connect route and env helpers
+- [x] Run lint, tests, and build
+- [x] Push branch and open PR
+
 ## Issue #63 - Revert PR 60 landing page rollout
 
 - Issue: [#63](https://github.com/rudrakshbhandari/vibe-tracker/issues/63)
