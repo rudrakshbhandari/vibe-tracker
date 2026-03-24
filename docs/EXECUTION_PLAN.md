@@ -1,5 +1,21 @@
 # Execution Plan
 
+## Issue #74 - Update GitHub Actions workflows for Node 24 compatibility
+
+- Issue: [#74](https://github.com/rudrakshbhandari/vibe-tracker/issues/74)
+- Branch: `rudrakshbhandari/update-actions-node24`
+- PR: [#75](https://github.com/rudrakshbhandari/vibe-tracker/pull/75)
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Identify the workflow actions still pinned to deprecated Node 20 runtimes
+- [x] Upgrade CI and hosted-smoke workflow actions to Node 24 compatible versions
+- [x] Run lint, tests, and build
+- [x] Push branch and open PR
+
 ## Issue #72 - Fix pull request branch-field sync regressions
 
 - Issue: [#72](https://github.com/rudrakshbhandari/vibe-tracker/issues/72)
