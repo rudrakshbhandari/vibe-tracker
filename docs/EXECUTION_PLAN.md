@@ -4,8 +4,8 @@
 
 - Issue: [#74](https://github.com/rudrakshbhandari/vibe-tracker/issues/74)
 - Branch: `rudrakshbhandari/update-actions-node24`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#75](https://github.com/rudrakshbhandari/vibe-tracker/pull/75)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -14,7 +14,7 @@
 - [x] Identify the workflow actions still pinned to deprecated Node 20 runtimes
 - [x] Upgrade CI and hosted-smoke workflow actions to Node 24 compatible versions
 - [x] Run lint, tests, and build
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
 
 ## Issue #70 - Set up sandbox GitHub sync smoke testing and deploy gate
 
