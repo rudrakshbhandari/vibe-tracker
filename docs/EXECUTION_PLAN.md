@@ -4,8 +4,8 @@
 
 - Issue: [#68](https://github.com/rudrakshbhandari/vibe-tracker/issues/68)
 - Branch: `rudrakshbhandari/fix-activity-sync-title`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#69](https://github.com/rudrakshbhandari/vibe-tracker/pull/69)
+- Workflow: In Review
 - Priority: P0
 - App: multi
 
@@ -15,7 +15,7 @@
 - [x] Restore `PullRequest.title` to the Prisma model and activity sync writes
 - [x] Add regression coverage for syncing pull request titles
 - [x] Run lint, tests, and build
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
 
 ## Issue #65 - Fix production GitHub connection missing-config regression
 
