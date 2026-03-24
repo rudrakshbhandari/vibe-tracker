@@ -51,7 +51,7 @@ function getSampleSeries(view: AnalyticsView) {
   };
 }
 
-export function getDashboardData(view: AnalyticsView = "weekly") {
+export function getDashboardData(view: AnalyticsView = "daily") {
   const series = getSampleSeries(view);
   const maxValue = Math.max(...series.additions, ...series.deletions);
   const totalAdditions = series.additions.reduce((sum, value) => sum + value, 0);

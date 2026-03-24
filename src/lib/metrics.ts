@@ -5,7 +5,7 @@ import type { AnalyticsView } from "@/lib/dashboard";
 import { getLiveMetrics } from "@/lib/live-metrics";
 
 export const metricsQuerySchema = z.object({
-  view: z.enum(["daily", "weekly", "monthly"]).default("weekly"),
+  view: z.enum(["daily", "weekly", "monthly"]).default("daily"),
   mode: z.enum(["shipped", "merged"]).default("shipped"),
 });
 

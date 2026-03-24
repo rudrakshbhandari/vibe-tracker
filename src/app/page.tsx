@@ -467,7 +467,7 @@ export default async function Home({ searchParams }: HomePageProps) {
     typeof params.view === "string" &&
     ["daily", "weekly", "monthly"].includes(params.view)
       ? (params.view as AnalyticsView)
-      : "weekly";
+      : "daily";
   const mode: MetricMode = "shipped";
   const githubStatus = typeof params.github === "string" ? params.github : undefined;
 
