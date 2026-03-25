@@ -14,7 +14,7 @@
 - [x] Reproduce the first-load theme toggle hydration mismatch in the browser
 - [x] Make the theme toggle render deterministically across server and client
 - [x] Improve the signed-out social landing layout for desktop while preserving mobile behavior
-- [x] Run lint, tests, build, and browser verification
+- [x] Run lint, tests, build, audit, and browser verification
 - [x] Push branch and open PR
 
 ## Issue #76 - Default shipped-work dashboard to daily view
