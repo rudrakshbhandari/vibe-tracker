@@ -4,8 +4,8 @@
 
 - Issue: [#78](https://github.com/rudrakshbhandari/vibe-tracker/issues/78)
 - Branch: `rudrakshbhandari/ui-audit`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#79](https://github.com/rudrakshbhandari/vibe-tracker/pull/79)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -14,8 +14,8 @@
 - [x] Reproduce the first-load theme toggle hydration mismatch in the browser
 - [x] Make the theme toggle render deterministically across server and client
 - [x] Improve the signed-out social landing layout for desktop while preserving mobile behavior
-- [x] Run lint and tests
-- [ ] Push branch and open PR
+- [x] Run lint, tests, build, and browser verification
+- [x] Push branch and open PR
 
 ## Issue #76 - Default shipped-work dashboard to daily view
 
