@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowUpRight, ShieldCheck, Sparkles, Users } from "lucide-react";
 
 import { SocialShell } from "@/components/social-shell";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -43,6 +44,53 @@ export default async function SocialPage({ searchParams }: SocialPageProps) {
                   Back home
                 </Link>
                 <ThemeToggle />
+              </div>
+            </div>
+            <div className="social-preview-panel">
+              <div className="social-preview-stack">
+                <div className="social-preview-badge">
+                  <Sparkles className="h-4 w-4" aria-hidden />
+                  Private by profile, public by leaderboard
+                </div>
+                <div className="space-y-3">
+                  <p className="social-preview-kicker">What unlocks after sign-in</p>
+                  <h2 className="social-preview-title">
+                    A friend graph built from shipped work, not vanity metrics.
+                  </h2>
+                  <p className="social-preview-copy">
+                    Invite collaborators, compare momentum over rolling windows,
+                    and control what shows up on your public profile.
+                  </p>
+                </div>
+              </div>
+              <div className="social-preview-grid">
+                <article className="social-preview-card">
+                  <Users className="h-4 w-4" aria-hidden />
+                  <div>
+                    <p className="social-preview-label">Friends leaderboard</p>
+                    <p className="social-preview-detail">
+                      See who is shipping steadily across the last 7, 30, or 90 days.
+                    </p>
+                  </div>
+                </article>
+                <article className="social-preview-card">
+                  <ArrowUpRight className="h-4 w-4" aria-hidden />
+                  <div>
+                    <p className="social-preview-label">Trend delta</p>
+                    <p className="social-preview-detail">
+                      Compare momentum, not just totals, so streaks and slowdowns stand out.
+                    </p>
+                  </div>
+                </article>
+                <article className="social-preview-card">
+                  <ShieldCheck className="h-4 w-4" aria-hidden />
+                  <div>
+                    <p className="social-preview-label">Visibility controls</p>
+                    <p className="social-preview-detail">
+                      Opt out of the public board anytime and keep your profile locked down.
+                    </p>
+                  </div>
+                </article>
               </div>
             </div>
           </section>

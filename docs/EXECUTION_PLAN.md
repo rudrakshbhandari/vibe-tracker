@@ -1,5 +1,22 @@
 # Execution Plan
 
+## Issue #78 - Fix theme hydration and social landing layout
+
+- Issue: [#78](https://github.com/rudrakshbhandari/vibe-tracker/issues/78)
+- Branch: `rudrakshbhandari/ui-audit`
+- PR: Pending
+- Workflow: In Progress
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Reproduce the first-load theme toggle hydration mismatch in the browser
+- [x] Make the theme toggle render deterministically across server and client
+- [x] Improve the signed-out social landing layout for desktop while preserving mobile behavior
+- [x] Run lint and tests
+- [ ] Push branch and open PR
+
 ## Issue #76 - Default shipped-work dashboard to daily view
 
 - Issue: [#76](https://github.com/rudrakshbhandari/vibe-tracker/issues/76)
