@@ -1,11 +1,27 @@
 # Execution Plan
 
+## Issue #80 - Patch dependency security updates after UI audit
+
+- Issue: [#80](https://github.com/rudrakshbhandari/vibe-tracker/issues/80)
+- Branch: `rudrakshbhandari/patch-security`
+- PR: Pending
+- Workflow: In Progress
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Patch dependencies to a clean `npm audit`
+- [x] Re-run lint, tests, and build under Node 20
+- [x] Investigate a full authenticated audit path after the UI review
+- [ ] Push branch and open PR
+
 ## Issue #78 - Fix theme hydration and social landing layout
 
 - Issue: [#78](https://github.com/rudrakshbhandari/vibe-tracker/issues/78)
 - Branch: `rudrakshbhandari/ui-audit`
 - PR: [#79](https://github.com/rudrakshbhandari/vibe-tracker/pull/79)
-- Workflow: In Review
+- Workflow: Done
 - Priority: P1
 - App: multi
 
