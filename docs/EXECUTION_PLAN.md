@@ -4,8 +4,8 @@
 
 - Issue: [#84](https://github.com/rudrakshbhandari/vibe-tracker/issues/84)
 - Branch: `rudrakshbhandari/fix-panel-heading-spacing`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#85](https://github.com/rudrakshbhandari/vibe-tracker/pull/85)
+- Workflow: In Review
 - Priority: P2
 - App: multi
 
@@ -15,9 +15,9 @@
 - [x] Increase vertical separation between the panel label and heading
 - [x] Loosen wrapped panel heading line-height without affecting page titles
 - [x] Run lint and tests
-- [ ] Push branch and open PR
-- [ ] Update project tracking with the PR URL
-- [ ] Verify the visual change in the deployed/browser view
+- [x] Push branch and open PR
+- [x] Update project tracking with the PR URL
+- [x] Verify the visual change in the browser view
 
 ## Issue #82 - Fix signed-in social hydration and mobile overflow
 
