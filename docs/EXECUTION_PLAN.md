@@ -1,11 +1,27 @@
 # Execution Plan
 
+## Issue #80 - Patch dependency security updates after UI audit
+
+- Issue: [#80](https://github.com/rudrakshbhandari/vibe-tracker/issues/80)
+- Branch: `rudrakshbhandari/patch-security`
+- PR: [#81](https://github.com/rudrakshbhandari/vibe-tracker/pull/81)
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Patch dependencies to a clean `npm audit`
+- [x] Re-run lint, tests, and build under Node 20
+- [x] Investigate a full authenticated audit path after the UI review
+- [x] Push branch and open PR
+
 ## Issue #78 - Fix theme hydration and social landing layout
 
 - Issue: [#78](https://github.com/rudrakshbhandari/vibe-tracker/issues/78)
 - Branch: `rudrakshbhandari/ui-audit`
 - PR: [#79](https://github.com/rudrakshbhandari/vibe-tracker/pull/79)
-- Workflow: In Review
+- Workflow: Done
 - Priority: P1
 - App: multi
 
@@ -14,7 +30,7 @@
 - [x] Reproduce the first-load theme toggle hydration mismatch in the browser
 - [x] Make the theme toggle render deterministically across server and client
 - [x] Improve the signed-out social landing layout for desktop while preserving mobile behavior
-- [x] Run lint, tests, build, and browser verification
+- [x] Run lint, tests, build, audit, and browser verification
 - [x] Push branch and open PR
 
 ## Issue #76 - Default shipped-work dashboard to daily view
