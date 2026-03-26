@@ -1,5 +1,23 @@
 # Execution Plan
 
+## Issue #82 - Fix signed-in social hydration and mobile overflow
+
+- Issue: [#82](https://github.com/rudrakshbhandari/vibe-tracker/issues/82)
+- Branch: `rudrakshbhandari/fix-social-ui-bugs`
+- PR: [#83](https://github.com/rudrakshbhandari/vibe-tracker/pull/83)
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Reproduce the signed-in social hydration mismatch and mobile invite overflow in the browser
+- [x] Make signed-in social date labels render deterministically across server and client
+- [x] Prevent invite links from overflowing narrow mobile viewports
+- [x] Run lint, tests, and build under Node 20
+- [ ] Verify the signed-in social fixes in the PR deployment browser session
+- [x] Push branch and open PR
+
 ## Issue #80 - Patch dependency security updates after UI audit
 
 - Issue: [#80](https://github.com/rudrakshbhandari/vibe-tracker/issues/80)

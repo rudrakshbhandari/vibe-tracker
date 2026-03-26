@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { formatDateLabel } from "@/lib/format-date-label";
 
 type SocialInviteCardProps = {
   token: string;
@@ -55,12 +56,7 @@ export function SocialInviteCard({
         <h1 className="page-title">Join @{inviter.login}&apos;s circle.</h1>
         <p className="page-description">
           {inviter.displayName ?? inviter.login} wants to compare shipped-output vibe
-          stats with you. This link expires on{" "}
-          {new Intl.DateTimeFormat("en-US", {
-            month: "short",
-            day: "numeric",
-          }).format(new Date(expiresAt))}
-          .
+          stats with you. This link expires on {formatDateLabel(expiresAt)}.
         </p>
       </div>
 

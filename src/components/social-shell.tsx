@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { Globe2, Link2, Trophy, Users } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { formatDateLabel } from "@/lib/format-date-label";
 
 import type {
   FriendSummary,
@@ -82,13 +83,6 @@ function formatDelta(value: number) {
     return "Flat";
   }
   return value > 0 ? `+${value}` : `${value}`;
-}
-
-function formatDateLabel(value: string) {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-  }).format(new Date(value));
 }
 
 export function SocialShell({
@@ -280,7 +274,10 @@ export function SocialShell({
           {invitePath ? (
             <div className="rounded-3xl border border-line bg-white/65 p-3 text-sm text-muted">
               Share this invite:{" "}
-              <Link href={invitePath} className="font-semibold text-foreground underline">
+              <Link
+                href={invitePath}
+                className="break-all font-semibold text-foreground underline"
+              >
                 {invitePath}
               </Link>
             </div>
@@ -423,7 +420,10 @@ export function SocialShell({
                     key={invite.token}
                     className="rounded-[1.5rem] border border-line bg-white/70 p-4"
                   >
-                    <Link href={invite.invitePath} className="font-semibold underline">
+                    <Link
+                      href={invite.invitePath}
+                      className="break-all font-semibold underline"
+                    >
                       {invite.invitePath}
                     </Link>
                     <p className="mt-2 text-sm text-muted">
