@@ -4,8 +4,8 @@
 
 - Issue: [#82](https://github.com/rudrakshbhandari/vibe-tracker/issues/82)
 - Branch: `rudrakshbhandari/fix-social-ui-bugs`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#83](https://github.com/rudrakshbhandari/vibe-tracker/pull/83)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -16,7 +16,7 @@
 - [x] Prevent invite links from overflowing narrow mobile viewports
 - [x] Run lint, tests, and build under Node 20
 - [ ] Verify the signed-in social fixes in the PR deployment browser session
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
 
 ## Issue #80 - Patch dependency security updates after UI audit
 
