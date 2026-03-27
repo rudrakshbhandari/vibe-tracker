@@ -4,7 +4,8 @@
 
 - Issue: [#90](https://github.com/rudrakshbhandari/vibe-tracker/issues/90)
 - Branch: `rudrakshbhandari/prevent-pr-body-formatting`
-- Workflow: In Progress
+- PR: [#91](https://github.com/rudrakshbhandari/vibe-tracker/pull/91)
+- Workflow: In Review
 - Priority: P2
 - App: multi
 
@@ -12,7 +13,11 @@
 
 - [x] Identify the failure mode that produced literal `\n` sequences in the PR body
 - [x] Add a hard rule in `AGENTS.md` requiring real multiline GitHub markdown plus verification
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
+
+### Verification
+
+- docs-only change; no app tests required
 
 ## Issue #86 - Use a single reusable social invite link per user
 
