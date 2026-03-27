@@ -4,8 +4,8 @@
 
 - Issue: [#97](https://github.com/rudrakshbhandari/vibe-tracker/issues/97)
 - Branch: `rudrakshbhandari/public-launch-hardening`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#100](https://github.com/rudrakshbhandari/vibe-tracker/pull/100)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -17,7 +17,7 @@
 - [x] Decouple global leaderboard refresh from routine activity sync
 - [x] Expose sync queue health in the UI and metrics payload
 - [x] Run Prisma generate, lint, tests, and build
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
 
 ### Verification
 
