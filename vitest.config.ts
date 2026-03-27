@@ -1,10 +1,11 @@
 import { resolve } from "node:path";
 
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
     environment: "node",
+    exclude: [...configDefaults.exclude, "cloudflare/worker/test/**/*.test.ts"],
   },
   resolve: {
     alias: {
