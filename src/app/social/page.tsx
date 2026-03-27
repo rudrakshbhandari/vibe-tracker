@@ -4,6 +4,7 @@ import { ArrowUpRight, ShieldCheck, Sparkles, Users } from "lucide-react";
 
 import { SocialShell } from "@/components/social-shell";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { getLinkPrefetch } from "@/lib/link-prefetch";
 import {
   fetchCloudflareReadJson,
   hasCloudflareSessionCookie,
@@ -37,7 +38,11 @@ export default async function SocialPage({ searchParams }: SocialPageProps) {
                 </p>
               </div>
               <div className="hero-actions">
-                <Link href="/api/github/connect" className="button-primary">
+                <Link
+                  href="/api/github/connect"
+                  prefetch={getLinkPrefetch("/api/github/connect")}
+                  className="button-primary"
+                >
                   Continue with GitHub
                 </Link>
                 <Link href="/" className="button-secondary">
