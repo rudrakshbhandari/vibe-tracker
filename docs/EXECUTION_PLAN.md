@@ -1,5 +1,24 @@
 # Execution Plan
 
+## Issue #90 - Prevent malformed PR body formatting from agent workflows
+
+- Issue: [#90](https://github.com/rudrakshbhandari/vibe-tracker/issues/90)
+- Branch: `rudrakshbhandari/prevent-pr-body-formatting`
+- PR: [#91](https://github.com/rudrakshbhandari/vibe-tracker/pull/91)
+- Workflow: In Review
+- Priority: P2
+- App: multi
+
+### Checklist
+
+- [x] Identify the failure mode that produced literal `\n` sequences in the PR body
+- [x] Add a hard rule in `AGENTS.md` requiring real multiline GitHub markdown plus verification
+- [x] Push branch and open PR
+
+### Verification
+
+- docs-only change; no app tests required
+
 ## Issue #86 - Use a single reusable social invite link per user
 
 - Issue: [#86](https://github.com/rudrakshbhandari/vibe-tracker/issues/86)
