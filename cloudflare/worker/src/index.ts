@@ -1,0 +1,95 @@
+import { leaderboardWindowSchema } from "@/jobs/contracts";
+import { handleQueueBatch } from "@/jobs/consumer";
+import {
+  rebuildLeaderboardRanks,
+  recomputeLeaderboardScoresForAccount,
+  runMaintenance,
+} from "@/jobs/leaderboard";
+import type { VibeWorkerEnv } from "@/env";
+import { json, parseJson, unauthorized } from "@/lib/http";
+
+type LeaderboardMaintenanceRequest = {
+  accountId?: string;
+  windows?: string[];
+};
+
+function isAuthorized(request: Request, env: VibeWorkerEnv) {
+  if (!env.MAINTENANCE_TOKEN) {
+    return false;
+  }
+
+  const authorization = request.headers.get("authorization");
+  return authorization === `Bearer ${env.MAINTENANCE_TOKEN}`;
+}
+
+async function handleLeaderboardMaintenance(
+  request: Request,
+  env: VibeWorkerEnv,
+) {
+  if (!isAuthorized(request, env)) {
+    return unauthorized();
+  }
+
+  const payload = await parseJson<LeaderboardMaintenanceRequest>(request);
+  const windows =
+    payload.windows?.map((window) => leaderboardWindowSchema.parse(window)) ??
+    ["7d", "30d", "90d"];
+
+  if (payload.accountId) {
+    await recomputeLeaderboardScoresForAccount(env, payload.accountId, windows);
+  }
+
+  for (const window of windows) {
+    await rebuildLeaderboardRanks(env, window);
+  }
+
+  return json({
+    ok: true,
+    accountId: payload.accountId ?? null,
+    windows,
+  });
+}
+
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+
+    if (request.method === "GET" && url.pathname === "/health") {
+      return json({
+        ok: true,
+        service: "vibe-tracker-cloudflare-worker",
+      });
+    }
+
+    if (request.method === "POST" && url.pathname === "/internal/maintenance/run") {
+      if (!isAuthorized(request, env)) {
+        return unauthorized();
+      }
+
+      await runMaintenance(env);
+      return json({ ok: true });
+    }
+
+    if (
+      request.method === "POST" &&
+      url.pathname === "/internal/leaderboards/rebuild"
+    ) {
+      return handleLeaderboardMaintenance(request, env);
+    }
+
+    return json(
+      {
+        error: "Not found",
+      },
+      { status: 404 },
+    );
+  },
+
+  async queue(batch, env) {
+    await handleQueueBatch(env, batch);
+  },
+
+  async scheduled(controller, env) {
+    await runMaintenance(env, new Date(controller.scheduledTime));
+  },
+} satisfies ExportedHandler<VibeWorkerEnv>;

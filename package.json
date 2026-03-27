@@ -7,6 +7,9 @@
   },
   "scripts": {
     "bootstrap": "./scripts/bootstrap-worktree.sh",
+    "cloudflare:dev": "wrangler dev --config cloudflare/worker/wrangler.jsonc",
+    "cloudflare:test": "vitest run --config cloudflare/worker/vitest.config.ts",
+    "cloudflare:typecheck": "tsc -p cloudflare/worker/tsconfig.json",
     "dev": "next dev",
     "build": "node scripts/validate-hosted-env.mjs && prisma generate && next build",
     "postinstall": "prisma generate",
@@ -31,6 +34,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260317.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -40,7 +44,8 @@
     "prisma": "^6.19.2",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "wrangler": "^4.78.0"
   },
   "overrides": {
     "effect": "3.20.0"

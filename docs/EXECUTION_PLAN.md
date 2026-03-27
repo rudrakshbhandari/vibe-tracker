@@ -1,5 +1,30 @@
 # Execution Plan
 
+## Issue #101 - Migrate backend to Cloudflare Workers, Queues, and D1
+
+- Issue: [#101](https://github.com/rudrakshbhandari/vibe-tracker/issues/101)
+- Branch: `rudrakshbhandari/cloudflare-full-cost-optimized`
+- PR: Pending
+- Workflow: In Progress
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Create the migration issue, task branch, and project tracking entry
+- [x] Add the Cloudflare worker scaffold and bindings
+- [x] Add the D1 schema and migration scripts
+- [x] Implement queue contracts plus leaderboard and maintenance consumers
+- [x] Add verification coverage for the new worker surface
+- [ ] Push branch and open PR
+
+### Verification
+
+- `npm test`
+- `npm run build`
+- `npm run cloudflare:typecheck`
+- `npm run cloudflare:test`
+
 ## Issue #98 - Fix social invite copy link UX
 
 - Issue: [#98](https://github.com/rudrakshbhandari/vibe-tracker/issues/98)
