@@ -1,6 +1,7 @@
 import {
   failStaleActivitySyncJobs,
   getActiveActivitySyncWhere,
+  getAccountSyncHealth,
 } from "@/lib/activity-sync-jobs";
 import { hasGitHubAppEnv, hasDurableDatabaseUrl } from "@/lib/env";
 import { db } from "@/lib/db";
@@ -21,14 +22,21 @@ export async function getGithubConnectionState() {
         "GitHub connection is not available right now. Please try again later.",
       primaryAction: reconnectAction,
       viewer: null,
-      activitySync: null,
+        activitySync: null,
       activitySyncRunning: false,
+      syncHealth: null,
       installations: [] as Array<{
         id: string;
         githubInstallId: number;
         accountLogin: string;
         repositoryCount: number;
-        repositoryNames: string[];
+        trackedRepositoryCount: number;
+        repositories: Array<{
+          id: string;
+          name: string;
+          owner: string;
+          syncEnabled: boolean;
+        }>;
       }>,
     };
   }
@@ -41,14 +49,21 @@ export async function getGithubConnectionState() {
         "GitHub sync is temporarily unavailable. Please try again later.",
       primaryAction: reconnectAction,
       viewer: null,
-      activitySync: null,
+        activitySync: null,
       activitySyncRunning: false,
+      syncHealth: null,
       installations: [] as Array<{
         id: string;
         githubInstallId: number;
         accountLogin: string;
         repositoryCount: number;
-        repositoryNames: string[];
+        trackedRepositoryCount: number;
+        repositories: Array<{
+          id: string;
+          name: string;
+          owner: string;
+          syncEnabled: boolean;
+        }>;
       }>,
     };
   }
@@ -66,6 +81,7 @@ export async function getGithubConnectionState() {
         viewer: null,
         activitySync: null,
         activitySyncRunning: false,
+        syncHealth: null,
         installations: [],
       };
     }
@@ -95,10 +111,20 @@ export async function getGithubConnectionState() {
       githubInstallId: grant.installation.githubInstallId,
       accountLogin: grant.installation.accountLogin,
       repositoryCount: grant.installation.repositories.length,
-      repositoryNames: grant.installation.repositories
-        .slice(0, 3)
-        .map((repository) => `${repository.owner}/${repository.name}`),
+      trackedRepositoryCount: grant.installation.repositories.filter(
+        (repository) => repository.syncEnabled,
+      ).length,
+      repositories: grant.installation.repositories.map((repository) => ({
+        id: repository.id,
+        name: repository.name,
+        owner: repository.owner,
+        syncEnabled: repository.syncEnabled,
+      })),
     }));
+    const syncHealth = await getAccountSyncHealth({
+      accountId: session.accountId,
+      installationIds,
+    });
 
     return {
       connected: true,
@@ -139,6 +165,7 @@ export async function getGithubConnectionState() {
             }),
           )
         : false,
+      syncHealth,
       installations,
     };
   } catch {
@@ -151,6 +178,7 @@ export async function getGithubConnectionState() {
       viewer: null,
       activitySync: null,
       activitySyncRunning: false,
+      syncHealth: null,
       installations: [],
     };
   }

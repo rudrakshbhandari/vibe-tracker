@@ -12,12 +12,34 @@ export function ActivitySyncRefresh({ active }: { active: boolean }) {
     }
 
     let intervalId: number | null = null;
+    let processing = false;
+
+    async function processSyncQueue() {
+      if (processing || document.visibilityState === "hidden") {
+        return;
+      }
+
+      processing = true;
+
+      try {
+        await fetch("/api/github/activity-sync/process", {
+          method: "POST",
+          cache: "no-store",
+        });
+      } catch {
+        // Best-effort worker tick. The dashboard refresh below keeps the UI honest.
+      } finally {
+        router.refresh();
+        processing = false;
+      }
+    }
 
     function startPolling() {
       if (document.visibilityState === "hidden" || intervalId !== null) return;
+      void processSyncQueue();
       intervalId = window.setInterval(() => {
         if (document.visibilityState !== "hidden") {
-          router.refresh();
+          void processSyncQueue();
         }
       }, 8000);
     }

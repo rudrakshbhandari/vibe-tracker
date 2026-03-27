@@ -38,5 +38,6 @@ export async function getMetricsResponseAsync(
     summary: dashboard.summary,
     timeline: dashboard.timeline,
     repositories: dashboard.repositories,
+    syncHealth: "syncHealth" in dashboard ? dashboard.syncHealth : null,
   };
 }

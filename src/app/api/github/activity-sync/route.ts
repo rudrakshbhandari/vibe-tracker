@@ -6,7 +6,7 @@ import {
 } from "@/lib/activity-sync-jobs";
 import { canEnableHostedGitHubSync } from "@/lib/env";
 import { db } from "@/lib/db";
-import { syncUserActivityForAccount } from "@/lib/installation-sync";
+import { enqueueActivitySyncForAccount } from "@/lib/installation-sync";
 import { getValidUserAccessToken } from "@/lib/session";
 
 export async function POST(request: NextRequest) {
@@ -39,16 +39,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await syncUserActivityForAccount({
+    await enqueueActivitySyncForAccount({
       accountId: session.session.accountId,
       userAccessToken: session.accessToken,
     });
-  } catch (error) {
-    console.error("Activity sync failed", error);
+  } catch {
     return NextResponse.redirect(new URL("/?github=sync-failed", request.url));
   }
 
-  return NextResponse.redirect(
-    new URL("/?github=activity-sync-completed", request.url),
-  );
+  return NextResponse.redirect(new URL("/?github=activity-sync-started", request.url));
 }

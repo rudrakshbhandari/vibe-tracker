@@ -1,5 +1,6 @@
 import {
   failStaleActivitySyncJobs,
+  getAccountSyncHealth,
   getActiveActivitySyncWhere,
 } from "@/lib/activity-sync-jobs";
 import { db } from "@/lib/db";
@@ -179,6 +180,10 @@ async function getLiveMetricsInner(
         },
       })
     : null;
+  const syncHealth = await getAccountSyncHealth({
+    accountId: session.accountId,
+    installationIds,
+  });
 
   const timeZone = await getUserTimezone();
 
@@ -220,6 +225,7 @@ async function getLiveMetricsInner(
       })),
       repositories: [],
       chartTitle: getViewConfig(view, timeZone).title,
+      syncHealth,
     };
   }
 
@@ -366,5 +372,6 @@ async function getLiveMetricsInner(
       })),
     chartTitle: getViewConfig(view, timeZone).title,
     activitySyncRunning: Boolean(runningActivitySync),
+    syncHealth,
   };
 }

@@ -24,7 +24,7 @@ The current schema is designed around shipped work and aggregate reads:
 - `PullRequest`: merged PR counters and shipped-work stats.
 - `DailyUserRepoStats`: aggregate shipped additions, deletions, commit counts, and merged PR counts by user, repo, and day.
 - `SyncCursor`: per-repo incremental cursor so repeated syncs only fetch recently updated PRs.
-- `SyncJob`: queued/running/completed sync bookkeeping.
+- `SyncJob`: durable queued/running/completed sync jobs with retry/lease bookkeeping and result payloads.
 
 ## Getting started
 
@@ -124,7 +124,10 @@ The current live flow is:
 2. If they already have an accessible installation, the app syncs repository grants automatically after auth.
 3. If they do not, GitHub sends them to install the app, then returns to the setup URL.
 4. The setup URL refreshes repository grants only, so onboarding stays fast.
-5. The user can then run `Sync my activity`, which pulls merged PRs and updates daily shipped-work aggregates for the last 90 days on first sync, then incrementally from per-repo cursors afterward.
+5. The user can then queue `Sync my activity`, which creates durable sync jobs per installation instead of doing the full GitHub fanout inside the click request.
+6. The app processes queued work one job at a time, leases jobs safely, and resumes deferred work after GitHub rate-limit windows.
+7. Each installation is capped to 25 tracked repositories, and users can choose which repositories stay in sync.
+8. Activity sync updates daily shipped-work aggregates incrementally from per-repo cursors. Global leaderboard refreshes are queued separately instead of recomputing inline on every activity sync.
 
 Hosted note:
 
@@ -165,7 +168,7 @@ The `Hosted Smoke` GitHub Action waits for the Vercel production deploy on `main
 
 ## Next implementation steps
 
-1. Replace the in-process dispatch with a durable external queue.
+1. Move queue processing from browser-driven polling onto a dedicated worker or cron trigger for fully unattended public scale.
 2. Add GitHub webhook handling for merged PRs and repository access changes.
 3. Add deeper PR drilldowns only if the product needs them.
-4. Add explicit repository selection so large installations can opt into narrower sync scope.
+4. Add richer operational dashboards and alerts around queue lag, rate-limit deferrals, and sync failures.
