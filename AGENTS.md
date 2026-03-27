@@ -72,6 +72,36 @@ Conventional examples:
 - `docs: update Firebase setup guide`
 - `chore: update dependencies`
 
+### Hard rule: PR bodies and GitHub markdown must render correctly
+
+Agents must not create or edit PR descriptions with literal escaped newline sequences like `\n`.
+If a PR body, issue body, or long GitHub comment is meant to be multiline markdown, write it using
+real newlines via `--body-file`, a heredoc, or another method that preserves actual line breaks.
+
+Required process for PR bodies:
+
+1. Draft the body as real multiline markdown, not a one-line shell string with escaped `\n`.
+2. Prefer `gh pr create --body-file <file>` or `gh pr create --body "$(cat <<'EOF' ... EOF)"`.
+3. After creating or editing the PR, immediately verify with `gh pr view --json body`.
+4. If the returned body contains literal `\n`, fix it immediately before reporting the PR to the user.
+
+Bad:
+
+```bash
+gh pr create --body "## Summary\n- item one\n- item two"
+```
+
+Good:
+
+```bash
+gh pr create --body "$(cat <<'EOF'
+## Summary
+- item one
+- item two
+EOF
+)"
+```
+
 ### GitHub Project + Docs Sync (Required)
 
 Liftlytics uses a **hybrid system**:
