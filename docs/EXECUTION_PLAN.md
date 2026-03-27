@@ -4,8 +4,8 @@
 
 - Issue: [#86](https://github.com/rudrakshbhandari/vibe-tracker/issues/86)
 - Branch: `rudrakshbhandari/single-social-invite-link`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#87](https://github.com/rudrakshbhandari/vibe-tracker/pull/87)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -15,7 +15,13 @@
 - [x] Reuse one active pending invite per user and expire duplicate active tokens
 - [x] Change the social action copy from create semantics to copy semantics
 - [x] Run lint, tests, and build
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
+
+### Verification
+
+- `npm run lint`
+- `npm test`
+- `npm run build`
 
 ## Issue #82 - Fix signed-in social hydration and mobile overflow
 
