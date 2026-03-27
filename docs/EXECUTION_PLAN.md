@@ -4,7 +4,8 @@
 
 - Issue: [#88](https://github.com/rudrakshbhandari/vibe-tracker/issues/88)
 - Branch: `rudrakshbhandari/rewrite-project-copy`
-- Workflow: In Progress
+- PR: [#89](https://github.com/rudrakshbhandari/vibe-tracker/pull/89)
+- Workflow: In Review
 - Priority: P2
 - App: multi
 
@@ -13,7 +14,13 @@
 - [x] Audit the homepage, social, invite, profile, and privacy copy surfaces
 - [x] Rewrite the product copy without changing layout or styling
 - [x] Run lint, tests, and build
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
+
+### Verification
+
+- `npm run lint`
+- `npm test`
+- `npm run build`
 
 ## Issue #86 - Use a single reusable social invite link per user
 
