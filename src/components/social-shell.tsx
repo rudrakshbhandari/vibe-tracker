@@ -172,13 +172,13 @@ export function SocialShell({
     });
 
     if (!response.ok) {
-      setMessage("Unable to save social settings right now.");
+      setMessage("Unable to save your profile settings right now.");
       return;
     }
 
     const payload = (await response.json()) as SocialMePayload;
     setMe(payload);
-    setMessage("Social profile updated.");
+    setMessage("Profile updated.");
   }
 
   async function handleCopyInvite() {
@@ -188,7 +188,7 @@ export function SocialShell({
     });
 
     if (!response.ok) {
-      setMessage("Unable to load your invite right now.");
+      setMessage("Unable to load your invite link right now.");
       return;
     }
 
@@ -206,7 +206,7 @@ export function SocialShell({
             .catch(() => false)
         : false;
 
-    setMessage(copied ? "Invite link copied." : "Invite link ready to share.");
+    setMessage(copied ? "Invite link copied." : "Invite link ready.");
 
     const refreshedFriends = await fetch(`/api/social/friends?window=${window}`, {
       cache: "no-store",
@@ -232,10 +232,9 @@ export function SocialShell({
         <div className="top-panel-copy">
           <span className="eyebrow">Social</span>
           <div className="space-y-3">
-            <h1 className="page-title">Bring your crew into the vibe.</h1>
+            <h1 className="page-title">Bring your people into the readout.</h1>
             <p className="page-description">
-              Compare shipped-output momentum with friends. You&apos;re on the
-              public leaderboard by default—opt out anytime from Profile.
+              Compare shipped-work momentum with friends. The public board is opt-out, and your profile controls live in Profile.
             </p>
           </div>
           <div className="hero-actions">
@@ -278,13 +277,12 @@ export function SocialShell({
           </div>
 
           <p className="hero-note">
-            Score is based on shipped work only: merged/default-branch additions,
-            deletions, commit count, and how many active coding periods you kept alive.
+            Score only counts shipped work: merged additions, deletions, commit count, and how consistently you stayed active.
           </p>
 
           {invitePath ? (
             <div className="rounded-3xl border border-line bg-white/65 p-3 text-sm text-muted">
-              Share this invite:{" "}
+              Share this link:{" "}
               <Link
                 href={invitePath}
                 className="break-all font-semibold text-foreground underline"
@@ -365,12 +363,10 @@ export function SocialShell({
             <div className="space-y-4">
               {friends.friends.length === 0 ? (
                 <div className="rounded-[1.75rem] border border-line bg-white/70 p-6">
-                  <p className="panel-label">No friends yet</p>
-                  <h3 className="panel-heading mt-2 text-3xl">Start with one invite link.</h3>
+                  <p className="panel-label">No circle yet</p>
+                  <h3 className="panel-heading mt-2 text-3xl">Start with one invite.</h3>
                   <p className="mt-3 max-w-xl text-sm leading-7 text-muted">
-                    Social v1 is trust-based. Share an invite with a friend, let
-                    them connect their GitHub account, and your private leaderboard
-                    will light up automatically.
+                    This social layer is opt-in and trust-based. Share a link, let them connect GitHub, and your circle fills in automatically.
                   </p>
                 </div>
               ) : (
@@ -417,13 +413,12 @@ export function SocialShell({
 
             <aside className="sidebar-panel space-y-4">
               <div>
-                <p className="panel-label">Pending invites</p>
-                <h3 className="panel-heading mt-2 text-3xl">Shareable link</h3>
+                <p className="panel-label">Active invites</p>
+                <h3 className="panel-heading mt-2 text-3xl">Invite link</h3>
               </div>
               {friends.pendingInvites.length === 0 ? (
                 <p className="text-sm leading-7 text-muted">
-                  No active invite link right now. Copy one when you want to add
-                  another person to your private circle.
+                  No live invite link right now. Copy one when you want to pull someone into your circle.
                 </p>
               ) : (
                 friends.pendingInvites.map((invite) => (
@@ -456,7 +451,7 @@ export function SocialShell({
                 <h3 className="panel-heading mt-2 text-3xl">
                   {scope === "global"
                     ? "Nobody is public yet."
-                    : "Add friends to unlock your circle leaderboard."}
+                    : "Add friends to light up your circle board."}
                 </h3>
               </div>
             ) : (
@@ -512,7 +507,7 @@ export function SocialShell({
             <div className="space-y-4 rounded-[1.75rem] border border-line bg-white/70 p-6">
               <div>
                 <p className="panel-label">Visibility settings</p>
-                <h3 className="panel-heading mt-2 text-3xl">Shape your social footprint.</h3>
+                <h3 className="panel-heading mt-2 text-3xl">Tune your social footprint.</h3>
               </div>
 
               <label className="block text-sm font-semibold text-foreground">
@@ -556,7 +551,7 @@ export function SocialShell({
               </div>
 
               <button type="button" className="button-primary" onClick={() => void handleSaveProfile()}>
-                Save social settings
+                Save profile settings
               </button>
             </div>
 
@@ -566,7 +561,7 @@ export function SocialShell({
                 <h3 className="panel-heading mt-2 text-3xl">@{me.profile.login}</h3>
               </div>
               <p className="text-sm leading-7 text-muted">
-                {bio || "Add a short line so friends know what kind of builder they are comparing against."}
+                {bio || "Add a one-line read on what kind of builder people are looking at."}
               </p>
               <div className="grid gap-3">
                 <div className="rounded-[1.5rem] border border-line bg-white/70 p-4">

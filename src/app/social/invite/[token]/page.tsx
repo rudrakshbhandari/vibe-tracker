@@ -32,7 +32,7 @@ export default async function SocialInvitePage({ params }: InvitePageProps) {
           expiresAt={invite.expiresAt}
         />
         <div className="text-sm text-muted">
-          Need to connect first? <Link href="/api/github/connect" className="underline">Continue with GitHub</Link>
+          Need GitHub first? <Link href="/api/github/connect" className="underline">Connect now</Link>
         </div>
       </div>
     </main>

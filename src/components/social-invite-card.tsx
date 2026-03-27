@@ -42,7 +42,7 @@ export function SocialInviteCard({
     setSubmitting(false);
 
     if (!response.ok) {
-      setMessage(payload.error ?? "Unable to respond to invite.");
+      setMessage(payload.error ?? "Unable to respond to this invite.");
       return;
     }
 
@@ -52,11 +52,10 @@ export function SocialInviteCard({
   return (
     <div className="dashboard-shell">
       <div className="space-y-3">
-        <span className="eyebrow eyebrow-subtle">Friend invite</span>
+        <span className="eyebrow eyebrow-subtle">Social invite</span>
         <h1 className="page-title">Join @{inviter.login}&apos;s circle.</h1>
         <p className="page-description">
-          {inviter.displayName ?? inviter.login} wants to compare shipped-output vibe
-          stats with you. This link expires on {formatDateLabel(expiresAt)}.
+          {inviter.displayName ?? inviter.login} wants to compare shipped-work momentum with you. This link expires on {formatDateLabel(expiresAt)}.
         </p>
       </div>
 
@@ -67,7 +66,7 @@ export function SocialInviteCard({
           onClick={() => void respond("accept")}
           disabled={submitting || status !== "PENDING"}
         >
-          Accept invite
+          Join circle
         </button>
         <button
           type="button"
@@ -75,7 +74,7 @@ export function SocialInviteCard({
           onClick={() => void respond("decline")}
           disabled={submitting || status !== "PENDING"}
         >
-          Decline
+          Not now
         </button>
         <Link href="/social" className="button-secondary">
           Back to social
@@ -85,7 +84,7 @@ export function SocialInviteCard({
       <p className="mt-4 text-sm text-muted">
         {message ??
           (status === "PENDING"
-            ? "Accept to create a mutual friend connection."
+            ? "Accept to create the friend link on both sides."
             : `This invite is ${status.toLowerCase()}.`)}
       </p>
     </div>
