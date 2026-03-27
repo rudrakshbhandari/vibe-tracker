@@ -1,5 +1,28 @@
 # Execution Plan
 
+## Issue #86 - Use a single reusable social invite link per user
+
+- Issue: [#86](https://github.com/rudrakshbhandari/vibe-tracker/issues/86)
+- Branch: `rudrakshbhandari/single-social-invite-link`
+- PR: [#87](https://github.com/rudrakshbhandari/vibe-tracker/pull/87)
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Confirm the social invite flow currently mints a new token on every click
+- [x] Reuse one active pending invite per user and expire duplicate active tokens
+- [x] Change the social action copy from create semantics to copy semantics
+- [x] Run lint, tests, and build
+- [x] Push branch and open PR
+
+### Verification
+
+- `npm run lint`
+- `npm test`
+- `npm run build`
+
 ## Issue #84 - Fix cramped panel heading spacing on dashboard cards
 
 - Issue: [#84](https://github.com/rudrakshbhandari/vibe-tracker/issues/84)

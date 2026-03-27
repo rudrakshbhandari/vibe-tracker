@@ -107,7 +107,9 @@ export function SocialShell({
   const [leaderboardVisibility, setLeaderboardVisibility] = useState(
     initialMe.settings.leaderboardVisibility,
   );
-  const [invitePath, setInvitePath] = useState<string | null>(null);
+  const [invitePath, setInvitePath] = useState<string | null>(
+    initialFriends.pendingInvites[0]?.invitePath ?? null,
+  );
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -179,14 +181,14 @@ export function SocialShell({
     setMessage("Social profile updated.");
   }
 
-  async function handleCreateInvite() {
+  async function handleCopyInvite() {
     setMessage(null);
     const response = await fetch("/api/social/friends/invite", {
       method: "POST",
     });
 
     if (!response.ok) {
-      setMessage("Unable to create an invite right now.");
+      setMessage("Unable to load your invite right now.");
       return;
     }
 
@@ -195,7 +197,16 @@ export function SocialShell({
     };
 
     setInvitePath(payload.invitePath);
-    setMessage("Invite link created.");
+    const copied =
+      typeof navigator !== "undefined" &&
+      typeof navigator.clipboard?.writeText === "function"
+        ? await navigator.clipboard
+            .writeText(payload.invitePath)
+            .then(() => true)
+            .catch(() => false)
+        : false;
+
+    setMessage(copied ? "Invite link copied." : "Invite link ready to share.");
 
     const refreshedFriends = await fetch(`/api/social/friends?window=${window}`, {
       cache: "no-store",
@@ -234,11 +245,11 @@ export function SocialShell({
             <button
               type="button"
               className="button-primary"
-              onClick={() => void handleCreateInvite()}
+              onClick={() => void handleCopyInvite()}
               disabled={isPending}
             >
               <Link2 className="h-4 w-4" />
-              Create invite
+              Copy invite
             </button>
             <ThemeToggle />
           </div>
@@ -407,11 +418,11 @@ export function SocialShell({
             <aside className="sidebar-panel space-y-4">
               <div>
                 <p className="panel-label">Pending invites</p>
-                <h3 className="panel-heading mt-2 text-3xl">Shareable links</h3>
+                <h3 className="panel-heading mt-2 text-3xl">Shareable link</h3>
               </div>
               {friends.pendingInvites.length === 0 ? (
                 <p className="text-sm leading-7 text-muted">
-                  No active invite links right now. Create one when you want to add
+                  No active invite link right now. Copy one when you want to add
                   another person to your private circle.
                 </p>
               ) : (
