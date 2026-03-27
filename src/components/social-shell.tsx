@@ -85,6 +85,14 @@ function formatDelta(value: number) {
   return value > 0 ? `+${value}` : `${value}`;
 }
 
+function toAbsoluteUrl(path: string) {
+  if (typeof window === "undefined") {
+    return path;
+  }
+
+  return new URL(path, window.location.origin).toString();
+}
+
 export function SocialShell({
   initialTab,
   initialScope,
@@ -106,9 +114,6 @@ export function SocialShell({
   );
   const [leaderboardVisibility, setLeaderboardVisibility] = useState(
     initialMe.settings.leaderboardVisibility,
-  );
-  const [invitePath, setInvitePath] = useState<string | null>(
-    initialFriends.pendingInvites[0]?.invitePath ?? null,
   );
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -196,12 +201,12 @@ export function SocialShell({
       invitePath: string;
     };
 
-    setInvitePath(payload.invitePath);
+    const inviteUrl = toAbsoluteUrl(payload.invitePath);
     const copied =
       typeof navigator !== "undefined" &&
       typeof navigator.clipboard?.writeText === "function"
         ? await navigator.clipboard
-            .writeText(payload.invitePath)
+            .writeText(inviteUrl)
             .then(() => true)
             .catch(() => false)
         : false;
@@ -279,18 +284,6 @@ export function SocialShell({
           <p className="hero-note">
             Score is based on shipped work: merged additions, deletions, commit count, and active periods.
           </p>
-
-          {invitePath ? (
-            <div className="rounded-3xl border border-line bg-white/65 p-3 text-sm text-muted">
-              Share this link:{" "}
-              <Link
-                href={invitePath}
-                className="break-all font-semibold text-foreground underline"
-              >
-                {invitePath}
-              </Link>
-            </div>
-          ) : null}
 
           {message ? <p className="text-sm text-muted">{message}</p> : null}
         </div>
@@ -414,7 +407,7 @@ export function SocialShell({
             <aside className="sidebar-panel space-y-4">
               <div>
                 <p className="panel-label">Active invites</p>
-                <h3 className="panel-heading mt-2 text-3xl">Invite link</h3>
+                <h3 className="panel-heading mt-2 text-3xl">Current invite</h3>
               </div>
               {friends.pendingInvites.length === 0 ? (
                 <p className="text-sm leading-7 text-muted">
@@ -427,10 +420,10 @@ export function SocialShell({
                     className="rounded-[1.5rem] border border-line bg-white/70 p-4"
                   >
                     <Link
-                      href={invite.invitePath}
+                      href={toAbsoluteUrl(invite.invitePath)}
                       className="break-all font-semibold underline"
                     >
-                      {invite.invitePath}
+                      {toAbsoluteUrl(invite.invitePath)}
                     </Link>
                     <p className="mt-2 text-sm text-muted">
                       Created {formatDateLabel(invite.createdAt)} · Expires{" "}
