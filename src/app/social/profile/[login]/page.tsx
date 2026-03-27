@@ -29,7 +29,7 @@ export default async function SocialProfilePage({ params }: ProfilePageProps) {
             <div className="space-y-3">
               <h1 className="page-title">@{profile.login}</h1>
               <p className="page-description">
-                {profile.bio || "A public readout of shipped work and momentum."}
+                {profile.bio || "A public profile with recent shipped-work activity."}
               </p>
             </div>
             <div className="hero-actions">

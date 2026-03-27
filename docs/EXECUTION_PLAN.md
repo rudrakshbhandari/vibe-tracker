@@ -1,5 +1,20 @@
 # Execution Plan
 
+## Issue #95 - Tone down launch copy voice after merge
+
+- Issue: [#95](https://github.com/rudrakshbhandari/vibe-tracker/issues/95)
+- Branch: `rudrakshbhandari/soften-launch-copy`
+- Workflow: In Progress
+- Priority: P2
+- App: multi
+
+### Checklist
+
+- [x] Identify the copy that drifted into an overly assertive tone
+- [x] Rewrite the launch surfaces to sound more understated without changing layout
+- [x] Run lint, tests, and build
+- [ ] Push branch and open PR
+
 ## Issue #90 - Prevent malformed PR body formatting from agent workflows
 
 - Issue: [#90](https://github.com/rudrakshbhandari/vibe-tracker/issues/90)
