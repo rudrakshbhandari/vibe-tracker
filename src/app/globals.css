@@ -357,6 +357,7 @@ a {
 .panel-heading {
   font-size: clamp(1.8rem, 2.6vw, 2.35rem);
   font-weight: 500;
+  line-height: 0.98;
 }
 
 .panel-label,
@@ -366,6 +367,10 @@ a {
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
+}
+
+.panel-label + .panel-heading {
+  margin-top: 0.45rem;
 }
 
 .dashboard-pill,

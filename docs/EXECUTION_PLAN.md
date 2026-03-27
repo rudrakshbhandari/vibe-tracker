@@ -23,6 +23,25 @@
 - `npm test`
 - `npm run build`
 
+## Issue #84 - Fix cramped panel heading spacing on dashboard cards
+
+- Issue: [#84](https://github.com/rudrakshbhandari/vibe-tracker/issues/84)
+- Branch: `rudrakshbhandari/fix-panel-heading-spacing`
+- PR: [#85](https://github.com/rudrakshbhandari/vibe-tracker/pull/85)
+- Workflow: In Review
+- Priority: P2
+- App: multi
+
+### Checklist
+
+- [x] Identify the shared typography styles driving panel label and heading spacing
+- [x] Increase vertical separation between the panel label and heading
+- [x] Loosen wrapped panel heading line-height without affecting page titles
+- [x] Run lint and tests
+- [x] Push branch and open PR
+- [x] Update project tracking with the PR URL
+- [x] Verify the visual change in the browser view
+
 ## Issue #82 - Fix signed-in social hydration and mobile overflow
 
 - Issue: [#82](https://github.com/rudrakshbhandari/vibe-tracker/issues/82)
