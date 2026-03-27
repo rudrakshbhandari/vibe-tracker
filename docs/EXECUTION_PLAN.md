@@ -1,5 +1,28 @@
 # Execution Plan
 
+## Issue #98 - Fix social invite copy link UX
+
+- Issue: [#98](https://github.com/rudrakshbhandari/vibe-tracker/issues/98)
+- Branch: `rudrakshbhandari/fix-social-invite-copy`
+- PR: Pending
+- Workflow: In Progress
+- Priority: P2
+- App: multi
+
+### Checklist
+
+- [x] Reproduce the broken invite copy behavior and identify where the relative path is copied
+- [x] Copy the absolute invite URL instead of the raw relative path
+- [x] Reduce duplicate raw invite-link rendering in the social UI
+- [x] Run lint, tests, and build
+- [ ] Push branch and open PR
+
+### Verification
+
+- `npm run lint`
+- `npm test`
+- `npm run build`
+
 ## Issue #95 - Tone down launch copy voice after merge
 
 - Issue: [#95](https://github.com/rudrakshbhandari/vibe-tracker/issues/95)
