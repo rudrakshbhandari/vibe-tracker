@@ -17,7 +17,7 @@ const GITHUB_STATUS_COPY: Record<string, { label: string; detail?: string }> = {
   "activity-sync-started": {
     label: "Activity sync started",
     detail:
-      "The dashboard will refresh automatically while your latest activity is being pulled in.",
+      "The sync was queued successfully. This page will keep processing queued work and refresh automatically while your latest activity is pulled in.",
   },
   "activity-sync-running": {
     label: "Activity sync already running",
@@ -79,6 +79,16 @@ const GITHUB_STATUS_COPY: Record<string, { label: string; detail?: string }> = {
   },
   "repositories-refreshed": {
     label: "Repository scope refreshed",
+  },
+  "repository-scope-saved": {
+    label: "Tracked repositories updated",
+    detail:
+      "Only the selected repositories will be included in future activity sync runs for that installation.",
+  },
+  "repository-scope-too-large": {
+    label: "Too many tracked repositories selected",
+    detail:
+      "Each installation is capped to 25 tracked repositories to keep sync fanout predictable.",
   },
   "session-reset": {
     label: "Session reset",
@@ -265,7 +275,36 @@ type GithubStateInstallation = {
   githubInstallId: number;
   accountLogin: string;
   repositoryCount: number;
-  repositoryNames: string[];
+  trackedRepositoryCount: number;
+  repositories: Array<{
+    id: string;
+    name: string;
+    owner: string;
+    syncEnabled: boolean;
+  }>;
+};
+
+type SyncHealthSummary = {
+  queuedJobs: number;
+  runningJobs: number;
+  completedLast24Hours: number;
+  failedLast24Hours: number;
+  averageDurationMs: number | null;
+  latestCompletedAt: Date | null;
+  latestResult: {
+    selectedRepositoryCount?: number;
+    skippedRepositoryCount?: number;
+    syncedRepositoryCount?: number;
+    processedPullRequestCount?: number;
+    fetchedPullRequestCount?: number;
+    githubRetryCount?: number;
+    githubRetryDelayMs?: number;
+    averageRepositoryDurationMs?: number;
+    queueDelayMs?: number;
+    durationMs?: number;
+    deferredUntil?: string;
+  } | null;
+  latestError: string | null;
 };
 
 type RepoSummary = {
@@ -284,6 +323,7 @@ function RepoSection({
   connected,
   hasInstallations,
   accessibleRepositoryCount,
+  trackedRepositoryCount,
 }: {
   repositories: RepoSummary[];
   repoActivityMax: number;
@@ -291,6 +331,7 @@ function RepoSection({
   connected: boolean;
   hasInstallations: boolean;
   accessibleRepositoryCount: number;
+  trackedRepositoryCount: number;
 }) {
   return (
     <section className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_360px]">
@@ -363,7 +404,7 @@ function RepoSection({
 
         <p className="scope-summary">
           {hasInstallations
-            ? `${formatNumber(accessibleRepositoryCount)} repositories are available in the current scope.`
+            ? `${formatNumber(trackedRepositoryCount)} of ${formatNumber(accessibleRepositoryCount)} repositories are currently tracked.`
             : "Install the GitHub App on the account you want to measure to unlock repository-level metrics."}
         </p>
 
@@ -376,7 +417,9 @@ function RepoSection({
                     <p className="scope-item-title">
                       {installations.length === 1 ? "Primary scope" : installation.accountLogin}
                     </p>
-                    <p className="scope-item-meta">{installation.repositoryCount} cached repos</p>
+                    <p className="scope-item-meta">
+                      {installation.trackedRepositoryCount}/{installation.repositoryCount} tracked repos
+                    </p>
                   </div>
                   <form
                     action={`/api/github/installations/${installation.githubInstallId}/sync`}
@@ -389,12 +432,50 @@ function RepoSection({
                   </form>
                 </div>
                 <p className="scope-copy">
-                  {installation.repositoryNames.length > 0
-                    ? installation.repositoryNames.join(", ")
+                  {installation.repositories.filter((repository) => repository.syncEnabled).length > 0
+                    ? installation.repositories
+                        .filter((repository) => repository.syncEnabled)
+                        .slice(0, 3)
+                        .map((repository) => `${repository.owner}/${repository.name}`)
+                        .join(", ")
                     : index === 0
-                      ? "Repository names will appear here after the next refresh."
-                      : "No repositories cached yet for this scope."}
+                      ? "No repositories are tracked yet for this scope."
+                      : "No tracked repositories yet for this scope."}
                 </p>
+                <details className="mt-4 rounded-[1.25rem] border border-line/80 bg-white/60 p-4">
+                  <summary className="cursor-pointer text-sm font-semibold text-foreground">
+                    Choose tracked repositories
+                  </summary>
+                  <p className="mt-3 text-sm leading-6 text-muted">
+                    Up to 25 repositories per installation will be included in queued activity sync.
+                  </p>
+                  <form
+                    action={`/api/github/installations/${installation.githubInstallId}/scope`}
+                    method="post"
+                    className="mt-4 space-y-4"
+                  >
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {installation.repositories.map((repository) => (
+                        <label
+                          key={repository.id}
+                          className="flex items-center gap-3 rounded-[1rem] border border-line/80 bg-white/70 px-3 py-2 text-sm text-foreground"
+                        >
+                          <input
+                            type="checkbox"
+                            name="repositoryIds"
+                            value={repository.id}
+                            defaultChecked={repository.syncEnabled}
+                            className="h-4 w-4"
+                          />
+                          <span>{repository.owner}/{repository.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <button type="submit" className="button-secondary button-compact">
+                      Save tracked repos
+                    </button>
+                  </form>
+                </details>
               </article>
             ))}
           </div>
@@ -451,12 +532,19 @@ const FALLBACK_GITHUB_STATE = {
   viewer: null,
   activitySync: null,
   activitySyncRunning: false,
+  syncHealth: null as SyncHealthSummary | null,
   installations: [] as Array<{
     id: string;
     githubInstallId: number;
     accountLogin: string;
     repositoryCount: number;
-    repositoryNames: string[];
+    trackedRepositoryCount: number;
+    repositories: Array<{
+      id: string;
+      name: string;
+      owner: string;
+      syncEnabled: boolean;
+    }>;
   }>,
 };
 
@@ -506,6 +594,17 @@ export default async function Home({ searchParams }: HomePageProps) {
     (count, installation) => count + installation.repositoryCount,
     0,
   );
+  const trackedRepositoryCount = githubState.installations.reduce(
+    (count, installation) => count + installation.trackedRepositoryCount,
+    0,
+  );
+  const syncQueueSummary = githubState.syncHealth
+    ? githubState.syncHealth.runningJobs > 0
+      ? `${githubState.syncHealth.runningJobs} running`
+      : githubState.syncHealth.queuedJobs > 0
+        ? `${githubState.syncHealth.queuedJobs} queued`
+        : "Idle"
+    : "Idle";
   const compactFilters = dashboard
     ? [
         dashboard.filters[0],
@@ -555,7 +654,19 @@ export default async function Home({ searchParams }: HomePageProps) {
               <div className="meta-row">
                 <span className="hero-meta-label">Repos in scope</span>
                 <span className="hero-meta-value">
+                  {formatNumber(trackedRepositoryCount)}
+                </span>
+              </div>
+              <div className="meta-row">
+                <span className="hero-meta-label">Accessible repos</span>
+                <span className="hero-meta-value">
                   {formatNumber(accessibleRepositoryCount)}
+                </span>
+              </div>
+              <div className="meta-row">
+                <span className="hero-meta-label">Sync queue</span>
+                <span className="hero-meta-value">
+                  {syncQueueSummary}
                 </span>
               </div>
             </div>
@@ -724,6 +835,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               connected={githubState.connected}
               hasInstallations={hasInstallations}
               accessibleRepositoryCount={accessibleRepositoryCount}
+              trackedRepositoryCount={trackedRepositoryCount}
             />
           </>
         ) : (

@@ -7,13 +7,13 @@ const {
   dbSyncJobFindFirstMock,
   failStaleActivitySyncJobsMock,
   getValidUserAccessTokenMock,
-  syncUserActivityForAccountMock,
+  enqueueActivitySyncForAccountMock,
 } = vi.hoisted(() => ({
   canEnableHostedGitHubSyncMock: vi.fn(),
   dbSyncJobFindFirstMock: vi.fn(),
   failStaleActivitySyncJobsMock: vi.fn(),
   getValidUserAccessTokenMock: vi.fn(),
-  syncUserActivityForAccountMock: vi.fn(),
+  enqueueActivitySyncForAccountMock: vi.fn(),
 }));
 
 vi.mock("@/lib/session", () => ({
@@ -49,7 +49,7 @@ vi.mock("@/lib/activity-sync-jobs", () => ({
 }));
 
 vi.mock("@/lib/installation-sync", () => ({
-  syncUserActivityForAccount: syncUserActivityForAccountMock,
+  enqueueActivitySyncForAccount: enqueueActivitySyncForAccountMock,
 }));
 
 import { POST } from "@/app/api/github/activity-sync/route";
@@ -60,7 +60,7 @@ describe("POST /api/github/activity-sync", () => {
     dbSyncJobFindFirstMock.mockReset();
     failStaleActivitySyncJobsMock.mockReset();
     getValidUserAccessTokenMock.mockReset();
-    syncUserActivityForAccountMock.mockReset();
+    enqueueActivitySyncForAccountMock.mockReset();
     canEnableHostedGitHubSyncMock.mockReturnValue(true);
     dbSyncJobFindFirstMock.mockResolvedValue(null);
     failStaleActivitySyncJobsMock.mockResolvedValue(undefined);
@@ -79,7 +79,7 @@ describe("POST /api/github/activity-sync", () => {
     expect(failStaleActivitySyncJobsMock).not.toHaveBeenCalled();
   });
 
-  it("awaits the sync before redirecting to completed", async () => {
+  it("enqueues the sync before redirecting to started", async () => {
     getValidUserAccessTokenMock.mockResolvedValue({
       accessToken: "user-token",
       session: {
@@ -102,10 +102,10 @@ describe("POST /api/github/activity-sync", () => {
     } as NextRequest);
 
     expect(response.headers.get("location")).toBe(
-      "https://example.com/?github=activity-sync-completed",
+      "https://example.com/?github=activity-sync-started",
     );
     expect(failStaleActivitySyncJobsMock).toHaveBeenCalledWith(["installation-1"]);
-    expect(syncUserActivityForAccountMock).toHaveBeenCalledWith({
+    expect(enqueueActivitySyncForAccountMock).toHaveBeenCalledWith({
       accountId: "account-1",
       userAccessToken: "user-token",
     });
@@ -141,10 +141,10 @@ describe("POST /api/github/activity-sync", () => {
       "https://example.com/?github=activity-sync-running",
     );
     expect(failStaleActivitySyncJobsMock).toHaveBeenCalledWith(["installation-1"]);
-    expect(syncUserActivityForAccountMock).not.toHaveBeenCalled();
+    expect(enqueueActivitySyncForAccountMock).not.toHaveBeenCalled();
   });
 
-  it("redirects with sync-failed when the sync throws", async () => {
+  it("redirects with sync-failed when enqueueing throws", async () => {
     getValidUserAccessTokenMock.mockResolvedValue({
       accessToken: "user-token",
       session: {
@@ -161,7 +161,7 @@ describe("POST /api/github/activity-sync", () => {
         },
       },
     });
-    syncUserActivityForAccountMock.mockRejectedValue(new Error("boom"));
+    enqueueActivitySyncForAccountMock.mockRejectedValue(new Error("boom"));
 
     const response = await POST({
       url: "https://example.com/api/github/activity-sync",

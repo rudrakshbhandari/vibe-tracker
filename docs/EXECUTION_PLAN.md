@@ -23,6 +23,32 @@
 - `npm test`
 - `npm run build`
 
+## Issue #97 - Harden public launch sync architecture and launch safety
+
+- Issue: [#97](https://github.com/rudrakshbhandari/vibe-tracker/issues/97)
+- Branch: `rudrakshbhandari/public-launch-hardening`
+- PR: [#100](https://github.com/rudrakshbhandari/vibe-tracker/pull/100)
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Move activity sync off the user click path into a queued worker flow
+- [x] Add per-installation tracked-repository selection with a 25-repo cap
+- [x] Add GitHub rate-limit aware retry/defer handling
+- [x] Decouple global leaderboard refresh from routine activity sync
+- [x] Expose sync queue health in the UI and metrics payload
+- [x] Run Prisma generate, lint, tests, and build
+- [x] Push branch and open PR
+
+### Verification
+
+- `npm run db:generate`
+- `npm run lint`
+- `npm test`
+- `npm run build`
+
 ## Issue #95 - Tone down launch copy voice after merge
 
 - Issue: [#95](https://github.com/rudrakshbhandari/vibe-tracker/issues/95)

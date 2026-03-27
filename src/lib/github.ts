@@ -1,3 +1,5 @@
+import { setTimeout as delay } from "node:timers/promises";
+
 import { createAppAuth } from "@octokit/auth-app";
 import { Octokit } from "octokit";
 
@@ -72,6 +74,16 @@ export type GitHubAssociatedPullRequest = {
   created_at: string;
   merged_at: string | null;
 };
+
+export type GitHubRequestOptions = {
+  onRateLimitRetry?: (input: {
+    delayMs: number;
+    reason: "primary" | "secondary";
+  }) => void;
+};
+
+const MAX_GITHUB_RATE_LIMIT_RETRIES = 2;
+const DEFAULT_GITHUB_RETRY_DELAY_MS = 30_000;
 
 export function buildGitHubAuthorizeUrl(state: string) {
   const env = getGitHubAppEnv();
@@ -151,21 +163,140 @@ export async function refreshUserToken(refreshToken: string) {
   return payload;
 }
 
-async function githubRequest<T>(path: string, token: string) {
-  const response = await fetch(`https://api.github.com${path}`, {
-    headers: {
-      Accept: "application/vnd.github+json",
-      Authorization: `Bearer ${token}`,
-      "X-GitHub-Api-Version": "2022-11-28",
-    },
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    throw new Error(`GitHub API request failed for ${path} with ${response.status}`);
+function getHeaderValue(
+  headers: Headers | Record<string, string> | undefined,
+  key: string,
+) {
+  if (!headers) {
+    return null;
   }
 
-  return (await response.json()) as T;
+  if (headers instanceof Headers) {
+    return headers.get(key);
+  }
+
+  return headers[key] ?? headers[key.toLowerCase()] ?? null;
+}
+
+function getRateLimitRetry(input: {
+  status?: number;
+  headers?: Headers | Record<string, string>;
+  message?: string;
+}) {
+  const message = input.message?.toLowerCase() ?? "";
+  const retryAfterHeader = getHeaderValue(input.headers, "retry-after");
+  const rateLimitResetHeader = getHeaderValue(input.headers, "x-ratelimit-reset");
+
+  if (retryAfterHeader) {
+    const retryAfterSeconds = Number.parseInt(retryAfterHeader, 10);
+    if (!Number.isNaN(retryAfterSeconds) && retryAfterSeconds > 0) {
+      return {
+        delayMs: retryAfterSeconds * 1000,
+        reason: "secondary" as const,
+      };
+    }
+  }
+
+  if (rateLimitResetHeader) {
+    const resetSeconds = Number.parseInt(rateLimitResetHeader, 10);
+    if (!Number.isNaN(resetSeconds)) {
+      const delayMs = Math.max(
+        1_000,
+        resetSeconds * 1000 - Date.now() + 1_000,
+      );
+
+      if (input.status === 403 || input.status === 429) {
+        return {
+          delayMs,
+          reason: "primary" as const,
+        };
+      }
+    }
+  }
+
+  if (
+    input.status === 429 ||
+    (input.status === 403 &&
+      (message.includes("secondary rate limit") ||
+        message.includes("rate limit exceeded")))
+  ) {
+    return {
+      delayMs: DEFAULT_GITHUB_RETRY_DELAY_MS,
+      reason: message.includes("secondary") ? ("secondary" as const) : ("primary" as const),
+    };
+  }
+
+  return null;
+}
+
+async function withGitHubRateLimitRetry<T>(
+  operation: () => Promise<T>,
+  options?: GitHubRequestOptions,
+) {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      const retry = getRateLimitRetry({
+        status:
+          error && typeof error === "object" && "status" in error
+            ? (error.status as number | undefined)
+            : undefined,
+        headers:
+          error &&
+          typeof error === "object" &&
+          "response" in error &&
+          error.response &&
+          typeof error.response === "object" &&
+          "headers" in error.response
+            ? (error.response.headers as Headers | Record<string, string> | undefined)
+            : undefined,
+        message: error instanceof Error ? error.message : undefined,
+      });
+
+      if (!retry || attempt >= MAX_GITHUB_RATE_LIMIT_RETRIES) {
+        throw error;
+      }
+
+      options?.onRateLimitRetry?.(retry);
+      await delay(retry.delayMs);
+    }
+  }
+}
+
+async function githubRequest<T>(
+  path: string,
+  token: string,
+  options?: GitHubRequestOptions,
+) {
+  return withGitHubRateLimitRetry(async () => {
+    const response = await fetch(`https://api.github.com${path}`, {
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${token}`,
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      const error = new Error(
+        `GitHub API request failed for ${path} with ${response.status}`,
+      ) as Error & {
+        status: number;
+        response: {
+          headers: Headers;
+        };
+      };
+      error.status = response.status;
+      error.response = {
+        headers: response.headers,
+      };
+      throw error;
+    }
+
+    return (await response.json()) as T;
+  }, options);
 }
 
 export function getGitHubTokenExpiry(expiresIn?: number) {
@@ -184,6 +315,7 @@ export async function getUserInstallations(accessToken: string) {
   const payload = await githubRequest<{ installations: GitHubInstallation[] }>(
     "/user/installations",
     accessToken,
+    undefined,
   );
 
   return payload.installations;
@@ -211,14 +343,21 @@ async function createInstallationOctokit(installationId: number) {
   return new Octokit({ auth: token });
 }
 
-export async function getInstallationRepositories(installationId: number) {
+export async function getInstallationRepositories(
+  installationId: number,
+  options?: GitHubRequestOptions,
+) {
   const octokit = await createInstallationOctokit(installationId);
-  const response = await octokit.request("GET /installation/repositories", {
-    per_page: 100,
-    headers: {
-      "X-GitHub-Api-Version": "2022-11-28",
-    },
-  });
+  const response = await withGitHubRateLimitRetry(
+    () =>
+      octokit.request("GET /installation/repositories", {
+        per_page: 100,
+        headers: {
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+      }),
+    options,
+  );
 
   return response.data.repositories as GitHubRepository[];
 }
@@ -228,19 +367,24 @@ export async function listMergedPullRequests(input: {
   repo: string;
   installationId: number;
   updatedSince?: string;
+  options?: GitHubRequestOptions;
 }) {
   const octokit = await createInstallationOctokit(input.installationId);
-  const response = await octokit.paginate(octokit.rest.pulls.list, {
-    owner: input.owner,
-    repo: input.repo,
-    state: "closed",
-    sort: "updated",
-    direction: "desc",
-    per_page: 100,
-    headers: {
-      "X-GitHub-Api-Version": "2022-11-28",
-    },
-  });
+  const response = await withGitHubRateLimitRetry(
+    () =>
+      octokit.paginate(octokit.rest.pulls.list, {
+        owner: input.owner,
+        repo: input.repo,
+        state: "closed",
+        sort: "updated",
+        direction: "desc",
+        per_page: 100,
+        headers: {
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+      }),
+    input.options,
+  );
 
   const pullRequests = response as GitHubPullRequestListItem[];
 
@@ -261,16 +405,21 @@ export async function getPullRequestDetail(input: {
   repo: string;
   pullNumber: number;
   installationId: number;
+  options?: GitHubRequestOptions;
 }) {
   const octokit = await createInstallationOctokit(input.installationId);
-  const response = await octokit.request("GET /repos/{owner}/{repo}/pulls/{pull_number}", {
-    owner: input.owner,
-    repo: input.repo,
-    pull_number: input.pullNumber,
-    headers: {
-      "X-GitHub-Api-Version": "2022-11-28",
-    },
-  });
+  const response = await withGitHubRateLimitRetry(
+    () =>
+      octokit.request("GET /repos/{owner}/{repo}/pulls/{pull_number}", {
+        owner: input.owner,
+        repo: input.repo,
+        pull_number: input.pullNumber,
+        headers: {
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+      }),
+    input.options,
+  );
 
   return response.data as GitHubPullRequestDetail;
 }

@@ -1,17 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
+  completeSyncJobMock,
   dbMock,
+  deferSyncJobMock,
+  failSyncJobMock,
   getInstallationRepositoriesMock,
   getPullRequestDetailMock,
   getUserInstallationsMock,
   listMergedPullRequestsMock,
   refreshLeaderboardSnapshotsForAccountMock,
+  renewSyncJobLeaseMock,
 } = vi.hoisted(() => ({
+  completeSyncJobMock: vi.fn(),
   dbMock: {
-    installation: { upsert: vi.fn() },
+    installation: { upsert: vi.fn(), findUnique: vi.fn() },
     installationGrant: { upsert: vi.fn() },
-    repository: { findMany: vi.fn(), upsert: vi.fn() },
+    repository: { findMany: vi.fn(), upsert: vi.fn(), updateMany: vi.fn() },
     dailyUserRepoStats: {
       deleteMany: vi.fn(),
       findUnique: vi.fn(),
@@ -30,16 +35,27 @@ const {
     },
     syncJob: {
       create: vi.fn(),
-      update: vi.fn(),
+      findFirst: vi.fn(),
     },
     gitHubAccount: { upsert: vi.fn() },
     $transaction: vi.fn(),
   },
+  deferSyncJobMock: vi.fn(),
+  failSyncJobMock: vi.fn(),
   getInstallationRepositoriesMock: vi.fn(),
   getPullRequestDetailMock: vi.fn(),
   getUserInstallationsMock: vi.fn(),
   listMergedPullRequestsMock: vi.fn(),
   refreshLeaderboardSnapshotsForAccountMock: vi.fn(),
+  renewSyncJobLeaseMock: vi.fn(),
+}));
+
+vi.mock("@/lib/activity-sync-jobs", () => ({
+  MAX_TRACKED_REPOSITORIES_PER_INSTALLATION: 25,
+  completeSyncJob: completeSyncJobMock,
+  deferSyncJob: deferSyncJobMock,
+  failSyncJob: failSyncJobMock,
+  renewSyncJobLease: renewSyncJobLeaseMock,
 }));
 
 vi.mock("@/lib/db", () => ({
@@ -61,14 +77,20 @@ vi.mock("@/lib/social", () => ({
   refreshLeaderboardSnapshotsForAccount: refreshLeaderboardSnapshotsForAccountMock,
 }));
 
-import { syncUserActivityForAccount } from "@/lib/installation-sync";
+import {
+  enqueueActivitySyncForAccount,
+  processClaimedSyncJob,
+} from "@/lib/installation-sync";
 
 describe("installation sync", () => {
   beforeEach(() => {
+    completeSyncJobMock.mockReset();
     dbMock.installation.upsert.mockReset();
+    dbMock.installation.findUnique.mockReset();
     dbMock.installationGrant.upsert.mockReset();
     dbMock.repository.findMany.mockReset();
     dbMock.repository.upsert.mockReset();
+    dbMock.repository.updateMany.mockReset();
     dbMock.dailyUserRepoStats.deleteMany.mockReset();
     dbMock.dailyUserRepoStats.findUnique.mockReset();
     dbMock.dailyUserRepoStats.delete.mockReset();
@@ -80,14 +102,17 @@ describe("installation sync", () => {
     dbMock.syncCursor.findUnique.mockReset();
     dbMock.syncCursor.upsert.mockReset();
     dbMock.syncJob.create.mockReset();
-    dbMock.syncJob.update.mockReset();
+    dbMock.syncJob.findFirst.mockReset();
     dbMock.gitHubAccount.upsert.mockReset();
     dbMock.$transaction.mockReset();
+    deferSyncJobMock.mockReset();
+    failSyncJobMock.mockReset();
     getInstallationRepositoriesMock.mockReset();
     getPullRequestDetailMock.mockReset();
     getUserInstallationsMock.mockReset();
     listMergedPullRequestsMock.mockReset();
     refreshLeaderboardSnapshotsForAccountMock.mockReset();
+    renewSyncJobLeaseMock.mockReset();
 
     dbMock.installation.upsert.mockResolvedValue({
       id: "installation-db-1",
@@ -95,22 +120,13 @@ describe("installation sync", () => {
       accountLogin: "octocat",
     });
     dbMock.installationGrant.upsert.mockResolvedValue({});
-    dbMock.repository.findMany
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([
-        {
-          id: "repo-db-1",
-          owner: "octocat",
-          name: "hello-world",
-        },
-      ]);
     dbMock.repository.upsert.mockResolvedValue({});
     dbMock.$transaction.mockResolvedValue([]);
+    dbMock.syncJob.findFirst.mockResolvedValue(null);
     dbMock.syncJob.create.mockResolvedValue({
       id: "job-1",
       installationId: "installation-db-1",
     });
-    dbMock.syncJob.update.mockResolvedValue({});
     dbMock.syncCursor.findUnique.mockResolvedValue(null);
     dbMock.syncCursor.upsert.mockResolvedValue({});
     dbMock.pullRequest.findUnique.mockResolvedValue(null);
@@ -144,18 +160,86 @@ describe("installation sync", () => {
         },
       },
     ]);
-    getInstallationRepositoriesMock.mockResolvedValue([
-      {
-        id: 123,
-        name: "hello-world",
-        full_name: "octocat/hello-world",
-        private: false,
-        default_branch: "main",
-        owner: {
-          login: "octocat",
-        },
+    refreshLeaderboardSnapshotsForAccountMock.mockResolvedValue(undefined);
+    completeSyncJobMock.mockResolvedValue(undefined);
+    deferSyncJobMock.mockResolvedValue(undefined);
+    failSyncJobMock.mockResolvedValue(undefined);
+    renewSyncJobLeaseMock.mockResolvedValue(undefined);
+  });
+
+  it("queues activity sync jobs using the tracked repository cap", async () => {
+    const githubRepositories = Array.from({ length: 26 }, (_, index) => ({
+      id: index + 1,
+      name: `repo-${index + 1}`,
+      full_name: `octocat/repo-${index + 1}`,
+      private: false,
+      default_branch: "main",
+      owner: {
+        login: "octocat",
       },
-    ]);
+    }));
+
+    getInstallationRepositoriesMock.mockResolvedValue(githubRepositories);
+    dbMock.repository.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce(
+        githubRepositories.map((repository, index) => ({
+          id: `repo-db-${index + 1}`,
+          owner: "octocat",
+          name: repository.name,
+          syncEnabled: index < 25,
+        })),
+      );
+
+    await enqueueActivitySyncForAccount({
+      accountId: "account-db-1",
+      userAccessToken: "user-token",
+    });
+
+    expect(dbMock.repository.upsert).toHaveBeenCalledTimes(26);
+    expect(dbMock.repository.upsert.mock.calls[25]?.[0]).toEqual(
+      expect.objectContaining({
+        create: expect.objectContaining({
+          syncEnabled: false,
+        }),
+      }),
+    );
+    expect(dbMock.syncJob.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          accountId: "account-db-1",
+          installationId: "installation-db-1",
+          scope: "activity",
+          status: "queued",
+          resultJson: expect.any(String),
+        }),
+      }),
+    );
+
+    const queuedPayload = JSON.parse(
+      dbMock.syncJob.create.mock.calls[0]?.[0].data.resultJson as string,
+    );
+    expect(queuedPayload).toEqual(
+      expect.objectContaining({
+        selectedRepositoryCount: 25,
+        skippedRepositoryCount: 1,
+      }),
+    );
+  });
+
+  it("processes a claimed activity job and enqueues leaderboard refresh separately", async () => {
+    dbMock.installation.findUnique.mockResolvedValue({
+      id: "installation-db-1",
+      githubInstallId: 99,
+      repositories: [
+        {
+          id: "repo-db-1",
+          owner: "octocat",
+          name: "hello-world",
+          syncEnabled: true,
+        },
+      ],
+    });
     listMergedPullRequestsMock.mockResolvedValue([
       {
         number: 42,
@@ -193,13 +277,19 @@ describe("installation sync", () => {
       deletions: 4,
       commits: 3,
     });
-    refreshLeaderboardSnapshotsForAccountMock.mockResolvedValue(undefined);
-  });
 
-  it("persists required pull request fields during activity sync", async () => {
-    await syncUserActivityForAccount({
-      accountId: "account-db-1",
-      userAccessToken: "user-token",
+    await processClaimedSyncJob({
+      job: {
+        id: "job-1",
+        accountId: "account-db-1",
+        installationId: "installation-db-1",
+        scope: "activity",
+        createdAt: new Date("2026-03-21T00:00:00.000Z"),
+        startedAt: new Date("2026-03-21T00:00:05.000Z"),
+        attemptCount: 1,
+        maxAttempts: 3,
+      } as never,
+      leaseToken: "lease-1",
     });
 
     expect(dbMock.pullRequest.upsert).toHaveBeenCalledWith(
@@ -216,5 +306,27 @@ describe("installation sync", () => {
         }),
       }),
     );
+    expect(completeSyncJobMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        jobId: "job-1",
+        leaseToken: "lease-1",
+        result: expect.objectContaining({
+          selectedRepositoryCount: 1,
+          syncedRepositoryCount: 1,
+          processedPullRequestCount: 1,
+        }),
+      }),
+    );
+    expect(dbMock.syncJob.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          accountId: "account-db-1",
+          installationId: "installation-db-1",
+          scope: "leaderboard",
+          status: "queued",
+        }),
+      }),
+    );
+    expect(refreshLeaderboardSnapshotsForAccountMock).not.toHaveBeenCalled();
   });
 });

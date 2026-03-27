@@ -72,6 +72,7 @@ model Installation {
   accountLogin    String
   targetType      String?
   permissionsJson String?
+  syncSelectionUpdatedAt DateTime?
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
   repositories    Repository[]
@@ -113,6 +114,7 @@ model Repository {
   name           String
   defaultBranch  String
   isPrivate      Boolean
+  syncEnabled    Boolean            @default(true)
   installationId String
   installation   Installation       @relation(fields: [installationId], references: [id])
   pullRequests   PullRequest[]
@@ -184,18 +186,26 @@ model SyncCursor {
 
 model SyncJob {
   id             String       @id @default(cuid())
+  accountId      String?
   installationId String
   installation   Installation @relation(fields: [installationId], references: [id])
   scope          String
   status         String
+  leaseToken     String?
+  leaseExpiresAt DateTime?
+  attemptCount   Int          @default(0)
+  maxAttempts    Int          @default(3)
   startedAt      DateTime?
   finishedAt     DateTime?
   cursor         String?
   errorMessage   String?
+  resultJson     String?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
   @@index([installationId, scope, status])
+  @@index([accountId, scope, status, createdAt])
+  @@index([scope, status, leaseExpiresAt, createdAt])
 }
 
 model FriendConnection {
