@@ -1,5 +1,30 @@
 # Execution Plan
 
+## Issue #103 - Port GitHub auth and sessions to the Cloudflare worker
+
+- Issue: [#103](https://github.com/rudrakshbhandari/vibe-tracker/issues/103)
+- Branch: `rudrakshbhandari/cloudflare-worker-auth`
+- PR: [#104](https://github.com/rudrakshbhandari/vibe-tracker/pull/104)
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Create the follow-up issue, task branch, and project tracking entry
+- [x] Add Worker-native GitHub auth configuration and crypto/session helpers
+- [x] Implement Worker routes for GitHub connect, callback, and session reset
+- [x] Add verification coverage for the Worker auth/session flow
+- [x] Push branch and open PR
+
+### Verification
+
+- `npm run lint`
+- `npm test`
+- `npm run build`
+- `npm run cloudflare:typecheck`
+- `npm run cloudflare:test`
+
 ## Issue #101 - Migrate backend to Cloudflare Workers, Queues, and D1
 
 - Issue: [#101](https://github.com/rudrakshbhandari/vibe-tracker/issues/101)

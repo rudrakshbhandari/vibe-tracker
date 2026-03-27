@@ -5,6 +5,11 @@ import {
   recomputeLeaderboardScoresForAccount,
   runMaintenance,
 } from "@/jobs/leaderboard";
+import {
+  handleGitHubCallback,
+  handleGitHubConnect,
+  handleSessionReset,
+} from "@/routes/auth";
 import type { VibeWorkerEnv } from "@/env";
 import { json, parseJson, unauthorized } from "@/lib/http";
 
@@ -59,6 +64,18 @@ export default {
         ok: true,
         service: "vibe-tracker-cloudflare-worker",
       });
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/github/connect") {
+      return handleGitHubConnect(request, env);
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/github/callback") {
+      return handleGitHubCallback(request, env);
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/session/reset") {
+      return handleSessionReset(request, env);
     }
 
     if (request.method === "POST" && url.pathname === "/internal/maintenance/run") {
