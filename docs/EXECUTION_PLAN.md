@@ -4,8 +4,8 @@
 
 - Issue: [#98](https://github.com/rudrakshbhandari/vibe-tracker/issues/98)
 - Branch: `rudrakshbhandari/fix-social-invite-copy`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#99](https://github.com/rudrakshbhandari/vibe-tracker/pull/99)
+- Workflow: In Review
 - Priority: P2
 - App: multi
 
@@ -15,7 +15,7 @@
 - [x] Copy the absolute invite URL instead of the raw relative path
 - [x] Reduce duplicate raw invite-link rendering in the social UI
 - [x] Run lint, tests, and build
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
 
 ### Verification
 
