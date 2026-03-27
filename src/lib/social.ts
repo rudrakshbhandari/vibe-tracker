@@ -129,6 +129,69 @@ function getPublicInvitePath(token: string) {
   return `/social/invite/${token}`;
 }
 
+type PendingInviteRecord = {
+  id: string;
+  token: string;
+  expiresAt: Date;
+  createdAt: Date;
+};
+
+function serializePendingInvite(invite: PendingInviteRecord) {
+  return {
+    token: invite.token,
+    invitePath: getPublicInvitePath(invite.token),
+    createdAt: invite.createdAt.toISOString(),
+    expiresAt: invite.expiresAt.toISOString(),
+  };
+}
+
+async function getCanonicalPendingFriendInvite(accountId: string) {
+  const pendingInvites = await db.friendInvite.findMany({
+    where: {
+      inviterAccountId: accountId,
+      status: FriendInviteStatus.PENDING,
+      expiresAt: {
+        gt: new Date(),
+      },
+    },
+    orderBy: [
+      {
+        createdAt: "desc",
+      },
+      {
+        id: "desc",
+      },
+    ],
+    select: {
+      id: true,
+      token: true,
+      expiresAt: true,
+      createdAt: true,
+    },
+  });
+
+  if (pendingInvites.length === 0) {
+    return null;
+  }
+
+  const [canonicalInvite, ...staleInvites] = pendingInvites;
+
+  if (staleInvites.length > 0) {
+    await db.friendInvite.updateMany({
+      where: {
+        id: {
+          in: staleInvites.map((invite) => invite.id),
+        },
+      },
+      data: {
+        status: FriendInviteStatus.EXPIRED,
+      },
+    });
+  }
+
+  return canonicalInvite;
+}
+
 export function buildFriendPairKey(accountIdA: string, accountIdB: string) {
   return [accountIdA, accountIdB].sort().join(":");
 }
@@ -441,21 +504,13 @@ export async function refreshLeaderboardSnapshotsForAccount() {
 }
 
 export async function getSocialMe(accountId: string) {
-  const [identity, totals, trendDelta, friends, pendingInvites, globalRank] =
+  const [identity, totals, trendDelta, friends, pendingInvite, globalRank] =
     await Promise.all([
       getIdentity(accountId),
       getWindowTotals(accountId, DEFAULT_WINDOW),
       getTrendDelta(accountId, DEFAULT_WINDOW),
       buildFriendLeaderboardEntries(accountId, DEFAULT_WINDOW),
-      db.friendInvite.count({
-        where: {
-          inviterAccountId: accountId,
-          status: FriendInviteStatus.PENDING,
-          expiresAt: {
-            gt: new Date(),
-          },
-        },
-      }),
+      getCanonicalPendingFriendInvite(accountId),
       getGlobalRank(accountId, DEFAULT_WINDOW),
     ]);
 
@@ -481,7 +536,7 @@ export async function getSocialMe(accountId: string) {
     } satisfies SocialSettings,
     counts: {
       friendCount: Math.max(0, friends.length - 1),
-      pendingInviteCount: pendingInvites,
+      pendingInviteCount: pendingInvite ? 1 : 0,
     },
     score: {
       window: DEFAULT_WINDOW,
@@ -534,44 +589,34 @@ export async function updateSocialProfile(
 }
 
 export async function createFriendInvite(accountId: string) {
-  const token = randomBytes(18).toString("hex");
-  const invite = await db.friendInvite.create({
-    data: {
-      token,
-      inviterAccountId: accountId,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    },
-  });
+  let invite = await getCanonicalPendingFriendInvite(accountId);
 
-  await markSocialOnboarding(accountId);
-
-  return {
-    token: invite.token,
-    invitePath: getPublicInvitePath(invite.token),
-    expiresAt: invite.expiresAt.toISOString(),
-  };
-}
-
-export async function getSocialFriends(accountId: string, window: SocialWindow = DEFAULT_WINDOW) {
-  const [entries, pendingInvites] = await Promise.all([
-    buildFriendLeaderboardEntries(accountId, window),
-    db.friendInvite.findMany({
-      where: {
+  if (!invite) {
+    const token = randomBytes(18).toString("hex");
+    invite = await db.friendInvite.create({
+      data: {
+        token,
         inviterAccountId: accountId,
-        status: FriendInviteStatus.PENDING,
-        expiresAt: {
-          gt: new Date(),
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },
       select: {
+        id: true,
         token: true,
         expiresAt: true,
         createdAt: true,
       },
-    }),
+    });
+  }
+
+  await markSocialOnboarding(accountId);
+
+  return serializePendingInvite(invite);
+}
+
+export async function getSocialFriends(accountId: string, window: SocialWindow = DEFAULT_WINDOW) {
+  const [entries, pendingInvite] = await Promise.all([
+    buildFriendLeaderboardEntries(accountId, window),
+    getCanonicalPendingFriendInvite(accountId),
   ]);
 
   return {
@@ -591,12 +636,7 @@ export async function getSocialFriends(accountId: string, window: SocialWindow =
         trendDelta: entry.trendDelta,
         rank: entry.rank,
       }) satisfies FriendSummary),
-    pendingInvites: pendingInvites.map((invite) => ({
-      token: invite.token,
-      invitePath: getPublicInvitePath(invite.token),
-      createdAt: invite.createdAt.toISOString(),
-      expiresAt: invite.expiresAt.toISOString(),
-    })),
+    pendingInvites: pendingInvite ? [serializePendingInvite(pendingInvite)] : [],
   };
 }
 

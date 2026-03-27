@@ -1,5 +1,22 @@
 # Execution Plan
 
+## Issue #86 - Use a single reusable social invite link per user
+
+- Issue: [#86](https://github.com/rudrakshbhandari/vibe-tracker/issues/86)
+- Branch: `rudrakshbhandari/single-social-invite-link`
+- PR: Pending
+- Workflow: In Progress
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Confirm the social invite flow currently mints a new token on every click
+- [x] Reuse one active pending invite per user and expire duplicate active tokens
+- [x] Change the social action copy from create semantics to copy semantics
+- [x] Run lint, tests, and build
+- [ ] Push branch and open PR
+
 ## Issue #82 - Fix signed-in social hydration and mobile overflow
 
 - Issue: [#82](https://github.com/rudrakshbhandari/vibe-tracker/issues/82)
