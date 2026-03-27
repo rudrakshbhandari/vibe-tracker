@@ -4,7 +4,8 @@
 
 - Issue: [#95](https://github.com/rudrakshbhandari/vibe-tracker/issues/95)
 - Branch: `rudrakshbhandari/soften-launch-copy`
-- Workflow: In Progress
+- PR: [#96](https://github.com/rudrakshbhandari/vibe-tracker/pull/96)
+- Workflow: In Review
 - Priority: P2
 - App: multi
 
@@ -13,7 +14,13 @@
 - [x] Identify the copy that drifted into an overly assertive tone
 - [x] Rewrite the launch surfaces to sound more understated without changing layout
 - [x] Run lint, tests, and build
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
+
+### Verification
+
+- `npm run lint`
+- `npm test`
+- `npm run build`
 
 ## Issue #90 - Prevent malformed PR body formatting from agent workflows
 
