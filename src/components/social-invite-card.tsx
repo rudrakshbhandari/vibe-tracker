@@ -53,9 +53,9 @@ export function SocialInviteCard({
     <div className="dashboard-shell">
       <div className="space-y-3">
         <span className="eyebrow eyebrow-subtle">Social invite</span>
-        <h1 className="page-title">Join @{inviter.login}&apos;s circle.</h1>
+        <h1 className="page-title">Accept @{inviter.login}&apos;s invite.</h1>
         <p className="page-description">
-          {inviter.displayName ?? inviter.login} wants to compare shipped-work momentum with you. This link expires on {formatDateLabel(expiresAt)}.
+          {inviter.displayName ?? inviter.login} wants to compare shipped-work activity with you. This link expires on {formatDateLabel(expiresAt)}.
         </p>
       </div>
 
@@ -66,7 +66,7 @@ export function SocialInviteCard({
           onClick={() => void respond("accept")}
           disabled={submitting || status !== "PENDING"}
         >
-          Join circle
+          Accept invite
         </button>
         <button
           type="button"
@@ -84,7 +84,7 @@ export function SocialInviteCard({
       <p className="mt-4 text-sm text-muted">
         {message ??
           (status === "PENDING"
-            ? "Accept to create the friend link on both sides."
+            ? "Accept to create a mutual friend connection."
             : `This invite is ${status.toLowerCase()}.`)}
       </p>
     </div>

@@ -232,9 +232,9 @@ export function SocialShell({
         <div className="top-panel-copy">
           <span className="eyebrow">Social</span>
           <div className="space-y-3">
-            <h1 className="page-title">Bring your people into the readout.</h1>
+            <h1 className="page-title">Compare activity with friends.</h1>
             <p className="page-description">
-              Compare shipped-work momentum with friends. The public board is opt-out, and your profile controls live in Profile.
+              Compare shipped-work activity with friends. You can control public visibility anytime from Profile.
             </p>
           </div>
           <div className="hero-actions">
@@ -277,7 +277,7 @@ export function SocialShell({
           </div>
 
           <p className="hero-note">
-            Score only counts shipped work: merged additions, deletions, commit count, and how consistently you stayed active.
+            Score is based on shipped work: merged additions, deletions, commit count, and active periods.
           </p>
 
           {invitePath ? (
@@ -363,10 +363,10 @@ export function SocialShell({
             <div className="space-y-4">
               {friends.friends.length === 0 ? (
                 <div className="rounded-[1.75rem] border border-line bg-white/70 p-6">
-                  <p className="panel-label">No circle yet</p>
-                  <h3 className="panel-heading mt-2 text-3xl">Start with one invite.</h3>
+                  <p className="panel-label">No friends yet</p>
+                  <h3 className="panel-heading mt-2 text-3xl">Start with one invite link.</h3>
                   <p className="mt-3 max-w-xl text-sm leading-7 text-muted">
-                    This social layer is opt-in and trust-based. Share a link, let them connect GitHub, and your circle fills in automatically.
+                    Share an invite with a friend, let them connect GitHub, and your private leaderboard will update automatically.
                   </p>
                 </div>
               ) : (
@@ -418,7 +418,7 @@ export function SocialShell({
               </div>
               {friends.pendingInvites.length === 0 ? (
                 <p className="text-sm leading-7 text-muted">
-                  No live invite link right now. Copy one when you want to pull someone into your circle.
+                  No active invite link right now. Copy one when you want to add someone new.
                 </p>
               ) : (
                 friends.pendingInvites.map((invite) => (
@@ -451,7 +451,7 @@ export function SocialShell({
                 <h3 className="panel-heading mt-2 text-3xl">
                   {scope === "global"
                     ? "Nobody is public yet."
-                    : "Add friends to light up your circle board."}
+                    : "Add friends to see your friends leaderboard."}
                 </h3>
               </div>
             ) : (
@@ -507,7 +507,7 @@ export function SocialShell({
             <div className="space-y-4 rounded-[1.75rem] border border-line bg-white/70 p-6">
               <div>
                 <p className="panel-label">Visibility settings</p>
-                <h3 className="panel-heading mt-2 text-3xl">Tune your social footprint.</h3>
+                <h3 className="panel-heading mt-2 text-3xl">Control your visibility.</h3>
               </div>
 
               <label className="block text-sm font-semibold text-foreground">
@@ -561,7 +561,7 @@ export function SocialShell({
                 <h3 className="panel-heading mt-2 text-3xl">@{me.profile.login}</h3>
               </div>
               <p className="text-sm leading-7 text-muted">
-                {bio || "Add a one-line read on what kind of builder people are looking at."}
+                {bio || "Add a short line so people know who they are looking at."}
               </p>
               <div className="grid gap-3">
                 <div className="rounded-[1.5rem] border border-line bg-white/70 p-4">
