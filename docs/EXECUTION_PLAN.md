@@ -4,8 +4,8 @@
 
 - Issue: [#103](https://github.com/rudrakshbhandari/vibe-tracker/issues/103)
 - Branch: `rudrakshbhandari/cloudflare-worker-auth`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#104](https://github.com/rudrakshbhandari/vibe-tracker/pull/104)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -15,7 +15,7 @@
 - [x] Add Worker-native GitHub auth configuration and crypto/session helpers
 - [x] Implement Worker routes for GitHub connect, callback, and session reset
 - [x] Add verification coverage for the Worker auth/session flow
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
 
 ### Verification
 
