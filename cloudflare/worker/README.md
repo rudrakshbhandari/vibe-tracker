@@ -11,6 +11,7 @@ This directory contains the new Cloudflare-first backend scaffold for Vibe Track
 - Scheduled maintenance hook for stale sync jobs, expired invites, and rank rebuilds
 - Worker-native GitHub OAuth connect/callback handlers
 - Server-side D1 session storage plus cookie reset handling
+- GitHub App-backed installation metadata sync and repository activity queue consumers
 
 ## Expected bindings
 
@@ -20,9 +21,12 @@ The worker code expects these bindings at deploy time:
 - `APP_URL`
 - `GITHUB_APP_CLIENT_ID`
 - `GITHUB_APP_CLIENT_SECRET`
+- `GITHUB_APP_ID`
+- `GITHUB_APP_PRIVATE_KEY`
 - `GITHUB_APP_SLUG`
 - `MAINTENANCE_TOKEN`: bearer token for manual maintenance endpoints
 - `SESSION_ENCRYPTION_KEY`
+- `SYNC_QUEUE`: Queue producer binding used to fan out installation and repository sync work
 
 ## Current endpoints
 
