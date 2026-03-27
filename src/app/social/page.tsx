@@ -29,11 +29,11 @@ export default async function SocialPage({ searchParams }: SocialPageProps) {
             <div className="top-panel-copy">
               <span className="eyebrow">Social</span>
               <div className="space-y-3">
-                <h1 className="page-title">Connect GitHub before you compare.</h1>
+                <h1 className="page-title">Connect GitHub before you rank the vibe.</h1>
                 <p className="page-description">
-                  Social features run on the same synced GitHub activity as your
-                  personal dashboard. Sign in first—you&apos;re on the public
-                  leaderboard by default, opt out anytime in Profile.
+                  Social runs on the same synced GitHub activity as your personal readout.
+                  Sign in first. You&apos;re public on the global board by default, and
+                  you can switch that off anytime in Profile.
                 </p>
               </div>
               <div className="hero-actions">
@@ -50,16 +50,15 @@ export default async function SocialPage({ searchParams }: SocialPageProps) {
               <div className="social-preview-stack">
                 <div className="social-preview-badge">
                   <Sparkles className="h-4 w-4" aria-hidden />
-                  Private by profile, public by leaderboard
+                  Private profile, optional leaderboard
                 </div>
                 <div className="space-y-3">
                   <p className="social-preview-kicker">What unlocks after sign-in</p>
                   <h2 className="social-preview-title">
-                    A friend graph built from shipped work, not vanity metrics.
+                    A social layer built on shipped work, not vanity metrics.
                   </h2>
                   <p className="social-preview-copy">
-                    Invite collaborators, compare momentum over rolling windows,
-                    and control what shows up on your public profile.
+                    Add collaborators, compare momentum across rolling windows, and choose exactly what the public gets to see.
                   </p>
                 </div>
               </div>
@@ -67,7 +66,7 @@ export default async function SocialPage({ searchParams }: SocialPageProps) {
                 <article className="social-preview-card">
                   <Users className="h-4 w-4" aria-hidden />
                   <div>
-                    <p className="social-preview-label">Friends leaderboard</p>
+                    <p className="social-preview-label">Friends board</p>
                     <p className="social-preview-detail">
                       See who is shipping steadily across the last 7, 30, or 90 days.
                     </p>
@@ -76,9 +75,9 @@ export default async function SocialPage({ searchParams }: SocialPageProps) {
                 <article className="social-preview-card">
                   <ArrowUpRight className="h-4 w-4" aria-hidden />
                   <div>
-                    <p className="social-preview-label">Trend delta</p>
+                    <p className="social-preview-label">Momentum shifts</p>
                     <p className="social-preview-detail">
-                      Compare momentum, not just totals, so streaks and slowdowns stand out.
+                      Compare momentum, not just totals, so surges and slowdowns actually stand out.
                     </p>
                   </div>
                 </article>
@@ -87,7 +86,7 @@ export default async function SocialPage({ searchParams }: SocialPageProps) {
                   <div>
                     <p className="social-preview-label">Visibility controls</p>
                     <p className="social-preview-detail">
-                      Opt out of the public board anytime and keep your profile locked down.
+                      Step off the public board whenever you want and keep your profile locked down.
                     </p>
                   </div>
                 </article>

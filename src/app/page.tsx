@@ -15,70 +15,70 @@ type HomePageProps = {
 
 const GITHUB_STATUS_COPY: Record<string, { label: string; detail?: string }> = {
   "activity-sync-started": {
-    label: "Activity sync started",
+    label: "Fresh vibe pull started",
     detail:
-      "The dashboard will refresh automatically while your activity is being pulled in.",
+      "The dashboard will refresh automatically while your latest shipped work is being pulled in.",
   },
   "activity-sync-running": {
-    label: "Activity sync is already running",
+    label: "Fresh vibe pull already running",
     detail:
-      "A sync is already in progress. The dashboard will refresh automatically; no extra clicks are needed.",
+      "A sync is already in flight. The dashboard will refresh automatically when the new numbers land.",
   },
   "activity-sync-completed": {
-    label: "Activity sync completed",
+    label: "Fresh vibe pull finished",
     detail:
-      "Shipped-work totals were refreshed. If the dashboard still looks empty, the selected scope may not contain merged PRs in the current time window.",
+      "Your shipped-work totals were refreshed. If the dashboard still looks empty, this time window may not contain merged PRs.",
   },
   connected: {
-    label: "GitHub connected",
+    label: "GitHub is connected",
   },
   "installation-connected": {
-    label: "Installation connected",
+    label: "Repository access granted",
     detail:
-      "Repository access is available now. Run a shipped-work sync to load your coding totals.",
+      "Your repo scope is live now. Run a sync to turn that access into actual numbers.",
   },
   "invalid-installation": {
-    label: "Installation could not be resolved",
+    label: "That installation could not be resolved",
   },
   "invalid-state": {
-    label: "OAuth state mismatch",
+    label: "GitHub lost the auth handshake",
     detail:
-      "GitHub returned to the app without a valid auth state. Start the connection flow again in the same tab.",
+      "GitHub returned without a valid auth state. Restart the connect flow in the same tab.",
   },
   "missing-code": {
-    label: "GitHub did not return an auth code",
+    label: "GitHub came back without an auth code",
   },
   "missing-config": {
-    label: "GitHub integration is not configured",
+    label: "GitHub is not configured here",
   },
   "not-connected": {
-    label: "GitHub account is not connected",
+    label: "GitHub is not connected",
   },
   "oauth-account-failed": {
     label: "GitHub connected, but account setup failed",
     detail:
-      "GitHub connected, but the app could not finish storing your account data. If this keeps happening, reset the session and try again.",
+      "GitHub connected, but the app could not finish saving your account details. If it keeps happening, reset the session and try again.",
   },
   "oauth-installations-failed": {
-    label: "GitHub connected, but installations could not be loaded",
+    label: "GitHub connected, but repo access could not be loaded",
     detail:
-      "The GitHub login worked, but installation access could not be read yet.",
+      "GitHub sign-in worked, but the installation scope could not be read yet.",
   },
   "oauth-session-failed": {
     label: "GitHub connected, but the session could not be stored",
     detail:
-      "GitHub connected, but the app could not complete sign-in. Please try again.",
+      "GitHub connected, but the app could not finish sign-in. Try again.",
   },
   "oauth-token-failed": {
     label: "GitHub token exchange failed",
-    detail: "GitHub sign-in did not complete successfully. Please try again.",
+    detail: "GitHub sign-in did not finish cleanly. Try again.",
   },
   "oauth-user-failed": {
-    label: "GitHub token worked, but user lookup failed",
-    detail: "GitHub authenticated the app, but user profile lookup failed.",
+    label: "GitHub authenticated, but user lookup failed",
+    detail: "GitHub accepted the app, but user profile lookup did not complete.",
   },
   "repositories-refreshed": {
-    label: "Repositories refreshed",
+    label: "Repository scope refreshed",
   },
   "session-reset": {
     label: "Session reset",
@@ -86,40 +86,40 @@ const GITHUB_STATUS_COPY: Record<string, { label: string; detail?: string }> = {
   },
   "sync-failed": {
     label: "Sync failed",
-    detail: "The app could not complete your activity sync. Please try again.",
+    detail: "The app could not pull your latest activity. Try again.",
   },
 };
 
 const CONNECT_STEPS = [
   {
-    title: "Connect your GitHub account",
-    detail: "Sign in once so the dashboard knows which merged pull requests belong to you.",
+    title: "Connect GitHub",
+    detail: "Sign in once so the product knows which merged pull requests are yours.",
   },
   {
-    title: "Grant repository access",
-    detail: "Install the GitHub App on the user or organization you want included.",
+    title: "Choose the repo scope",
+    detail: "Install the GitHub App on the user or organization you want counted.",
   },
   {
-    title: "Run the first sync",
-    detail: "Pull merged PR counts and line stats into the local database so the totals become real.",
+    title: "Pull the first snapshot",
+    detail: "Sync merged PR activity so the dashboard stops guessing and starts measuring.",
   },
 ];
 
 const TRUST_ITEMS = [
   {
-    title: "Reads metric inputs, not repo files",
+    title: "Measures shipped work, not your source code",
     detail:
-      "The current sync reads repository scope plus merged pull request stats needed for shipped-work analytics.",
+      "The sync reads repository scope and merged PR stats. It does not pull repository files into the app.",
   },
   {
-    title: "Stores less than before",
+    title: "Keeps only what the product needs",
     detail:
-      "GitHub session tokens are stored encrypted, and the dashboard no longer needs PR titles or branch names in the database.",
+      "GitHub tokens stay encrypted, and the database stores lightweight activity data instead of a bunch of repo context.",
   },
   {
-    title: "Makes the permission model explicit",
+    title: "Shows the access model before the click",
     detail:
-      "Users can inspect the privacy page before connecting GitHub instead of guessing what the app can access.",
+      "You can read the privacy breakdown before connecting GitHub instead of guessing what the product can touch.",
   },
 ];
 
@@ -297,8 +297,8 @@ function RepoSection({
       <section className="story-panel">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="panel-label">Repository pressure</p>
-            <h3 className="panel-heading">Where the work landed</h3>
+            <p className="panel-label">Repository readout</p>
+            <h3 className="panel-heading">Where the work actually landed</h3>
           </div>
           <span className="dashboard-pill">{repositories.length} repos</span>
         </div>
@@ -335,9 +335,9 @@ function RepoSection({
             })
           ) : (
             <article className="repo-card">
-              <h3 className="text-lg font-semibold text-foreground">No synced repositories yet</h3>
+              <h3 className="text-lg font-semibold text-foreground">No repos in the readout yet</h3>
               <p className="mt-2 text-sm leading-6 text-muted">
-                Install the GitHub App, then run the first sync to populate repository metrics.
+                Install the GitHub App, then run a sync to turn repository activity into visible metrics.
               </p>
             </article>
           )}
@@ -347,11 +347,11 @@ function RepoSection({
       <aside className="sidebar-panel">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="panel-label">Connected scope</p>
+            <p className="panel-label">Measured scope</p>
             <h3 className="panel-heading">
               {hasInstallations
                 ? `${installations.length} GitHub App installation${installations.length === 1 ? "" : "s"}`
-                : "No installation yet"}
+                : "No repo scope yet"}
             </h3>
           </div>
           {connected ? (
@@ -363,8 +363,8 @@ function RepoSection({
 
         <p className="scope-summary">
           {hasInstallations
-            ? `${formatNumber(accessibleRepositoryCount)} repositories are available in the current scope.`
-            : "Install the GitHub App on the account you want to measure to unlock repository-level metrics."}
+            ? `${formatNumber(accessibleRepositoryCount)} repositories are in the current readout scope.`
+            : "Install the GitHub App on the account you want measured to unlock repository-level visibility."}
         </p>
 
         {hasInstallations ? (
@@ -374,7 +374,7 @@ function RepoSection({
                 <div className="scope-item-head">
                   <div>
                     <p className="scope-item-title">
-                      {installations.length === 1 ? "Primary scope" : installation.accountLogin}
+                      {installations.length === 1 ? "Main scope" : installation.accountLogin}
                     </p>
                     <p className="scope-item-meta">{installation.repositoryCount} cached repos</p>
                   </div>
@@ -393,7 +393,7 @@ function RepoSection({
                     ? installation.repositoryNames.join(", ")
                     : index === 0
                       ? "Repository names will appear here after the next refresh."
-                      : "No repositories cached yet for this scope."}
+                      : "No repositories are cached yet for this scope."}
                 </p>
               </article>
             ))}
@@ -413,16 +413,15 @@ function TrustSection() {
     <section className="story-panel">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-2xl">
-          <p className="panel-label">Launch trust</p>
-          <h3 className="panel-heading">What the app reads and what it does not</h3>
+          <p className="panel-label">Why this is safe</p>
+          <h3 className="panel-heading">What the app reads, keeps, and leaves alone</h3>
           <p className="mt-3 text-sm leading-6 text-muted sm:text-base">
-            Users are right to be skeptical. The product needs a plain-English data story before
-            asking for GitHub access.
+            If a product asks for GitHub access, the terms should be plain before the click, not buried after it.
           </p>
         </div>
 
         <Link href="/privacy" className="button-secondary w-full sm:w-auto">
-          Read privacy breakdown
+          Read privacy model
           <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
@@ -447,7 +446,7 @@ function TrustSection() {
 const FALLBACK_GITHUB_STATE = {
   connected: false,
   title: "Something went wrong",
-  description: "We could not load your connection state. Please try again.",
+  description: "We could not load your GitHub connection state. Please try again.",
   primaryAction: { label: "Reconnect GitHub", href: "/api/github/connect" },
   viewer: null,
   activitySync: null,
@@ -536,8 +535,7 @@ export default async function Home({ searchParams }: HomePageProps) {
             <div className="space-y-3">
               <h1 className="page-title">Everyone is vibe coding, but how much?</h1>
               <p className="page-description">
-                Track shipped work, recent trend, and repository impact without
-                dragging the whole branch graph into storage.
+                Measure shipped work, recent momentum, and repo-level impact without pretending raw commit spam means anything.
               </p>
             </div>
           </div>
@@ -545,17 +543,17 @@ export default async function Home({ searchParams }: HomePageProps) {
           <div className="top-panel-meta">
             <div className="meta-stack">
               <div className="meta-row">
-                <span className="hero-meta-label">Connection</span>
+                <span className="hero-meta-label">GitHub</span>
                 <span className="hero-meta-value">
                   {githubState.connected ? "GitHub connected" : "Not connected"}
                 </span>
               </div>
               <div className="meta-row">
-                <span className="hero-meta-label">Latest sync</span>
+                <span className="hero-meta-label">Last pull</span>
                 <span className="hero-meta-value">{connectionSummary}</span>
               </div>
               <div className="meta-row">
-                <span className="hero-meta-label">Connected repositories</span>
+                <span className="hero-meta-label">Repos in scope</span>
                 <span className="hero-meta-value">
                   {formatNumber(accessibleRepositoryCount)}
                 </span>
@@ -563,21 +561,20 @@ export default async function Home({ searchParams }: HomePageProps) {
             </div>
 
             <p className="hero-note">
-              Repository access is cached locally. Activity sync refreshes merged pull request
-              totals when you need a fresh snapshot without cloning repository code into the app.
+              Repo access stays scoped to the sync model. When you want a fresh read, pull merged PR activity without dragging source code into the product.
             </p>
 
             <div className="hero-actions">
-              <ConnectionAction href="/privacy" label="Read privacy breakdown" tone="secondary" />
+              <ConnectionAction href="/privacy" label="Read privacy model" tone="secondary" />
               {!githubState.connected && githubState.primaryAction ? (
                 <>
                   <ConnectionAction
                     href={githubState.primaryAction.href}
-                    label={githubState.primaryAction.label}
+                    label={githubState.primaryAction.label === "Connect GitHub" ? "Start with GitHub" : githubState.primaryAction.label}
                   />
                   <ConnectionAction
                     href="/api/session/reset"
-                    label="Reset Session"
+                    label="Reset session"
                     tone="secondary"
                   />
                 </>
@@ -594,7 +591,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                     className="button-secondary w-full sm:w-auto"
                     disabled={githubState.activitySyncRunning}
                   >
-                    {githubState.activitySyncRunning ? "Syncing" : "Run shipped-work sync"}
+                    {githubState.activitySyncRunning ? "Pulling..." : "Pull fresh vibe data"}
                   </button>
                 </form>
               ) : null}
@@ -637,8 +634,8 @@ export default async function Home({ searchParams }: HomePageProps) {
                     <h2 className="dashboard-title">{dashboard.profile.login}</h2>
                     <p className="max-w-2xl text-sm leading-7 text-muted sm:text-base">
                       {dashboard.profile.source === "live"
-                        ? "These numbers come from synced merged pull request stats and daily shipped-work aggregates stored in the local database."
-                        : "This is sample data that mirrors the shape of the live shipped-work metrics once GitHub activity has been synced."}
+                        ? "These numbers come from synced merged PR stats and daily shipped-work aggregates stored locally."
+                        : "This is sample data that mirrors the live view once GitHub activity has been synced."}
                     </p>
                   </div>
                 </div>
@@ -675,7 +672,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="panel-label">{dashboard.chartTitle}</p>
-                  <h3 className="panel-heading">Activity by time bucket</h3>
+                  <h3 className="panel-heading">When the vibe actually landed</h3>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="legend-pill">
@@ -715,7 +712,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                 </div>
               ) : (
                 <div className="mt-6 rounded-[1.4rem] border border-line bg-white/70 px-4 py-6 text-sm text-muted">
-                  No timeline data available yet.
+                  No activity buckets yet.
                 </div>
               )}
             </section>
@@ -735,11 +732,10 @@ export default async function Home({ searchParams }: HomePageProps) {
               <div className="space-y-4">
                 <span className="eyebrow eyebrow-subtle">Not connected</span>
                 <h2 className="dashboard-title max-w-3xl">
-                  No GitHub, no signal.
+                  No GitHub, no readout.
                 </h2>
                 <p className="max-w-2xl text-sm leading-7 text-muted sm:text-base">
-                  This dashboard only shows synced GitHub activity. Until the account is connected
-                  and the first sync completes, there is nothing meaningful to read.
+                  This product only measures synced GitHub activity. Until the account is connected and the first pull finishes, there is no real signal to read.
                 </p>
               </div>
 
@@ -759,14 +755,14 @@ export default async function Home({ searchParams }: HomePageProps) {
                 <p className="mt-3 text-sm leading-6 text-muted">{githubState.description}</p>
                 {githubState.primaryAction ? (
                   <div className="mt-5 flex flex-wrap gap-3">
-                    <ConnectionAction href="/privacy" label="Read privacy breakdown" tone="secondary" />
+                    <ConnectionAction href="/privacy" label="Read privacy model" tone="secondary" />
                     <ConnectionAction
                       href={githubState.primaryAction.href}
-                      label={githubState.primaryAction.label}
+                      label={githubState.primaryAction.label === "Connect GitHub" ? "Start with GitHub" : githubState.primaryAction.label}
                     />
                     <ConnectionAction
                       href="/api/session/reset"
-                      label="Reset Session"
+                      label="Reset session"
                       tone="secondary"
                     />
                   </div>

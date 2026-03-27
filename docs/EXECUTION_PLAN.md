@@ -1,5 +1,20 @@
 # Execution Plan
 
+## Issue #88 - Rewrite product copy to match launch tone
+
+- Issue: [#88](https://github.com/rudrakshbhandari/vibe-tracker/issues/88)
+- Branch: `rudrakshbhandari/rewrite-project-copy`
+- Workflow: In Progress
+- Priority: P2
+- App: multi
+
+### Checklist
+
+- [x] Audit the homepage, social, invite, profile, and privacy copy surfaces
+- [x] Rewrite the product copy without changing layout or styling
+- [x] Run lint, tests, and build
+- [ ] Push branch and open PR
+
 ## Issue #86 - Use a single reusable social invite link per user
 
 - Issue: [#86](https://github.com/rudrakshbhandari/vibe-tracker/issues/86)
