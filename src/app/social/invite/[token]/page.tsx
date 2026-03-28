@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { SocialInviteCard } from "@/components/social-invite-card";
 import { fetchCloudflareReadJson, hasCloudflareWorkerProxy } from "@/lib/cloudflare-read";
+import { getLinkPrefetch } from "@/lib/link-prefetch";
 
 type SocialInvitePayload = {
   token: string;
@@ -47,7 +48,14 @@ export default async function SocialInvitePage({ params }: InvitePageProps) {
           expiresAt={invite.expiresAt}
         />
         <div className="text-sm text-muted">
-          Need GitHub first? <Link href="/api/github/connect" className="underline">Connect now</Link>
+          Need to connect first?{" "}
+          <Link
+            href="/api/github/connect"
+            prefetch={getLinkPrefetch("/api/github/connect")}
+            className="underline"
+          >
+            Continue with GitHub
+          </Link>
         </div>
       </div>
     </main>
