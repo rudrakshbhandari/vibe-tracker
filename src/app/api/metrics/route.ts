@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 import {
   fetchCloudflareReadJson,
-  hasCloudflareReadProxy,
+  hasCloudflareWorkerProxy,
 } from "@/lib/cloudflare-read";
-import { getMetricsResponseAsync, metricsQuerySchema } from "@/lib/metrics";
-import { getOptionalUserSession } from "@/lib/session";
+import { metricsQuerySchema } from "@/lib/metrics";
 
 export async function GET(request: NextRequest) {
   const parseResult = metricsQuerySchema.safeParse({
@@ -23,14 +22,12 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const session = await getOptionalUserSession();
-  if (hasCloudflareReadProxy() && session) {
+  if (hasCloudflareWorkerProxy()) {
     const proxied = await fetchCloudflareReadJson(
       `/api/metrics?${new URLSearchParams({
         view: parseResult.data.view,
         mode: parseResult.data.mode,
       }).toString()}`,
-      { accountId: session.accountId },
     );
 
     if (proxied) {
@@ -38,5 +35,8 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.json(await getMetricsResponseAsync(parseResult.data));
+  return NextResponse.json(
+    { error: "Cloudflare metrics backend is unavailable" },
+    { status: 503 },
+  );
 }

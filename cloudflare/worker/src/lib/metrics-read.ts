@@ -142,6 +142,10 @@ export async function getMetricsResponse(
   if (trackedRepoCount === 0) {
     return {
       user: `@${profile.login}`,
+      profile: {
+        login: `@${profile.login}`,
+        source: "live" as const,
+      },
       view,
       mode: "shipped",
       generatedAt: new Date().toISOString(),
@@ -270,6 +274,10 @@ export async function getMetricsResponse(
 
   return {
     user: `@${profile.login}`,
+    profile: {
+      login: `@${profile.login}`,
+      source: "live" as const,
+    },
     view,
     mode: "shipped",
     generatedAt: new Date().toISOString(),

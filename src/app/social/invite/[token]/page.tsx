@@ -2,7 +2,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { SocialInviteCard } from "@/components/social-invite-card";
-import { getFriendInviteDetails } from "@/lib/social";
+import { fetchCloudflareReadJson, hasCloudflareWorkerProxy } from "@/lib/cloudflare-read";
+
+type SocialInvitePayload = {
+  token: string;
+  status: string;
+  expiresAt: string;
+  inviter: {
+    id: string;
+    login: string;
+    displayName: string | null;
+  };
+};
 
 type InvitePageProps = {
   params: Promise<{
@@ -12,7 +23,11 @@ type InvitePageProps = {
 
 export default async function SocialInvitePage({ params }: InvitePageProps) {
   const { token } = await params;
-  const invite = await getFriendInviteDetails(token);
+  const invite = hasCloudflareWorkerProxy()
+    ? await fetchCloudflareReadJson<SocialInvitePayload>(
+        `/api/social/invite/${encodeURIComponent(token)}`,
+      )
+    : null;
 
   if (!invite) {
     notFound();

@@ -1,5 +1,31 @@
 # Execution Plan
 
+## Issue #109 - Complete Cloudflare migration by cutting over auth, sync controls, and social writes
+
+- Issue: [#109](https://github.com/rudrakshbhandari/vibe-tracker/issues/109)
+- Branch: `rudrakshbhandari/cloudflare-final-cutover`
+- PR: [#110](https://github.com/rudrakshbhandari/vibe-tracker/pull/110)
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Create the follow-up issue, task branch, and project tracking entry
+- [x] Add worker-backed GitHub connection/control endpoints for install, setup, scope, sync, and connection state
+- [x] Add worker-backed social mutation and invite-detail endpoints
+- [x] Add a same-origin Next proxy for worker auth/control/write flows, including cookie and redirect forwarding
+- [x] Remove browser-polled sync processing from the active runtime path and switch the remaining SSR/API reads off Prisma session lookups
+- [x] Run verification, push branch, and open PR
+
+### Verification
+
+- `npm run lint`
+- `npm test`
+- `npm run build`
+- `npm run cloudflare:typecheck`
+- `npm run cloudflare:test`
+
 ## Issue #107 - Cut dashboard and social read paths over to the Cloudflare worker
 
 - Issue: [#107](https://github.com/rudrakshbhandari/vibe-tracker/issues/107)

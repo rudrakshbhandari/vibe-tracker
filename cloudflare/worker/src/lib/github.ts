@@ -346,6 +346,39 @@ export async function exchangeCodeForUserToken(env: VibeWorkerEnv, code: string)
   return payload;
 }
 
+export async function refreshUserToken(env: VibeWorkerEnv, refreshToken: string) {
+  const config = getGitHubAuthEnv(env);
+  const response = await fetch("https://github.com/login/oauth/access_token", {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      client_id: config.GITHUB_APP_CLIENT_ID,
+      client_secret: config.GITHUB_APP_CLIENT_SECRET,
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`GitHub token refresh failed with ${response.status}`);
+  }
+
+  const payload = (await response.json()) as GitHubUserTokenResponse;
+
+  if (!payload.access_token) {
+    throw new Error(
+      payload.error_description ??
+        payload.error ??
+        "GitHub did not return a refreshed access token",
+    );
+  }
+
+  return payload;
+}
+
 export function getViewer(accessToken: string) {
   return githubRequest<GitHubViewer>("/user", accessToken);
 }

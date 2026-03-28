@@ -1,8 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-import { clearUserSession } from "@/lib/session";
+import { proxyCloudflareRequest } from "@/lib/cloudflare-read";
 
 export async function GET(request: NextRequest) {
-  await clearUserSession();
-  return NextResponse.redirect(new URL("/?github=session-reset", request.url));
+  return proxyCloudflareRequest(request, "/api/session/reset");
 }

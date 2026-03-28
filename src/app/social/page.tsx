@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react";
 import Link from "next/link";
 import { ArrowUpRight, ShieldCheck, Sparkles, Users } from "lucide-react";
 
@@ -5,26 +6,21 @@ import { SocialShell } from "@/components/social-shell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
   fetchCloudflareReadJson,
-  hasCloudflareReadProxy,
+  hasCloudflareSessionCookie,
+  hasCloudflareWorkerProxy,
 } from "@/lib/cloudflare-read";
-import { getOptionalUserSession } from "@/lib/session";
-import {
-  getSocialFriends,
-  getSocialLeaderboard,
-  getSocialMe,
-  socialScopeSchema,
-  socialTabSchema,
-  socialWindowSchema,
-} from "@/lib/social";
+import { socialScopeSchema, socialTabSchema, socialWindowSchema } from "@/lib/social";
 
 type SocialPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default async function SocialPage({ searchParams }: SocialPageProps) {
-  const session = await getOptionalUserSession();
+type SocialShellProps = ComponentProps<typeof SocialShell>;
 
-  if (!session) {
+export default async function SocialPage({ searchParams }: SocialPageProps) {
+  const hasSession = await hasCloudflareSessionCookie();
+
+  if (!hasSession || !hasCloudflareWorkerProxy()) {
     return (
       <main className="page-shell min-h-screen">
         <div className="page-wash" />
@@ -113,40 +109,55 @@ export default async function SocialPage({ searchParams }: SocialPageProps) {
     ? (params.window as "7d" | "30d" | "90d")
     : "30d";
 
-  const workerPayloads = hasCloudflareReadProxy()
+  const workerPayloads: [
+    SocialShellProps["initialMe"] | null,
+    SocialShellProps["initialFriends"] | null,
+    SocialShellProps["initialLeaderboard"] | null,
+  ] = hasCloudflareWorkerProxy()
     ? await Promise.all([
-        fetchCloudflareReadJson<Awaited<ReturnType<typeof getSocialMe>>>(
-          "/api/social/me",
-          {
-            accountId: session.accountId,
-          },
-        ),
-        fetchCloudflareReadJson<Awaited<ReturnType<typeof getSocialFriends>>>(
+        fetchCloudflareReadJson<SocialShellProps["initialMe"]>("/api/social/me"),
+        fetchCloudflareReadJson(
           `/api/social/friends?${new URLSearchParams({
             window: initialWindow,
           }).toString()}`,
-          {
-            accountId: session.accountId,
-          },
-        ),
-        fetchCloudflareReadJson<Awaited<ReturnType<typeof getSocialLeaderboard>>>(
+        ) as Promise<SocialShellProps["initialFriends"] | null>,
+        fetchCloudflareReadJson(
           `/api/social/leaderboard?${new URLSearchParams({
             scope: initialScope,
             window: initialWindow,
           }).toString()}`,
-          {
-            accountId: session.accountId,
-          },
-        ),
+        ) as Promise<SocialShellProps["initialLeaderboard"] | null>,
       ])
     : [null, null, null];
 
-  const [me, friends, leaderboard] = await Promise.all([
-    workerPayloads[0] ?? getSocialMe(session.accountId),
-    workerPayloads[1] ?? getSocialFriends(session.accountId, initialWindow),
-    workerPayloads[2] ??
-      getSocialLeaderboard(session.accountId, initialScope, initialWindow),
-  ]);
+  const [me, friends, leaderboard] = workerPayloads;
+
+  if (!me || !friends || !leaderboard) {
+    return (
+      <main className="page-shell min-h-screen">
+        <div className="page-wash" />
+        <div className="relative mx-auto flex w-full max-w-[1320px] flex-col gap-5 px-4 py-5 sm:px-6 sm:py-8 lg:px-10 lg:py-10">
+          <section className="top-panel">
+            <div className="top-panel-copy">
+              <span className="eyebrow">Social</span>
+              <div className="space-y-3">
+                <h1 className="page-title">Social is temporarily unavailable.</h1>
+                <p className="page-description">
+                  The Cloudflare social backend did not respond. Refresh the page after the worker is available again.
+                </p>
+              </div>
+              <div className="hero-actions">
+                <Link href="/" className="button-secondary">
+                  Back home
+                </Link>
+                <ThemeToggle />
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="page-shell min-h-screen">

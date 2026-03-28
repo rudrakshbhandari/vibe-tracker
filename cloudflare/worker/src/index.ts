@@ -11,6 +11,18 @@ import {
   handleSessionReset,
 } from "@/routes/auth";
 import {
+  handleGitHubActivitySync,
+  handleGitHubInstall,
+  handleGitHubInstallationScope,
+  handleGitHubInstallationSync,
+  handleGitHubSetup,
+  handleGitHubState,
+  handleSocialFriendInviteCreate,
+  handleSocialFriendInviteRespond,
+  handleSocialInviteRead,
+  handleSocialProfileUpdate,
+} from "@/routes/control";
+import {
   handleMetricsRead,
   handleSocialFriendsRead,
   handleSocialLeaderboardRead,
@@ -77,12 +89,50 @@ export default {
       return handleGitHubConnect(request, env);
     }
 
+    if (request.method === "GET" && url.pathname === "/api/github/install") {
+      return handleGitHubInstall(request, env);
+    }
+
     if (request.method === "GET" && url.pathname === "/api/github/callback") {
       return handleGitHubCallback(request, env);
     }
 
+    if (request.method === "GET" && url.pathname === "/api/github/setup") {
+      return handleGitHubSetup(request, env);
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/github/state") {
+      return handleGitHubState(request, env);
+    }
+
     if (request.method === "GET" && url.pathname === "/api/session/reset") {
       return handleSessionReset(request, env);
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/github/activity-sync") {
+      return handleGitHubActivitySync(request, env);
+    }
+
+    if (
+      request.method === "POST" &&
+      /\/api\/github\/installations\/\d+\/scope$/.test(url.pathname)
+    ) {
+      const githubInstallationId = Number.parseInt(
+        url.pathname.split("/").at(-2) ?? "",
+        10,
+      );
+      return handleGitHubInstallationScope(request, env, githubInstallationId);
+    }
+
+    if (
+      request.method === "POST" &&
+      /\/api\/github\/installations\/\d+\/sync$/.test(url.pathname)
+    ) {
+      const githubInstallationId = Number.parseInt(
+        url.pathname.split("/").at(-2) ?? "",
+        10,
+      );
+      return handleGitHubInstallationSync(request, env, githubInstallationId);
     }
 
     if (request.method === "GET" && url.pathname === "/api/metrics") {
@@ -109,6 +159,34 @@ export default {
         url.pathname.replace("/api/social/profile/", ""),
       );
       return handleSocialProfileRead(request, env, login);
+    }
+
+    if (request.method === "PATCH" && url.pathname === "/api/social/profile") {
+      return handleSocialProfileUpdate(request, env);
+    }
+
+    if (
+      request.method === "POST" &&
+      url.pathname === "/api/social/friends/invite"
+    ) {
+      return handleSocialFriendInviteCreate(request, env);
+    }
+
+    if (
+      request.method === "POST" &&
+      url.pathname === "/api/social/friends/respond"
+    ) {
+      return handleSocialFriendInviteRespond(request, env);
+    }
+
+    if (
+      request.method === "GET" &&
+      url.pathname.startsWith("/api/social/invite/")
+    ) {
+      const token = decodeURIComponent(
+        url.pathname.replace("/api/social/invite/", ""),
+      );
+      return handleSocialInviteRead(env, token);
     }
 
     if (request.method === "POST" && url.pathname === "/internal/maintenance/run") {
