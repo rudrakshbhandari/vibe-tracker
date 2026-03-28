@@ -14,24 +14,29 @@ if (process.env.NODE_ENV !== "production") {
   global.prisma = db;
 }
 
-let hostedRepositorySchemaPromise: Promise<void> | null = null;
+let hostedSchemaCompatibilityPromise: Promise<void> | null = null;
 
-export async function ensureHostedRepositorySchema() {
+export async function ensureHostedSchemaCompatibility() {
   if (!hasDurableDatabaseUrl()) {
     return;
   }
 
-  if (!hostedRepositorySchemaPromise) {
-    hostedRepositorySchemaPromise = db
-      .$executeRawUnsafe(
-        'ALTER TABLE "Repository" ADD COLUMN IF NOT EXISTS "syncEnabled" BOOLEAN NOT NULL DEFAULT true',
-      )
+  if (!hostedSchemaCompatibilityPromise) {
+    hostedSchemaCompatibilityPromise = db
+      .$transaction([
+        db.$executeRawUnsafe(
+          'ALTER TABLE "Repository" ADD COLUMN IF NOT EXISTS "syncEnabled" BOOLEAN NOT NULL DEFAULT true',
+        ),
+        db.$executeRawUnsafe(
+          'ALTER TABLE "Installation" ADD COLUMN IF NOT EXISTS "syncSelectionUpdatedAt" TIMESTAMP(3)',
+        ),
+      ])
       .then(() => undefined)
       .catch((error) => {
-        hostedRepositorySchemaPromise = null;
+        hostedSchemaCompatibilityPromise = null;
         throw error;
       });
   }
 
-  await hostedRepositorySchemaPromise;
+  await hostedSchemaCompatibilityPromise;
 }
