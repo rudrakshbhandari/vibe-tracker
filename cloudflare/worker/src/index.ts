@@ -10,6 +10,13 @@ import {
   handleGitHubConnect,
   handleSessionReset,
 } from "@/routes/auth";
+import {
+  handleMetricsRead,
+  handleSocialFriendsRead,
+  handleSocialLeaderboardRead,
+  handleSocialMeRead,
+  handleSocialProfileRead,
+} from "@/routes/read";
 import type { VibeWorkerEnv } from "@/env";
 import { json, parseJson, unauthorized } from "@/lib/http";
 
@@ -76,6 +83,32 @@ export default {
 
     if (request.method === "GET" && url.pathname === "/api/session/reset") {
       return handleSessionReset(request, env);
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/metrics") {
+      return handleMetricsRead(request, env);
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/social/me") {
+      return handleSocialMeRead(request, env);
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/social/friends") {
+      return handleSocialFriendsRead(request, env);
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/social/leaderboard") {
+      return handleSocialLeaderboardRead(request, env);
+    }
+
+    if (
+      request.method === "GET" &&
+      url.pathname.startsWith("/api/social/profile/")
+    ) {
+      const login = decodeURIComponent(
+        url.pathname.replace("/api/social/profile/", ""),
+      );
+      return handleSocialProfileRead(request, env, login);
     }
 
     if (request.method === "POST" && url.pathname === "/internal/maintenance/run") {

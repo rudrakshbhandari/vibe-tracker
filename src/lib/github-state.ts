@@ -21,6 +21,7 @@ export async function getGithubConnectionState() {
       description:
         "GitHub connection is not available right now. Please try again later.",
       primaryAction: reconnectAction,
+      accountId: null as string | null,
       viewer: null,
         activitySync: null,
       activitySyncRunning: false,
@@ -48,6 +49,7 @@ export async function getGithubConnectionState() {
       description:
         "GitHub sync is temporarily unavailable. Please try again later.",
       primaryAction: reconnectAction,
+      accountId: null as string | null,
       viewer: null,
         activitySync: null,
       activitySyncRunning: false,
@@ -78,6 +80,7 @@ export async function getGithubConnectionState() {
         description:
           "One click starts the GitHub flow. If you already have an installation, the app will sync it automatically. If not, it will send you to install and then return here.",
         primaryAction: reconnectAction,
+        accountId: null as string | null,
         viewer: null,
         activitySync: null,
         activitySyncRunning: false,
@@ -135,6 +138,7 @@ export async function getGithubConnectionState() {
         label: "Add another installation",
         href: "/api/github/install",
       },
+      accountId: session.accountId,
       viewer: {
         login: session.account.login,
         sessionExpiryLabel: await formatDate(session.expiresAt, {
@@ -175,6 +179,7 @@ export async function getGithubConnectionState() {
       description:
         "We could not load your GitHub connection right now. Please try again later.",
       primaryAction: reconnectAction,
+      accountId: null as string | null,
       viewer: null,
       activitySync: null,
       activitySyncRunning: false,

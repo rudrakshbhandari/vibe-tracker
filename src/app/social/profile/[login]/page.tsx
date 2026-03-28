@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import {
+  fetchCloudflareReadJson,
+  hasCloudflareReadProxy,
+} from "@/lib/cloudflare-read";
 import { getOptionalUserSession } from "@/lib/session";
 import { getSocialProfileByLogin } from "@/lib/social";
 
@@ -13,7 +17,15 @@ type ProfilePageProps = {
 export default async function SocialProfilePage({ params }: ProfilePageProps) {
   const { login } = await params;
   const session = await getOptionalUserSession();
-  const profile = await getSocialProfileByLogin(login, session?.accountId);
+  const profile =
+    (hasCloudflareReadProxy()
+      ? await fetchCloudflareReadJson<
+          Awaited<ReturnType<typeof getSocialProfileByLogin>>
+        >(
+          `/api/social/profile/${encodeURIComponent(login)}`,
+          { accountId: session?.accountId ?? null },
+        )
+      : null) ?? (await getSocialProfileByLogin(login, session?.accountId));
 
   if (!profile) {
     notFound();

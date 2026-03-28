@@ -4,6 +4,10 @@ import { ArrowRight, CheckCircle2, Github, RefreshCcw, ShieldCheck, TimerReset }
 import { ActivityBarChart } from "@/components/activity-bar-chart";
 import { ActivitySyncRefresh } from "@/components/activity-sync-refresh";
 import { ThemeToggle } from "@/components/theme-toggle";
+import {
+  fetchCloudflareReadJson,
+  hasCloudflareReadProxy,
+} from "@/lib/cloudflare-read";
 import { formatNumber } from "@/lib/dashboard";
 import type { AnalyticsView, MetricMode } from "@/lib/dashboard";
 import { getGithubConnectionState } from "@/lib/github-state";
@@ -562,7 +566,19 @@ export default async function Home({ searchParams }: HomePageProps) {
   let dashboard: Awaited<ReturnType<typeof getLiveMetrics>> = null;
   try {
     githubState = await getGithubConnectionState();
-    dashboard = githubState.connected ? await getLiveMetrics(view, mode) : null;
+    dashboard = githubState.connected
+      ? ((hasCloudflareReadProxy() && githubState.accountId
+          ? await fetchCloudflareReadJson<Awaited<ReturnType<typeof getLiveMetrics>>>(
+              `/api/metrics?${new URLSearchParams({
+                view,
+                mode,
+              }).toString()}`,
+              {
+                accountId: githubState.accountId,
+              },
+            )
+          : null) ?? (await getLiveMetrics(view, mode)))
+      : null;
   } catch {
     githubState = FALLBACK_GITHUB_STATE;
     dashboard = null;

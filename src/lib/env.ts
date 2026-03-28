@@ -18,6 +18,11 @@ const smokeTestSchema = z.object({
   SMOKE_TEST_SECRET: z.string().min(1),
 });
 
+const cloudflareReadSchema = z.object({
+  CLOUDFLARE_WORKER_URL: z.string().url(),
+  CLOUDFLARE_INTERNAL_API_TOKEN: z.string().min(1),
+});
+
 const databaseUrlEnvKeys = [
   "DATABASE_URL",
   "POSTGRES_PRISMA_URL",
@@ -100,4 +105,8 @@ export function hasDurableDatabaseUrl() {
 
 export function canEnableHostedGitHubSync() {
   return hasGitHubAppEnv() && hasDurableDatabaseUrl();
+}
+
+export function hasCloudflareReadEnv() {
+  return cloudflareReadSchema.safeParse(process.env).success;
 }

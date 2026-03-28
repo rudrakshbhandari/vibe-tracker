@@ -3,6 +3,10 @@ import { ArrowUpRight, ShieldCheck, Sparkles, Users } from "lucide-react";
 
 import { SocialShell } from "@/components/social-shell";
 import { ThemeToggle } from "@/components/theme-toggle";
+import {
+  fetchCloudflareReadJson,
+  hasCloudflareReadProxy,
+} from "@/lib/cloudflare-read";
 import { getOptionalUserSession } from "@/lib/session";
 import {
   getSocialFriends,
@@ -109,10 +113,39 @@ export default async function SocialPage({ searchParams }: SocialPageProps) {
     ? (params.window as "7d" | "30d" | "90d")
     : "30d";
 
+  const workerPayloads = hasCloudflareReadProxy()
+    ? await Promise.all([
+        fetchCloudflareReadJson<Awaited<ReturnType<typeof getSocialMe>>>(
+          "/api/social/me",
+          {
+            accountId: session.accountId,
+          },
+        ),
+        fetchCloudflareReadJson<Awaited<ReturnType<typeof getSocialFriends>>>(
+          `/api/social/friends?${new URLSearchParams({
+            window: initialWindow,
+          }).toString()}`,
+          {
+            accountId: session.accountId,
+          },
+        ),
+        fetchCloudflareReadJson<Awaited<ReturnType<typeof getSocialLeaderboard>>>(
+          `/api/social/leaderboard?${new URLSearchParams({
+            scope: initialScope,
+            window: initialWindow,
+          }).toString()}`,
+          {
+            accountId: session.accountId,
+          },
+        ),
+      ])
+    : [null, null, null];
+
   const [me, friends, leaderboard] = await Promise.all([
-    getSocialMe(session.accountId),
-    getSocialFriends(session.accountId, initialWindow),
-    getSocialLeaderboard(session.accountId, initialScope, initialWindow),
+    workerPayloads[0] ?? getSocialMe(session.accountId),
+    workerPayloads[1] ?? getSocialFriends(session.accountId, initialWindow),
+    workerPayloads[2] ??
+      getSocialLeaderboard(session.accountId, initialScope, initialWindow),
   ]);
 
   return (
