@@ -4,7 +4,7 @@
 
 - Issue: [#111](https://github.com/rudrakshbhandari/vibe-tracker/issues/111)
 - Branch: `rudrakshbhandari/fix-cloudflare-production-config`
-- PR: _pending_
+- PR: [#112](https://github.com/rudrakshbhandari/vibe-tracker/pull/112)
 - Workflow: Blocked
 - Priority: P1
 - App: multi
