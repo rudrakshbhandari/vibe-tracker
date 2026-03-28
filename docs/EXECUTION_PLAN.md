@@ -4,8 +4,8 @@
 
 - Issue: [#107](https://github.com/rudrakshbhandari/vibe-tracker/issues/107)
 - Branch: `rudrakshbhandari/cloudflare-read-cutover`
-- PR: pending
-- Workflow: In Progress
+- PR: [#108](https://github.com/rudrakshbhandari/vibe-tracker/pull/108)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -16,7 +16,7 @@
 - [x] Add a trusted Next-to-worker read proxy bridge
 - [x] Cut the dashboard and social SSR/API GET paths over to the worker with local fallback
 - [x] Add verification coverage for the worker read routes and proxy flow
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
 
 ### Verification
 
