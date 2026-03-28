@@ -1,57 +1,52 @@
-import type { NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getOptionalUserSessionMock, getSocialProfileByLoginMock } = vi.hoisted(() => ({
-  getOptionalUserSessionMock: vi.fn(),
-  getSocialProfileByLoginMock: vi.fn(),
+const {
+  fetchCloudflareReadJsonMock,
+  hasCloudflareWorkerProxyMock,
+} = vi.hoisted(() => ({
+  fetchCloudflareReadJsonMock: vi.fn(),
+  hasCloudflareWorkerProxyMock: vi.fn(),
 }));
 
-vi.mock("@/lib/session", () => ({
-  getOptionalUserSession: getOptionalUserSessionMock,
+vi.mock("@/lib/cloudflare-read", () => ({
+  fetchCloudflareReadJson: fetchCloudflareReadJsonMock,
+  hasCloudflareWorkerProxy: hasCloudflareWorkerProxyMock,
 }));
-
-vi.mock("@/lib/social", () => ({
-  getSocialProfileByLogin: getSocialProfileByLoginMock,
-}));
-
-import { GET } from "@/app/api/social/profile/[login]/route";
 
 describe("GET /api/social/profile/[login]", () => {
   beforeEach(() => {
-    getOptionalUserSessionMock.mockReset();
-    getSocialProfileByLoginMock.mockReset();
+    vi.resetModules();
+    fetchCloudflareReadJsonMock.mockReset();
+    hasCloudflareWorkerProxyMock.mockReset();
   });
 
-  it("returns 404 for a hidden profile", async () => {
-    getOptionalUserSessionMock.mockResolvedValue(null);
-    getSocialProfileByLoginMock.mockResolvedValue(null);
-
-    const response = await GET({} as NextRequest, {
-      params: Promise.resolve({ login: "private-user" }),
-    });
-
-    expect(response.status).toBe(404);
-  });
-
-  it("returns the visible profile payload", async () => {
-    getOptionalUserSessionMock.mockResolvedValue({
-      accountId: "viewer-1",
-    });
-    getSocialProfileByLoginMock.mockResolvedValue({
+  it("returns the worker-backed profile payload", async () => {
+    hasCloudflareWorkerProxyMock.mockReturnValue(true);
+    fetchCloudflareReadJsonMock.mockResolvedValue({
       login: "public-user",
-      isPublic: true,
     });
 
-    const response = await GET({} as NextRequest, {
+    const { GET } = await import("@/app/api/social/profile/[login]/route");
+    const response = await GET(new NextRequest("http://localhost"), {
       params: Promise.resolve({ login: "public-user" }),
     });
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
       login: "public-user",
-      isPublic: true,
     });
-    expect(getSocialProfileByLoginMock).toHaveBeenCalledWith("public-user", "viewer-1");
+  });
+
+  it("returns 503 when the worker path is unavailable", async () => {
+    hasCloudflareWorkerProxyMock.mockReturnValue(false);
+
+    const { GET } = await import("@/app/api/social/profile/[login]/route");
+    const response = await GET(new NextRequest("http://localhost"), {
+      params: Promise.resolve({ login: "public-user" }),
+    });
+
+    expect(response.status).toBe(503);
   });
 });

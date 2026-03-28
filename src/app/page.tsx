@@ -2,16 +2,13 @@ import Link from "next/link";
 import { ArrowRight, CheckCircle2, Github, RefreshCcw, ShieldCheck, TimerReset } from "lucide-react";
 
 import { ActivityBarChart } from "@/components/activity-bar-chart";
-import { ActivitySyncRefresh } from "@/components/activity-sync-refresh";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
   fetchCloudflareReadJson,
-  hasCloudflareReadProxy,
+  hasCloudflareWorkerProxy,
 } from "@/lib/cloudflare-read";
 import { formatNumber } from "@/lib/dashboard";
 import type { AnalyticsView, MetricMode } from "@/lib/dashboard";
-import { getGithubConnectionState } from "@/lib/github-state";
-import { getLiveMetrics } from "@/lib/live-metrics";
 
 type HomePageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -21,12 +18,12 @@ const GITHUB_STATUS_COPY: Record<string, { label: string; detail?: string }> = {
   "activity-sync-started": {
     label: "Activity sync started",
     detail:
-      "The sync was queued successfully. This page will keep processing queued work and refresh automatically while your latest activity is pulled in.",
+      "The sync was queued successfully in the Cloudflare worker. Refresh the page in a moment if the latest totals have not landed yet.",
   },
   "activity-sync-running": {
     label: "Activity sync already running",
     detail:
-      "A sync is already in progress. The dashboard will refresh automatically when the new numbers land.",
+      "A sync is already in progress for this account. Refresh again after the queue finishes pulling the latest merged PRs.",
   },
   "activity-sync-completed": {
     label: "Activity sync finished",
@@ -320,6 +317,56 @@ type RepoSummary = {
   commitCount: number;
 };
 
+type DashboardPayload = {
+  user: string;
+  view: AnalyticsView;
+  mode: MetricMode;
+  filters: string[];
+  summary: Array<{ label: string; value: string; detail: string }>;
+  timeline: TimelinePoint[];
+  repositories: RepoSummary[];
+  chartTitle: string;
+  activitySyncRunning: boolean;
+  syncHealth: SyncHealthSummary | null;
+  profile: {
+    login: string;
+    source: "live" | "sample";
+  };
+};
+
+type GithubState = {
+  connected: boolean;
+  title: string;
+  description: string;
+  primaryAction: {
+    label: string;
+    href: string;
+  } | null;
+  accountId: string | null;
+  viewer: {
+    login: string;
+  } | null;
+  activitySync: {
+    status: string;
+    updatedAt: string;
+  } | null;
+  activitySyncRunning: boolean;
+  syncHealth: SyncHealthSummary | null;
+  installations: Array<{
+    id: string;
+    githubInstallId: number;
+    accountLogin: string;
+    repositoryCount: number;
+    trackedRepositoryCount: number;
+    repositories: Array<{
+      id: string;
+      name: string;
+      owner: string;
+      syncEnabled: boolean;
+    }>;
+  }>;
+};
+
 function RepoSection({
   repositories,
   repoActivityMax,
@@ -533,6 +580,7 @@ const FALLBACK_GITHUB_STATE = {
   title: "Something went wrong",
   description: "We could not load your GitHub connection state. Please try again.",
   primaryAction: { label: "Reconnect GitHub", href: "/api/github/connect" },
+  accountId: null as string | null,
   viewer: null,
   activitySync: null,
   activitySyncRunning: false,
@@ -550,7 +598,7 @@ const FALLBACK_GITHUB_STATE = {
       syncEnabled: boolean;
     }>;
   }>,
-};
+} satisfies GithubState;
 
 export default async function Home({ searchParams }: HomePageProps) {
   const params = (await searchParams) ?? {};
@@ -562,22 +610,20 @@ export default async function Home({ searchParams }: HomePageProps) {
   const mode: MetricMode = "shipped";
   const githubStatus = typeof params.github === "string" ? params.github : undefined;
 
-  let githubState;
-  let dashboard: Awaited<ReturnType<typeof getLiveMetrics>> = null;
+  let githubState: GithubState = FALLBACK_GITHUB_STATE;
+  let dashboard: DashboardPayload | null = null;
   try {
-    githubState = await getGithubConnectionState();
+    githubState =
+      (hasCloudflareWorkerProxy()
+        ? await fetchCloudflareReadJson<GithubState>("/api/github/state")
+        : null) ?? FALLBACK_GITHUB_STATE;
     dashboard = githubState.connected
-      ? ((hasCloudflareReadProxy() && githubState.accountId
-          ? await fetchCloudflareReadJson<Awaited<ReturnType<typeof getLiveMetrics>>>(
-              `/api/metrics?${new URLSearchParams({
-                view,
-                mode,
-              }).toString()}`,
-              {
-                accountId: githubState.accountId,
-              },
-            )
-          : null) ?? (await getLiveMetrics(view, mode)))
+      ? await fetchCloudflareReadJson<DashboardPayload>(
+          `/api/metrics?${new URLSearchParams({
+            view,
+            mode,
+          }).toString()}`,
+        )
       : null;
   } catch {
     githubState = FALLBACK_GITHUB_STATE;
@@ -588,12 +634,6 @@ export default async function Home({ searchParams }: HomePageProps) {
     : null;
   const views: AnalyticsView[] = ["daily", "weekly", "monthly"];
   const hasInstallations = githubState.installations.length > 0;
-  const syncRefreshActive = Boolean(
-    githubStatus === "activity-sync-started" ||
-      githubStatus === "activity-sync-running" ||
-      githubState.activitySyncRunning ||
-      dashboard?.activitySyncRunning,
-  );
   const repoActivityMax = Math.max(
     1,
     ...(dashboard?.repositories.map(
@@ -631,7 +671,6 @@ export default async function Home({ searchParams }: HomePageProps) {
 
   return (
     <main className="page-shell min-h-screen">
-      <ActivitySyncRefresh active={syncRefreshActive} />
       <div className="page-wash" />
 
       <div className="relative mx-auto flex w-full max-w-[1280px] flex-col gap-4 px-4 py-4 sm:px-6 sm:py-7 lg:px-8 lg:py-8">

@@ -1,174 +1,33 @@
-import type { NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const {
-  canEnableHostedGitHubSyncMock,
-  dbSyncJobFindFirstMock,
-  failStaleActivitySyncJobsMock,
-  getValidUserAccessTokenMock,
-  enqueueActivitySyncForAccountMock,
-} = vi.hoisted(() => ({
-  canEnableHostedGitHubSyncMock: vi.fn(),
-  dbSyncJobFindFirstMock: vi.fn(),
-  failStaleActivitySyncJobsMock: vi.fn(),
-  getValidUserAccessTokenMock: vi.fn(),
-  enqueueActivitySyncForAccountMock: vi.fn(),
+const { proxyCloudflareRequestMock } = vi.hoisted(() => ({
+  proxyCloudflareRequestMock: vi.fn(),
 }));
 
-vi.mock("@/lib/session", () => ({
-  getValidUserAccessToken: getValidUserAccessTokenMock,
+vi.mock("@/lib/cloudflare-read", () => ({
+  proxyCloudflareRequest: proxyCloudflareRequestMock,
 }));
-
-vi.mock("@/lib/env", () => ({
-  canEnableHostedGitHubSync: canEnableHostedGitHubSyncMock,
-}));
-
-vi.mock("@/lib/db", () => ({
-  db: {
-    syncJob: {
-      findFirst: dbSyncJobFindFirstMock,
-    },
-  },
-}));
-
-vi.mock("@/lib/activity-sync-jobs", () => ({
-  failStaleActivitySyncJobs: failStaleActivitySyncJobsMock,
-  getActiveActivitySyncWhere: vi.fn((installationIds: string[]) => ({
-    installationId: {
-      in: installationIds,
-    },
-    scope: "activity",
-    status: {
-      in: ["queued", "running"],
-    },
-    updatedAt: {
-      gte: new Date("2026-01-01T00:00:00.000Z"),
-    },
-  })),
-}));
-
-vi.mock("@/lib/installation-sync", () => ({
-  enqueueActivitySyncForAccount: enqueueActivitySyncForAccountMock,
-}));
-
-import { POST } from "@/app/api/github/activity-sync/route";
 
 describe("POST /api/github/activity-sync", () => {
   beforeEach(() => {
-    canEnableHostedGitHubSyncMock.mockReset();
-    dbSyncJobFindFirstMock.mockReset();
-    failStaleActivitySyncJobsMock.mockReset();
-    getValidUserAccessTokenMock.mockReset();
-    enqueueActivitySyncForAccountMock.mockReset();
-    canEnableHostedGitHubSyncMock.mockReturnValue(true);
-    dbSyncJobFindFirstMock.mockResolvedValue(null);
-    failStaleActivitySyncJobsMock.mockResolvedValue(undefined);
+    vi.resetModules();
+    proxyCloudflareRequestMock.mockReset();
+    proxyCloudflareRequestMock.mockResolvedValue(new Response(null, { status: 302 }));
   });
 
-  it("redirects unauthenticated users", async () => {
-    getValidUserAccessTokenMock.mockResolvedValue(null);
-
-    const response = await POST({
-      url: "https://example.com/api/github/activity-sync",
-    } as NextRequest);
-
-    expect(response.headers.get("location")).toBe(
-      "https://example.com/?github=not-connected",
-    );
-    expect(failStaleActivitySyncJobsMock).not.toHaveBeenCalled();
-  });
-
-  it("enqueues the sync before redirecting to started", async () => {
-    getValidUserAccessTokenMock.mockResolvedValue({
-      accessToken: "user-token",
-      session: {
-        accountId: "account-1",
-        account: {
-          login: "octocat",
-          installationGrants: [
-            {
-              installation: {
-                id: "installation-1",
-              },
-            },
-          ],
-        },
-      },
+  it("proxies the sync request to the Cloudflare worker", async () => {
+    const { POST } = await import("@/app/api/github/activity-sync/route");
+    const request = new NextRequest("https://example.com/api/github/activity-sync", {
+      method: "POST",
     });
 
-    const response = await POST({
-      url: "https://example.com/api/github/activity-sync",
-    } as NextRequest);
+    await POST(request);
 
-    expect(response.headers.get("location")).toBe(
-      "https://example.com/?github=activity-sync-started",
-    );
-    expect(failStaleActivitySyncJobsMock).toHaveBeenCalledWith(["installation-1"]);
-    expect(enqueueActivitySyncForAccountMock).toHaveBeenCalledWith({
-      accountId: "account-1",
-      userAccessToken: "user-token",
-    });
-  });
-
-  it("does not schedule a second sync while one is already running", async () => {
-    getValidUserAccessTokenMock.mockResolvedValue({
-      accessToken: "user-token",
-      session: {
-        accountId: "account-1",
-        account: {
-          login: "octocat",
-          installationGrants: [
-            {
-              installation: {
-                id: "installation-1",
-              },
-            },
-          ],
-        },
-      },
-    });
-    dbSyncJobFindFirstMock.mockResolvedValue({
-      id: "sync-1",
-      status: "running",
-    });
-
-    const response = await POST({
-      url: "https://example.com/api/github/activity-sync",
-    } as NextRequest);
-
-    expect(response.headers.get("location")).toBe(
-      "https://example.com/?github=activity-sync-running",
-    );
-    expect(failStaleActivitySyncJobsMock).toHaveBeenCalledWith(["installation-1"]);
-    expect(enqueueActivitySyncForAccountMock).not.toHaveBeenCalled();
-  });
-
-  it("redirects with sync-failed when enqueueing throws", async () => {
-    getValidUserAccessTokenMock.mockResolvedValue({
-      accessToken: "user-token",
-      session: {
-        accountId: "account-1",
-        account: {
-          login: "octocat",
-          installationGrants: [
-            {
-              installation: {
-                id: "installation-1",
-              },
-            },
-          ],
-        },
-      },
-    });
-    enqueueActivitySyncForAccountMock.mockRejectedValue(new Error("boom"));
-
-    const response = await POST({
-      url: "https://example.com/api/github/activity-sync",
-    } as NextRequest);
-
-    expect(response.headers.get("location")).toBe(
-      "https://example.com/?github=sync-failed",
+    expect(proxyCloudflareRequestMock).toHaveBeenCalledWith(
+      request,
+      "/api/github/activity-sync",
     );
   });
 });

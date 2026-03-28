@@ -1,38 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-import { canEnableHostedGitHubSync } from "@/lib/env";
-import { getValidUserAccessToken } from "@/lib/session";
-import { syncInstallationMetadataForAccount } from "@/lib/installation-sync";
+import { proxyCloudflareRequest } from "@/lib/cloudflare-read";
 
 export async function GET(request: NextRequest) {
-  if (!canEnableHostedGitHubSync()) {
-    return NextResponse.redirect(new URL("/?github=missing-config", request.url));
-  }
-
-  const installationId = Number.parseInt(
-    request.nextUrl.searchParams.get("installation_id") ?? "",
-    10,
+  return proxyCloudflareRequest(
+    request,
+    `/api/github/setup${request.nextUrl.search}`,
   );
-
-  if (Number.isNaN(installationId)) {
-    return NextResponse.redirect(new URL("/?github=invalid-installation", request.url));
-  }
-
-  const session = await getValidUserAccessToken();
-
-  if (!session) {
-    return NextResponse.redirect(new URL("/?github=not-connected", request.url));
-  }
-
-  try {
-    await syncInstallationMetadataForAccount({
-      githubInstallationId: installationId,
-      accountId: session.session.accountId,
-      userAccessToken: session.accessToken,
-    });
-
-    return NextResponse.redirect(new URL("/?github=installation-connected", request.url));
-  } catch {
-    return NextResponse.redirect(new URL("/?github=sync-failed", request.url));
-  }
 }

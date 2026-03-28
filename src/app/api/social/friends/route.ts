@@ -2,21 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 import {
   fetchCloudflareReadJson,
-  hasCloudflareReadProxy,
+  hasCloudflareWorkerProxy,
 } from "@/lib/cloudflare-read";
-import {
-  getRequiredSocialSession,
-  getSocialFriends,
-  socialWindowSchema,
-} from "@/lib/social";
+import { socialWindowSchema } from "@/lib/social";
 
 export async function GET(request: NextRequest) {
-  const session = await getRequiredSocialSession();
-
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const parseResult = socialWindowSchema.safeParse(
     request.nextUrl.searchParams.get("window") ?? "30d",
   );
@@ -31,12 +21,11 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  if (hasCloudflareReadProxy()) {
+  if (hasCloudflareWorkerProxy()) {
     const proxied = await fetchCloudflareReadJson(
       `/api/social/friends?${new URLSearchParams({
         window: parseResult.data,
       }).toString()}`,
-      { accountId: session.accountId },
     );
 
     if (proxied) {
@@ -44,5 +33,8 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.json(await getSocialFriends(session.accountId, parseResult.data));
+  return NextResponse.json(
+    { error: "Cloudflare social backend is unavailable" },
+    { status: 503 },
+  );
 }

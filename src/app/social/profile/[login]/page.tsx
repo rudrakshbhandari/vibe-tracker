@@ -3,10 +3,25 @@ import { notFound } from "next/navigation";
 
 import {
   fetchCloudflareReadJson,
-  hasCloudflareReadProxy,
+  hasCloudflareWorkerProxy,
 } from "@/lib/cloudflare-read";
-import { getOptionalUserSession } from "@/lib/session";
-import { getSocialProfileByLogin } from "@/lib/social";
+
+type SocialProfilePayload = {
+  accountId: string;
+  login: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  bio: string;
+  isPublic: boolean;
+  isFriend: boolean;
+  vibeScore: number;
+  mergedAdditions: number;
+  mergedDeletions: number;
+  mergedCommits: number;
+  activePeriods: number;
+  trendDelta: number;
+  globalRank: number | null;
+};
 
 type ProfilePageProps = {
   params: Promise<{
@@ -16,16 +31,11 @@ type ProfilePageProps = {
 
 export default async function SocialProfilePage({ params }: ProfilePageProps) {
   const { login } = await params;
-  const session = await getOptionalUserSession();
-  const profile =
-    (hasCloudflareReadProxy()
-      ? await fetchCloudflareReadJson<
-          Awaited<ReturnType<typeof getSocialProfileByLogin>>
-        >(
-          `/api/social/profile/${encodeURIComponent(login)}`,
-          { accountId: session?.accountId ?? null },
-        )
-      : null) ?? (await getSocialProfileByLogin(login, session?.accountId));
+  const profile = hasCloudflareWorkerProxy()
+    ? await fetchCloudflareReadJson<SocialProfilePayload>(
+        `/api/social/profile/${encodeURIComponent(login)}`,
+      )
+    : null;
 
   if (!profile) {
     notFound();

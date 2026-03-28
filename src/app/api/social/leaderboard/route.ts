@@ -3,14 +3,9 @@ import { z } from "zod";
 
 import {
   fetchCloudflareReadJson,
-  hasCloudflareReadProxy,
+  hasCloudflareWorkerProxy,
 } from "@/lib/cloudflare-read";
-import {
-  getRequiredSocialSession,
-  getSocialLeaderboard,
-  socialScopeSchema,
-  socialWindowSchema,
-} from "@/lib/social";
+import { socialScopeSchema, socialWindowSchema } from "@/lib/social";
 
 const leaderboardQuerySchema = z.object({
   scope: socialScopeSchema.default("friends"),
@@ -18,12 +13,6 @@ const leaderboardQuerySchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
-  const session = await getRequiredSocialSession();
-
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const parseResult = leaderboardQuerySchema.safeParse({
     scope: request.nextUrl.searchParams.get("scope") ?? undefined,
     window: request.nextUrl.searchParams.get("window") ?? undefined,
@@ -39,13 +28,12 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  if (hasCloudflareReadProxy()) {
+  if (hasCloudflareWorkerProxy()) {
     const proxied = await fetchCloudflareReadJson(
       `/api/social/leaderboard?${new URLSearchParams({
         scope: parseResult.data.scope,
         window: parseResult.data.window,
       }).toString()}`,
-      { accountId: session.accountId },
     );
 
     if (proxied) {
@@ -54,10 +42,7 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.json(
-    await getSocialLeaderboard(
-      session.accountId,
-      parseResult.data.scope,
-      parseResult.data.window,
-    ),
+    { error: "Cloudflare social backend is unavailable" },
+    { status: 503 },
   );
 }
