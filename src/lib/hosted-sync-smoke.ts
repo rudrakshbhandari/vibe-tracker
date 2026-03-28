@@ -1,4 +1,4 @@
-import { db } from "@/lib/db";
+import { db, ensureHostedSchemaCompatibility } from "@/lib/db";
 import {
   getInstallationRepositories,
   getPullRequestDetail,
@@ -119,6 +119,7 @@ async function getSmokeTarget() {
 }
 
 export async function runHostedSyncSmokeTest() {
+  await ensureHostedSchemaCompatibility();
   const target = await getSmokeTarget();
   const repositories = await getInstallationRepositories(
     target.githubInstallationId,
