@@ -24,6 +24,7 @@ const {
 
 vi.mock("@/lib/db", () => ({
   db: dbMock,
+  ensureHostedRepositorySchema: vi.fn(),
 }));
 
 vi.mock("@/lib/github", () => ({
