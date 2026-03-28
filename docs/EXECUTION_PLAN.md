@@ -4,8 +4,8 @@
 
 - Issue: [#109](https://github.com/rudrakshbhandari/vibe-tracker/issues/109)
 - Branch: `rudrakshbhandari/cloudflare-final-cutover`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#110](https://github.com/rudrakshbhandari/vibe-tracker/pull/110)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -16,7 +16,7 @@
 - [x] Add worker-backed social mutation and invite-detail endpoints
 - [x] Add a same-origin Next proxy for worker auth/control/write flows, including cookie and redirect forwarding
 - [x] Remove browser-polled sync processing from the active runtime path and switch the remaining SSR/API reads off Prisma session lookups
-- [ ] Run verification, push branch, and open PR
+- [x] Run verification, push branch, and open PR
 
 ### Verification
 
