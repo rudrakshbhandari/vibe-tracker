@@ -1,5 +1,31 @@
 # Execution Plan
 
+## Issue #105 - Port installation metadata and repository activity sync to Cloudflare queues
+
+- Issue: [#105](https://github.com/rudrakshbhandari/vibe-tracker/issues/105)
+- Branch: `rudrakshbhandari/cloudflare-queue-sync`
+- PR: [#106](https://github.com/rudrakshbhandari/vibe-tracker/pull/106)
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Create the follow-up issue, task branch, and project tracking entry
+- [x] Add Worker GitHub App installation auth and queue bindings
+- [x] Port installation metadata sync into the Worker queue consumer
+- [x] Port repository activity sync plus daily stat persistence into the Worker queue consumer
+- [x] Add verification coverage for the Worker queue sync flow
+- [x] Push branch and open PR
+
+### Verification
+
+- `npm run lint`
+- `npm test`
+- `npm run build`
+- `npm run cloudflare:typecheck`
+- `npm run cloudflare:test`
+
 ## Issue #103 - Port GitHub auth and sessions to the Cloudflare worker
 
 - Issue: [#103](https://github.com/rudrakshbhandari/vibe-tracker/issues/103)

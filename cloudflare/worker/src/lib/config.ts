@@ -10,10 +10,23 @@ const githubAuthEnvSchema = z.object({
   SESSION_ENCRYPTION_KEY: z.string().min(1),
 });
 
+const githubAppEnvSchema = z.object({
+  GITHUB_APP_ID: z.union([z.string().min(1), z.number().int().positive()]),
+  GITHUB_APP_PRIVATE_KEY: z.string().min(1),
+});
+
 export function hasGitHubAuthEnv(env: VibeWorkerEnv) {
   return githubAuthEnvSchema.safeParse(env).success;
 }
 
 export function getGitHubAuthEnv(env: VibeWorkerEnv) {
   return githubAuthEnvSchema.parse(env);
+}
+
+export function getGitHubAppEnv(env: VibeWorkerEnv) {
+  return githubAppEnvSchema.parse(env);
+}
+
+export function hasSyncQueue(env: VibeWorkerEnv) {
+  return Boolean(env.SYNC_QUEUE);
 }

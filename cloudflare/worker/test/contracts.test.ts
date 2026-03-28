@@ -17,6 +17,36 @@ describe("queue contracts", () => {
     });
   });
 
+  it("parses installation sync messages", () => {
+    expect(
+      parseQueueMessage({
+        type: "installation-sync",
+        accountId: "account-1",
+        installation: {
+          githubInstallationId: 123,
+          accountLogin: "octo-org",
+          accountType: "Organization",
+          targetType: "organization",
+          permissions: {
+            contents: "read",
+          },
+        },
+      }),
+    ).toEqual({
+      type: "installation-sync",
+      accountId: "account-1",
+      installation: {
+        githubInstallationId: 123,
+        accountLogin: "octo-org",
+        accountType: "Organization",
+        targetType: "organization",
+        permissions: {
+          contents: "read",
+        },
+      },
+    });
+  });
+
   it("rejects unsupported windows", () => {
     expect(() =>
       parseQueueMessage({

@@ -5,6 +5,7 @@ import {
   recomputeLeaderboardScoresForAccount,
   runMaintenance,
 } from "@/jobs/leaderboard";
+import { handleInstallationSync, handleRepositorySync } from "@/jobs/sync";
 import type { VibeWorkerEnv } from "@/env";
 
 async function handleQueueMessage(
@@ -12,6 +13,16 @@ async function handleQueueMessage(
   message: QueueMessage,
   now = new Date(),
 ) {
+  if (message.type === "installation-sync") {
+    await handleInstallationSync(env, message);
+    return;
+  }
+
+  if (message.type === "repository-sync") {
+    await handleRepositorySync(env, message);
+    return;
+  }
+
   if (message.type === "leaderboard-update") {
     await recomputeLeaderboardScoresForAccount(
       env,
@@ -35,6 +46,8 @@ async function handleQueueMessage(
     for (const window of windows) {
       await rebuildLeaderboardRanks(env, window, now);
     }
+
+    return;
   }
 }
 

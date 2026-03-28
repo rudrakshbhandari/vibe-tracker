@@ -190,9 +190,26 @@ describe("worker auth routes", () => {
         ),
       )
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ installations: [{ id: 1 }] }), {
-          status: 200,
-        }),
+        new Response(
+          JSON.stringify({
+            installations: [
+              {
+                id: 1,
+                account: {
+                  login: "octo-org",
+                  type: "Organization",
+                },
+                target_type: "organization",
+                permissions: {
+                  contents: "read",
+                },
+              },
+            ],
+          }),
+          {
+            status: 200,
+          },
+        ),
       );
 
     const env = createEnv();

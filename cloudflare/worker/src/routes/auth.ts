@@ -7,6 +7,7 @@ import {
   getUserInstallations,
   getViewer,
 } from "@/lib/github";
+import { enqueueInstallationSyncs } from "@/jobs/sync";
 import { clearUserSession, consumeOAuthState, createUserSession, issueOAuthStateCookie, issueUserSessionCookie } from "@/lib/session";
 import { upsertGitHubAccount } from "@/lib/store";
 
@@ -69,6 +70,17 @@ export async function handleGitHubCallback(request: Request, env: VibeWorkerEnv)
     if (installations.length === 0) {
       return redirect(buildGitHubInstallUrl(env), headers);
     }
+
+    await enqueueInstallationSyncs(env, {
+      accountId: account.id,
+      installations: installations.map((installation) => ({
+        githubInstallationId: installation.id,
+        accountLogin: installation.account.login,
+        accountType: installation.account.type,
+        targetType: installation.target_type ?? null,
+        permissions: installation.permissions,
+      })),
+    });
 
     return redirect(getAppRedirect(env, "/?github=connected"), headers);
   } catch (error) {
