@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import {
+  fetchCloudflareReadJson,
+  hasCloudflareReadProxy,
+} from "@/lib/cloudflare-read";
+import {
   getRequiredSocialSession,
   getSocialFriends,
   socialWindowSchema,
@@ -25,6 +29,19 @@ export async function GET(request: NextRequest) {
       },
       { status: 400 },
     );
+  }
+
+  if (hasCloudflareReadProxy()) {
+    const proxied = await fetchCloudflareReadJson(
+      `/api/social/friends?${new URLSearchParams({
+        window: parseResult.data,
+      }).toString()}`,
+      { accountId: session.accountId },
+    );
+
+    if (proxied) {
+      return NextResponse.json(proxied);
+    }
   }
 
   return NextResponse.json(await getSocialFriends(session.accountId, parseResult.data));

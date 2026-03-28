@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import {
+  fetchCloudflareReadJson,
+  hasCloudflareReadProxy,
+} from "@/lib/cloudflare-read";
+import {
   getRequiredSocialSession,
   getSocialLeaderboard,
   socialScopeSchema,
@@ -33,6 +37,20 @@ export async function GET(request: NextRequest) {
       },
       { status: 400 },
     );
+  }
+
+  if (hasCloudflareReadProxy()) {
+    const proxied = await fetchCloudflareReadJson(
+      `/api/social/leaderboard?${new URLSearchParams({
+        scope: parseResult.data.scope,
+        window: parseResult.data.window,
+      }).toString()}`,
+      { accountId: session.accountId },
+    );
+
+    if (proxied) {
+      return NextResponse.json(proxied);
+    }
   }
 
   return NextResponse.json(
