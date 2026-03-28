@@ -1,5 +1,38 @@
 # Execution Plan
 
+## Issue #111 - Fix Cloudflare production config and deploy worker
+
+- Issue: [#111](https://github.com/rudrakshbhandari/vibe-tracker/issues/111)
+- Branch: `rudrakshbhandari/fix-cloudflare-production-config`
+- PR: _pending_
+- Workflow: Blocked
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Create the follow-up issue, task branch, and project tracking entry
+- [x] Provision Cloudflare D1 and Queue resources for the worker runtime
+- [x] Bind the production Worker to D1, the sync queue, and the production app URL in Wrangler config
+- [x] Seed the Worker with non-empty shared runtime secrets that were available locally
+- [x] Set `CLOUDFLARE_WORKER_URL` and `CLOUDFLARE_INTERNAL_API_TOKEN` in Vercel production and redeploy
+- [x] Smoke test the deployed Vercel app and Cloudflare worker
+- [ ] Restore real `GITHUB_APP_*` credentials in production so GitHub connect/setup can work
+
+### Blocker
+
+- Vercel production currently stores blank values for `GITHUB_APP_ID`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_PRIVATE_KEY`, and `GITHUB_APP_SLUG`, and no non-empty source for those secrets exists in this repo, local shell, local env files, or GitHub Actions secrets.
+
+### Verification
+
+- `npm run cloudflare:typecheck`
+- `npm run cloudflare:test`
+- `npx wrangler d1 migrations apply vibe-tracker-prod --remote --config cloudflare/worker/wrangler.jsonc`
+- `npx wrangler deploy --config cloudflare/worker/wrangler.jsonc`
+- `vercel --prod --yes`
+- `curl -i https://vibe-tracker-max.vercel.app/api/session/reset`
+- `curl -i https://vibe-tracker-worker.rudrakshbhandari99.workers.dev/health`
+
 ## Issue #109 - Complete Cloudflare migration by cutting over auth, sync controls, and social writes
 
 - Issue: [#109](https://github.com/rudrakshbhandari/vibe-tracker/issues/109)

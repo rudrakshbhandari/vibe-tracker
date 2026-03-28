@@ -1,6 +1,30 @@
 {
-  "$schema": "../../node_modules/wrangler/config-schema.json",
-  "name": "vibe-tracker-worker",
-  "main": "src/index.ts",
-  "compatibility_date": "2026-03-27"
+	"$schema": "../../node_modules/wrangler/config-schema.json",
+	"name": "vibe-tracker-worker",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-03-27",
+	"workers_dev": true,
+	"vars": {
+		"APP_URL": "https://vibe-tracker-max.vercel.app"
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "vibe-tracker-prod",
+			"database_id": "0cc9eac0-4b0a-4661-85c4-04790da16955"
+		}
+	],
+	"queues": {
+		"producers": [
+			{
+				"queue": "vibe-tracker-sync-prod",
+				"binding": "SYNC_QUEUE"
+			}
+		],
+		"consumers": [
+			{
+				"queue": "vibe-tracker-sync-prod"
+			}
+		]
+	}
 }
