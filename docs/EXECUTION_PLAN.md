@@ -4,8 +4,8 @@
 
 - Issue: [#117](https://github.com/rudrakshbhandari/vibe-tracker/issues/117)
 - Branch: `rudrakshbhandari/recent-repo-selection`
-- PR: pending
-- Workflow: In Progress
+- PR: [#118](https://github.com/rudrakshbhandari/vibe-tracker/pull/118)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -15,7 +15,7 @@
 - [x] Replace alphabetical auto-selection with recent personal merged-PR ranking
 - [x] Add repo recency fallback for repos without personal activity
 - [x] Add worker coverage for the ranking behavior
-- [ ] Run verification, push branch, and open PR
+- [x] Run verification, push branch, and open PR
 
 ### Verification
 
