@@ -1,5 +1,27 @@
 # Execution Plan
 
+## Issue #117 - Improve default tracked repo selection to recent personal activity
+
+- Issue: [#117](https://github.com/rudrakshbhandari/vibe-tracker/issues/117)
+- Branch: `rudrakshbhandari/recent-repo-selection`
+- PR: [#118](https://github.com/rudrakshbhandari/vibe-tracker/pull/118)
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Create the follow-up issue and task branch
+- [x] Replace alphabetical auto-selection with recent personal merged-PR ranking
+- [x] Add repo recency fallback for repos without personal activity
+- [x] Add worker coverage for the ranking behavior
+- [x] Run verification, push branch, and open PR
+
+### Verification
+
+- `npm run cloudflare:typecheck`
+- `npm run cloudflare:test -- sync.test.ts`
+
 ## Issue #115 - Debug production installation discovery after GitHub App install
 
 - Issue: [#115](https://github.com/rudrakshbhandari/vibe-tracker/issues/115)

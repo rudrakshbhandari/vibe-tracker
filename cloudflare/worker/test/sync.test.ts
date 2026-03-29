@@ -233,6 +233,34 @@ class FakeD1Database {
   }
 
   all(sql: string, args: unknown[]) {
+    if (sql.includes("MAX(pull_requests.merged_at) AS latestMergedAt")) {
+      const installationId = String(args[0]);
+      const accountId = String(args[1]);
+      const latestByRepo = new Map<number, number>();
+
+      for (const repository of this.repositories.filter(
+        (row) => row.installation_id === installationId,
+      )) {
+        for (const pullRequest of this.pullRequests.filter(
+          (row) =>
+            row.repository_id === repository.id &&
+            row.author_id === accountId &&
+            row.merged_at !== null,
+        )) {
+          const nextMergedAt = Number(pullRequest.merged_at);
+          const existingMergedAt = latestByRepo.get(repository.github_repo_id) ?? 0;
+          if (nextMergedAt > existingMergedAt) {
+            latestByRepo.set(repository.github_repo_id, nextMergedAt);
+          }
+        }
+      }
+
+      return Array.from(latestByRepo.entries()).map(([githubRepoId, latestMergedAt]) => ({
+        githubRepoId,
+        latestMergedAt,
+      }));
+    }
+
     if (sql.includes("FROM repositories") && sql.includes("installation_id = ?")) {
       return this.repositories
         .filter((row) => row.installation_id === String(args[0]))
@@ -585,6 +613,7 @@ describe("worker queue sync flow", () => {
                 full_name: "octo-org/api",
                 private: false,
                 default_branch: "main",
+                pushed_at: "2026-03-20T10:00:00.000Z",
                 owner: { login: "octo-org" },
               },
             ],
@@ -623,6 +652,65 @@ describe("worker queue sync flow", () => {
         repo: "api",
       }),
     ]);
+  });
+
+  it("prefers repo recency over alphabetical order for initial auto-selection", async () => {
+    const env = createEnv();
+
+    vi.mocked(globalThis.fetch)
+      .mockResolvedValueOnce(new Response(JSON.stringify({ token: "install-token" })))
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            repositories: [
+              ...Array.from({ length: 25 }, (_, index) => ({
+                id: 200 + index,
+                name: `repo-${index.toString().padStart(2, "0")}`,
+                full_name: `octo-org/repo-${index.toString().padStart(2, "0")}`,
+                private: false,
+                default_branch: "main",
+                pushed_at: new Date(Date.UTC(2026, 2, 1 + index)).toISOString(),
+                owner: { login: "octo-org" },
+              })),
+              {
+                id: 100,
+                name: "aardvark",
+                full_name: "octo-org/aardvark",
+                private: false,
+                default_branch: "main",
+                pushed_at: "2026-01-01T10:00:00.000Z",
+                owner: { login: "octo-org" },
+              },
+            ],
+          }),
+        ),
+      );
+
+    const batch = createBatch([
+      {
+        type: "installation-sync",
+        accountId: "account-1",
+        installation: {
+          githubInstallationId: 77,
+          accountLogin: "octo-org",
+          accountType: "Organization",
+          targetType: "organization",
+          permissions: { contents: "read" },
+        },
+      },
+    ]);
+
+    await handleQueueBatch(env, batch);
+
+    const db = env.DB as unknown as FakeD1Database;
+    const queue = env.SYNC_QUEUE as unknown as FakeQueue;
+    const syncedRepoNames = queue.sent.map(
+      (message) => (message as { repo: string }).repo,
+    );
+    expect(syncedRepoNames).toContain("repo-24");
+    expect(syncedRepoNames).not.toContain("aardvark");
+    expect(db.repositories.find((row) => row.github_repo_id === 224)?.sync_enabled).toBe(1);
+    expect(db.repositories.find((row) => row.github_repo_id === 100)?.sync_enabled).toBe(0);
   });
 
   it("syncs repository pull requests, persists aggregates, and enqueues leaderboard work", async () => {

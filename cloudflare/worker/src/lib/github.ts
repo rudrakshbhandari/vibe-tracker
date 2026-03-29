@@ -35,6 +35,7 @@ export type GitHubRepository = {
   full_name: string;
   private: boolean;
   default_branch: string;
+  pushed_at?: string | null;
   owner: {
     login: string;
   };
