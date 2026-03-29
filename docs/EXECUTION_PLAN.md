@@ -4,8 +4,8 @@
 
 - Issue: [#119](https://github.com/rudrakshbhandari/vibe-tracker/issues/119)
 - Branch: `rudrakshbhandari/recommended-repos`
-- PR: Pending
-- Workflow: In Progress
+- PR: [#120](https://github.com/rudrakshbhandari/vibe-tracker/pull/120)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -17,7 +17,7 @@
 - [x] Surface the recommended scope in the dashboard UI
 - [x] Add coverage for the worker recommendation logic and proxy route
 - [x] Run verification locally
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
 
 ### Verification
 
