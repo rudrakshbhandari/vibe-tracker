@@ -1,5 +1,31 @@
 # Execution Plan
 
+## Issue #119 - Add recommended repo scope and one-click apply flow
+
+- Issue: [#119](https://github.com/rudrakshbhandari/vibe-tracker/issues/119)
+- Branch: `rudrakshbhandari/recommended-repos`
+- PR: [#120](https://github.com/rudrakshbhandari/vibe-tracker/pull/120)
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Create the follow-up issue and task branch
+- [x] Add a worker-side recommended repository set per installation
+- [x] Add a dedicated action to apply the recommended 25 without changing refresh behavior
+- [x] Surface the recommended scope in the dashboard UI
+- [x] Add coverage for the worker recommendation logic and proxy route
+- [x] Run verification locally
+- [x] Push branch and open PR
+
+### Verification
+
+- `npm run cloudflare:typecheck`
+- `npm run cloudflare:test`
+- `npm test`
+- `npm run build`
+
 ## Issue #117 - Improve default tracked repo selection to recent personal activity
 
 - Issue: [#117](https://github.com/rudrakshbhandari/vibe-tracker/issues/117)

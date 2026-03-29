@@ -87,6 +87,11 @@ const GITHUB_STATUS_COPY: Record<string, { label: string; detail?: string }> = {
     detail:
       "Only the selected repositories will be included in future activity sync runs for that installation.",
   },
+  "recommended-repositories-applied": {
+    label: "Recommended repositories applied",
+    detail:
+      "Tracked repositories now match the current recommended 25 based on your recent merged PR activity.",
+  },
   "repository-scope-too-large": {
     label: "Too many tracked repositories selected",
     detail:
@@ -279,6 +284,8 @@ type GithubStateInstallation = {
   accountLogin: string;
   repositoryCount: number;
   trackedRepositoryCount: number;
+  recommendedRepositoryCount: number;
+  recommendedRepositoryIds: string[];
   repositories: Array<{
     id: string;
     name: string;
@@ -360,6 +367,8 @@ type GithubState = {
     accountLogin: string;
     repositoryCount: number;
     trackedRepositoryCount: number;
+    recommendedRepositoryCount: number;
+    recommendedRepositoryIds: string[];
     repositories: Array<{
       id: string;
       name: string;
@@ -465,6 +474,23 @@ function RepoSection({
           <div className="scope-list">
             {installations.map((installation, index) => (
               <article key={installation.id} className="scope-item">
+                {(() => {
+                  const trackedIds = installation.repositories
+                    .filter((repository) => repository.syncEnabled)
+                    .map((repository) => repository.id)
+                    .sort();
+                  const recommendedIds = [...installation.recommendedRepositoryIds].sort();
+                  const recommendationDiffers =
+                    trackedIds.length !== recommendedIds.length ||
+                    trackedIds.some((repositoryId, index) => repositoryId !== recommendedIds[index]);
+                  const recommendedNames = installation.repositories
+                    .filter((repository) =>
+                      installation.recommendedRepositoryIds.includes(repository.id),
+                    )
+                    .map((repository) => `${repository.owner}/${repository.name}`);
+
+                  return (
+                    <>
                 <div className="scope-item-head">
                   <div>
                     <p className="scope-item-title">
@@ -495,6 +521,37 @@ function RepoSection({
                       ? "No repositories are tracked yet for this scope."
                       : "No tracked repositories yet for this scope."}
                 </p>
+                <div className="mt-4 rounded-[1.25rem] border border-line/80 bg-white/60 p-4">
+                  <p className="text-sm font-semibold text-foreground">
+                    Recommended scope
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-muted">
+                    {installation.recommendedRepositoryCount > 0
+                      ? `${installation.recommendedRepositoryCount} repos based on your recent merged PR activity, with repo recency as fallback.`
+                      : "No recommendation yet. Run a sync first so the app can rank your most active repositories."}
+                  </p>
+                  {recommendedNames.length > 0 ? (
+                    <p className="mt-3 text-sm leading-6 text-muted">
+                      {recommendedNames.slice(0, 3).join(", ")}
+                      {recommendedNames.length > 3 ? "…" : ""}
+                    </p>
+                  ) : null}
+                  {recommendationDiffers ? (
+                    <form
+                      action={`/api/github/installations/${installation.githubInstallId}/scope/recommended`}
+                      method="post"
+                      className="mt-4"
+                    >
+                      <button type="submit" className="button-secondary button-compact">
+                        Use recommended 25
+                      </button>
+                    </form>
+                  ) : (
+                    <p className="mt-3 text-sm font-medium text-foreground">
+                      Current tracked scope already matches the recommendation.
+                    </p>
+                  )}
+                </div>
                 <details className="mt-4 rounded-[1.25rem] border border-line/80 bg-white/60 p-4">
                   <summary className="cursor-pointer text-sm font-semibold text-foreground">
                     Choose tracked repositories
@@ -529,6 +586,9 @@ function RepoSection({
                     </button>
                   </form>
                 </details>
+                    </>
+                  );
+                })()}
               </article>
             ))}
           </div>
@@ -593,6 +653,8 @@ const FALLBACK_GITHUB_STATE = {
     accountLogin: string;
     repositoryCount: number;
     trackedRepositoryCount: number;
+    recommendedRepositoryCount: number;
+    recommendedRepositoryIds: string[];
     repositories: Array<{
       id: string;
       name: string;

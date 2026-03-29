@@ -69,6 +69,7 @@ type RepositoryRow = {
   name: string;
   default_branch: string;
   is_private: number;
+  pushed_at: number | null;
   sync_enabled: number;
   installation_id: string;
   created_at: number;
@@ -270,6 +271,9 @@ class FakeD1Database {
                 id: row.id,
                 github_repo_id: row.github_repo_id,
                 sync_enabled: row.sync_enabled,
+                owner: row.owner,
+                name: row.name,
+                pushed_at: row.pushed_at,
               }
             : {
                 id: row.id,
@@ -399,9 +403,10 @@ class FakeD1Database {
         existing.name = String(args[3]);
         existing.default_branch = String(args[4]);
         existing.is_private = Number(args[5]);
-        existing.sync_enabled = Number(args[6]);
-        existing.installation_id = String(args[7]);
-        existing.updated_at = Number(args[9]);
+        existing.pushed_at = (args[6] as number | null) ?? null;
+        existing.sync_enabled = Number(args[7]);
+        existing.installation_id = String(args[8]);
+        existing.updated_at = Number(args[10]);
         return;
       }
 
@@ -412,10 +417,11 @@ class FakeD1Database {
         name: String(args[3]),
         default_branch: String(args[4]),
         is_private: Number(args[5]),
-        sync_enabled: Number(args[6]),
-        installation_id: String(args[7]),
-        created_at: Number(args[8]),
-        updated_at: Number(args[9]),
+        pushed_at: (args[6] as number | null) ?? null,
+        sync_enabled: Number(args[7]),
+        installation_id: String(args[8]),
+        created_at: Number(args[9]),
+        updated_at: Number(args[10]),
       });
       return;
     }
@@ -733,6 +739,7 @@ describe("worker queue sync flow", () => {
       name: "api",
       default_branch: "main",
       is_private: 0,
+      pushed_at: Date.now(),
       sync_enabled: 1,
       installation_id: "installation-row",
       created_at: Date.now(),

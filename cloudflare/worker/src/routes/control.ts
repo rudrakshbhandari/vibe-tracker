@@ -9,6 +9,7 @@ import { json, parseJson, unauthorized } from "@/lib/http";
 import { getRequestAccountId } from "@/lib/request-auth";
 import { getValidUserAccessToken } from "@/lib/session";
 import { getSocialFriends, getSocialMe } from "@/lib/social-read";
+import { getRecommendedRepositoryIds } from "@/lib/store";
 
 const MAX_TRACKED_REPOSITORIES_PER_INSTALLATION = 25;
 
@@ -31,9 +32,12 @@ type InstallationStateRow = {
   targetType: string | null;
   permissionsJson: string | null;
   repositoryId: string | null;
+  repositoryGithubRepoId: number | null;
   repositoryName: string | null;
   repositoryOwner: string | null;
   syncEnabled: number | null;
+  pushedAt: number | null;
+  latestMergedAt: number | null;
 };
 
 function redirect(url: string, headers = new Headers()) {
@@ -109,15 +113,34 @@ async function listInstallationsForAccount(
       installations.target_type AS targetType,
       installations.permissions_json AS permissionsJson,
       repositories.id AS repositoryId,
+      repositories.github_repo_id AS repositoryGithubRepoId,
       repositories.name AS repositoryName,
       repositories.owner AS repositoryOwner,
-      repositories.sync_enabled AS syncEnabled
+      repositories.sync_enabled AS syncEnabled,
+      repositories.pushed_at AS pushedAt,
+      MAX(pull_requests.merged_at) AS latestMergedAt
      FROM installation_grants
      INNER JOIN installations
        ON installations.id = installation_grants.installation_id
      LEFT JOIN repositories
        ON repositories.installation_id = installations.id
+     LEFT JOIN pull_requests
+       ON pull_requests.repository_id = repositories.id
+      AND pull_requests.author_id = installation_grants.account_id
+      AND pull_requests.merged_at IS NOT NULL
      WHERE installation_grants.account_id = ?
+     GROUP BY
+      installations.id,
+      installations.github_install_id,
+      installations.account_login,
+      installations.account_type,
+      installations.target_type,
+      installations.permissions_json,
+      repositories.id,
+      repositories.name,
+      repositories.owner,
+      repositories.sync_enabled,
+      repositories.pushed_at
      ORDER BY installations.account_login ASC, repositories.name ASC`,
   )
     .bind(accountId)
@@ -134,9 +157,12 @@ async function listInstallationsForAccount(
       permissions: Record<string, string>;
       repositories: Array<{
         id: string;
+        githubRepoId: number;
         name: string;
         owner: string;
         syncEnabled: boolean;
+        pushedAt: number;
+        latestMergedAt: number;
       }>;
     }
   >();
@@ -157,9 +183,12 @@ async function listInstallationsForAccount(
     if (row.repositoryId && row.repositoryName && row.repositoryOwner) {
       existing.repositories.push({
         id: row.repositoryId,
+        githubRepoId: row.repositoryGithubRepoId ?? 0,
         name: row.repositoryName,
         owner: row.repositoryOwner,
         syncEnabled: row.syncEnabled === 1,
+        pushedAt: row.pushedAt ?? 0,
+        latestMergedAt: row.latestMergedAt ?? 0,
       });
     }
 
@@ -171,6 +200,20 @@ async function listInstallationsForAccount(
     repositories: installation.repositories.sort((left, right) =>
       `${left.owner}/${left.name}`.localeCompare(`${right.owner}/${right.name}`),
     ),
+    recommendedRepositoryIds: getRecommendedRepositoryIds({
+      repositories: installation.repositories.map((repository) => ({
+        id: repository.id,
+        githubRepoId: repository.githubRepoId,
+        fullName: `${repository.owner}/${repository.name}`,
+        pushedAt: repository.pushedAt,
+      })),
+      activityByRepoId: new Map(
+        installation.repositories.map((repository) => [
+          repository.githubRepoId,
+          repository.latestMergedAt,
+        ]),
+      ),
+    }),
   }));
 }
 
@@ -285,6 +328,8 @@ export async function handleGitHubState(request: Request, env: VibeWorkerEnv) {
       trackedRepositoryCount: installation.repositories.filter(
         (repository) => repository.syncEnabled,
       ).length,
+      recommendedRepositoryCount: installation.recommendedRepositoryIds.length,
+      recommendedRepositoryIds: installation.recommendedRepositoryIds,
       repositories: installation.repositories,
     })),
   });
@@ -498,6 +543,57 @@ export async function handleGitHubInstallationScope(
   ]);
 
   return redirect(getAppRedirectUrl(env, request, "/?github=repository-scope-saved"));
+}
+
+export async function handleGitHubInstallationRecommendedScope(
+  request: Request,
+  env: VibeWorkerEnv,
+  githubInstallationId: number,
+) {
+  const accountId = await getRequestAccountId(request, env);
+  if (!accountId) {
+    return redirect(getAppRedirectUrl(env, request, "/?github=not-connected"));
+  }
+
+  const installations = await listInstallationsForAccount(env, accountId);
+  const installation = installations.find(
+    (entry) => entry.githubInstallId === githubInstallationId,
+  );
+
+  if (!installation) {
+    return redirect(getAppRedirectUrl(env, request, "/?github=invalid-installation"));
+  }
+
+  const now = Date.now();
+  await env.DB.batch([
+    env.DB.prepare(
+      `UPDATE repositories
+       SET sync_enabled = 0,
+           updated_at = ?
+       WHERE installation_id = ?`,
+    ).bind(now, installation.id),
+    ...(installation.recommendedRepositoryIds.length > 0
+      ? [
+          env.DB.prepare(
+            `UPDATE repositories
+             SET sync_enabled = 1,
+                 updated_at = ?
+             WHERE installation_id = ?
+               AND id IN (${installation.recommendedRepositoryIds.map(() => "?").join(", ")})`,
+          ).bind(now, installation.id, ...installation.recommendedRepositoryIds),
+        ]
+      : []),
+    env.DB.prepare(
+      `UPDATE installations
+       SET sync_selection_updated_at = ?,
+           updated_at = ?
+       WHERE id = ?`,
+    ).bind(now, now, installation.id),
+  ]);
+
+  return redirect(
+    getAppRedirectUrl(env, request, "/?github=recommended-repositories-applied"),
+  );
 }
 
 export async function handleSocialProfileUpdate(

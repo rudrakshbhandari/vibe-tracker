@@ -13,6 +13,7 @@ import {
 import {
   handleGitHubActivitySync,
   handleGitHubInstall,
+  handleGitHubInstallationRecommendedScope,
   handleGitHubInstallationScope,
   handleGitHubInstallationSync,
   handleGitHubSetup,
@@ -111,6 +112,17 @@ export default {
 
     if (request.method === "POST" && url.pathname === "/api/github/activity-sync") {
       return handleGitHubActivitySync(request, env);
+    }
+
+    if (
+      request.method === "POST" &&
+      /\/api\/github\/installations\/\d+\/scope\/recommended$/.test(url.pathname)
+    ) {
+      const githubInstallationId = Number.parseInt(
+        url.pathname.split("/").at(-3) ?? "",
+        10,
+      );
+      return handleGitHubInstallationRecommendedScope(request, env, githubInstallationId);
     }
 
     if (
