@@ -1,34 +1,36 @@
 import { NextRequest } from "next/server";
+import { z } from "zod";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
-  fetchCloudflareReadJsonMock,
   hasCloudflareWorkerProxyMock,
+  proxyCloudflareRequestMock,
 } = vi.hoisted(() => ({
-  fetchCloudflareReadJsonMock: vi.fn(),
   hasCloudflareWorkerProxyMock: vi.fn(),
+  proxyCloudflareRequestMock: vi.fn(),
 }));
 
 vi.mock("@/lib/cloudflare-read", () => ({
-  fetchCloudflareReadJson: fetchCloudflareReadJsonMock,
   hasCloudflareWorkerProxy: hasCloudflareWorkerProxyMock,
+  proxyCloudflareRequest: proxyCloudflareRequestMock,
+}));
+
+vi.mock("@/lib/social", () => ({
+  socialScopeSchema: z.enum(["friends", "global"]),
+  socialWindowSchema: z.enum(["7d", "30d", "90d"]),
 }));
 
 describe("GET /api/social/leaderboard", () => {
   beforeEach(() => {
     vi.resetModules();
-    fetchCloudflareReadJsonMock.mockReset();
     hasCloudflareWorkerProxyMock.mockReset();
+    proxyCloudflareRequestMock.mockReset();
+    proxyCloudflareRequestMock.mockResolvedValue(new Response(null, { status: 200 }));
   });
 
   it("passes scope and window through to the worker", async () => {
     hasCloudflareWorkerProxyMock.mockReturnValue(true);
-    fetchCloudflareReadJsonMock.mockResolvedValue({
-      scope: "global",
-      window: "90d",
-      entries: [],
-    });
 
     const { GET } = await import("@/app/api/social/leaderboard/route");
     const request = new NextRequest(
@@ -37,7 +39,8 @@ describe("GET /api/social/leaderboard", () => {
     const response = await GET(request);
 
     expect(response.status).toBe(200);
-    expect(fetchCloudflareReadJsonMock).toHaveBeenCalledWith(
+    expect(proxyCloudflareRequestMock).toHaveBeenCalledWith(
+      request,
       "/api/social/leaderboard?scope=global&window=90d",
     );
   });

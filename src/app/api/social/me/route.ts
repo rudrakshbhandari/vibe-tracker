@@ -1,17 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import {
-  fetchCloudflareReadJson,
   hasCloudflareWorkerProxy,
+  proxyCloudflareRequest,
 } from "@/lib/cloudflare-read";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   if (hasCloudflareWorkerProxy()) {
-    const proxied = await fetchCloudflareReadJson("/api/social/me");
-
-    if (proxied) {
-      return NextResponse.json(proxied);
-    }
+    return proxyCloudflareRequest(request, "/api/social/me");
   }
 
   return NextResponse.json(

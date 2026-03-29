@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import {
-  fetchCloudflareReadJson,
   hasCloudflareWorkerProxy,
+  proxyCloudflareRequest,
 } from "@/lib/cloudflare-read";
 import { socialWindowSchema } from "@/lib/social";
 
@@ -22,15 +22,12 @@ export async function GET(request: NextRequest) {
   }
 
   if (hasCloudflareWorkerProxy()) {
-    const proxied = await fetchCloudflareReadJson(
+    return proxyCloudflareRequest(
+      request,
       `/api/social/friends?${new URLSearchParams({
         window: parseResult.data,
       }).toString()}`,
     );
-
-    if (proxied) {
-      return NextResponse.json(proxied);
-    }
   }
 
   return NextResponse.json(

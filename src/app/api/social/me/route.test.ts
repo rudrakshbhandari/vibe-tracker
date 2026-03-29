@@ -1,38 +1,40 @@
+import { NextRequest } from "next/server";
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
-  fetchCloudflareReadJsonMock,
   hasCloudflareWorkerProxyMock,
+  proxyCloudflareRequestMock,
 } = vi.hoisted(() => ({
-  fetchCloudflareReadJsonMock: vi.fn(),
   hasCloudflareWorkerProxyMock: vi.fn(),
+  proxyCloudflareRequestMock: vi.fn(),
 }));
 
 vi.mock("@/lib/cloudflare-read", () => ({
-  fetchCloudflareReadJson: fetchCloudflareReadJsonMock,
   hasCloudflareWorkerProxy: hasCloudflareWorkerProxyMock,
+  proxyCloudflareRequest: proxyCloudflareRequestMock,
 }));
 
 describe("GET /api/social/me", () => {
   beforeEach(() => {
     vi.resetModules();
-    fetchCloudflareReadJsonMock.mockReset();
     hasCloudflareWorkerProxyMock.mockReset();
+    proxyCloudflareRequestMock.mockReset();
+    proxyCloudflareRequestMock.mockResolvedValue(new Response(null, { status: 200 }));
   });
 
-  it("returns worker payload when the Cloudflare backend responds", async () => {
+  it("proxies the request to the Cloudflare backend", async () => {
     hasCloudflareWorkerProxyMock.mockReturnValue(true);
-    fetchCloudflareReadJsonMock.mockResolvedValue({
-      profile: { login: "octocat" },
-    });
 
     const { GET } = await import("@/app/api/social/me/route");
-    const response = await GET();
+    const request = new NextRequest("http://localhost/api/social/me");
+    const response = await GET(request);
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({
-      profile: { login: "octocat" },
-    });
+    expect(proxyCloudflareRequestMock).toHaveBeenCalledWith(
+      request,
+      "/api/social/me",
+    );
   });
 
   it("returns 503 when the Cloudflare backend is unavailable", async () => {

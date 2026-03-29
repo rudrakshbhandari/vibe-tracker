@@ -75,6 +75,7 @@ export type GitHubRequestOptions = {
 
 const MAX_GITHUB_RATE_LIMIT_RETRIES = 2;
 const DEFAULT_GITHUB_RETRY_DELAY_MS = 30_000;
+const GITHUB_USER_AGENT = "vibe-tracker";
 
 function encodeBase64Url(input: string | ArrayBuffer) {
   const bytes =
@@ -238,14 +239,18 @@ async function githubRequest<T>(
       headers: {
         Accept: "application/vnd.github+json",
         Authorization: `Bearer ${accessToken}`,
+        "User-Agent": GITHUB_USER_AGENT,
         "X-GitHub-Api-Version": "2022-11-28",
       },
       cache: "no-store",
     });
 
     if (!response.ok) {
+      const responseText = await response.text();
       const error = new Error(
-        `GitHub API request failed for ${path} with ${response.status}`,
+        `GitHub API request failed for ${path} with ${response.status}${
+          responseText ? `: ${responseText.slice(0, 200)}` : ""
+        }`,
       ) as Error & {
         status: number;
         response: {
@@ -272,6 +277,7 @@ async function createInstallationToken(env: VibeWorkerEnv, installationId: numbe
       headers: {
         Accept: "application/vnd.github+json",
         Authorization: `Bearer ${jwt}`,
+        "User-Agent": GITHUB_USER_AGENT,
         "X-GitHub-Api-Version": "2022-11-28",
       },
     },
@@ -320,6 +326,7 @@ export async function exchangeCodeForUserToken(env: VibeWorkerEnv, code: string)
     headers: {
       Accept: "application/json",
       "Content-Type": "application/x-www-form-urlencoded",
+      "User-Agent": GITHUB_USER_AGENT,
     },
     body: new URLSearchParams({
       client_id: config.GITHUB_APP_CLIENT_ID,
@@ -353,6 +360,7 @@ export async function refreshUserToken(env: VibeWorkerEnv, refreshToken: string)
     headers: {
       Accept: "application/json",
       "Content-Type": "application/x-www-form-urlencoded",
+      "User-Agent": GITHUB_USER_AGENT,
     },
     body: new URLSearchParams({
       client_id: config.GITHUB_APP_CLIENT_ID,
