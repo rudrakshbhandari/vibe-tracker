@@ -4,8 +4,8 @@
 
 - Issue: [#113](https://github.com/rudrakshbhandari/vibe-tracker/issues/113)
 - Branch: `rudrakshbhandari/fix-worker-read-proxy`
-- PR: pending
-- Workflow: In Progress
+- PR: [#114](https://github.com/rudrakshbhandari/vibe-tracker/pull/114)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -15,7 +15,8 @@
 - [x] Preserve worker response status/body for worker-backed metrics and social GET API routes
 - [x] Add route coverage for the affected proxy endpoints
 - [x] Run targeted verification for the updated routes and a production build
-- [ ] Push branch, open PR, deploy, and complete one real production GitHub connect + sync flow
+- [x] Push branch and open PR
+- [ ] Deploy and complete one real production GitHub connect + sync flow
 
 ### Verification
 
