@@ -85,6 +85,9 @@ export async function handleGitHubCallback(request: Request, env: VibeWorkerEnv)
     return redirect(getAppRedirect(env, "/?github=connected"), headers);
   } catch (error) {
     const message = error instanceof Error ? error.message : "oauth-failed";
+    console.error("GitHub OAuth callback failed", {
+      message,
+    });
     const codeSuffix = message.includes("token exchange")
       ? "oauth-token-failed"
       : message.includes("GitHub API request failed for /user")

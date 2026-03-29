@@ -246,8 +246,11 @@ async function githubRequest<T>(
     });
 
     if (!response.ok) {
+      const responseText = await response.text();
       const error = new Error(
-        `GitHub API request failed for ${path} with ${response.status}`,
+        `GitHub API request failed for ${path} with ${response.status}${
+          responseText ? `: ${responseText.slice(0, 200)}` : ""
+        }`,
       ) as Error & {
         status: number;
         response: {
