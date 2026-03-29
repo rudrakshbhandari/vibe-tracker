@@ -1,5 +1,29 @@
 # Execution Plan
 
+## Issue #115 - Debug production installation discovery after GitHub App install
+
+- Issue: [#115](https://github.com/rudrakshbhandari/vibe-tracker/issues/115)
+- Branch: `rudrakshbhandari/debug-installation-discovery`
+- PR: pending
+- Workflow: In Progress
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Create the follow-up issue and task branch
+- [x] Trace the production worker install discovery path and confirm the missing D1 installation rows
+- [x] Fix `/api/github/install` so existing signed-in installations enqueue sync instead of bouncing back to GitHub
+- [x] Add worker coverage for the existing-installation install flow
+- [x] Run worker verification locally
+- [ ] Push branch, open PR, deploy, and confirm production installation discovery and first sync
+
+### Verification
+
+- `npm run cloudflare:test -- routes-control-install.test.ts`
+- `npm run cloudflare:test`
+- `npm run cloudflare:typecheck`
+
 ## Issue #111 - Fix Cloudflare production config and deploy worker
 
 - Issue: [#111](https://github.com/rudrakshbhandari/vibe-tracker/issues/111)

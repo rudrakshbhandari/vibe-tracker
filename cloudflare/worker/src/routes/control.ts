@@ -290,6 +290,33 @@ export async function handleGitHubInstall(request: Request, env: VibeWorkerEnv) 
     return redirect(new URL("/?github=missing-config", request.url).toString());
   }
 
+  const session = await getValidUserAccessToken(env, request);
+
+  if (session) {
+    try {
+      const installations = await getUserInstallations(session.accessToken);
+      const queued = await enqueueInstallationMessages(
+        env,
+        session.accountId,
+        installations.map((installation) => ({
+          githubInstallationId: installation.id,
+          accountLogin: installation.account.login,
+          accountType: installation.account.type,
+          targetType: installation.target_type ?? null,
+          permissions: installation.permissions,
+        })),
+      );
+
+      if (queued) {
+        return redirect(
+          new URL("/?github=installation-connected", request.url).toString(),
+        );
+      }
+    } catch {
+      return redirect(new URL("/?github=sync-failed", request.url).toString());
+    }
+  }
+
   return redirect(
     `https://github.com/apps/${env.GITHUB_APP_SLUG}/installations/new`,
   );
