@@ -92,11 +92,30 @@ function encodeBase64Url(input: string | ArrayBuffer) {
 }
 
 function decodePemPrivateKey(privateKey: string) {
-  const normalized = privateKey
+  const trimmed = privateKey.trim();
+  if (trimmed.includes("BEGIN RSA PRIVATE KEY")) {
+    throw new Error(
+      "GitHub private key must be stored in PKCS#8 format (BEGIN PRIVATE KEY).",
+    );
+  }
+
+  const normalized = trimmed
+    .trim()
+    .replace(/^"|"$/g, "")
+    .replace(/\\r/g, "")
+    .replace(/\\n/g, "\n")
     .replace(/-----BEGIN PRIVATE KEY-----/g, "")
     .replace(/-----END PRIVATE KEY-----/g, "")
-    .replace(/\s+/g, "");
-  const binary = atob(normalized);
+    .replace(/\s+/g, "")
+    .replace(/-/g, "+")
+    .replace(/_/g, "/");
+  let binary: string;
+
+  try {
+    binary = atob(normalized);
+  } catch {
+    throw new Error("GitHub private key secret is not valid base64.");
+  }
   const bytes = new Uint8Array(binary.length);
 
   for (let index = 0; index < binary.length; index += 1) {

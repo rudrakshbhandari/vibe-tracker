@@ -66,6 +66,11 @@ export async function handleQueueBatch(
         continue;
       }
 
+      console.error("Queue message failed", {
+        messageId: message.id,
+        body: message.body,
+        error: error instanceof Error ? error.message : String(error),
+      });
       message.retry();
     }
   }
