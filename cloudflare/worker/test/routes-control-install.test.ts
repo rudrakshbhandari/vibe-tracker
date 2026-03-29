@@ -92,4 +92,23 @@ describe("handleGitHubInstall", () => {
       "https://github.com/apps/vibe-tracker-rb/installations/new",
     );
   });
+
+  it("redirects failures back to the app origin instead of the worker origin", async () => {
+    const env = createEnv();
+    getValidUserAccessTokenMock.mockResolvedValue({
+      accountId: "account-1",
+      accessToken: "access-token",
+    });
+    getUserInstallationsMock.mockRejectedValue(new Error("GitHub exploded"));
+
+    const response = await handleGitHubInstall(
+      new Request("https://vibe-tracker-worker.rudrakshbhandari99.workers.dev/api/github/install"),
+      env,
+    );
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get("location")).toBe(
+      "https://vibe-tracker-max.vercel.app/?github=sync-failed",
+    );
+  });
 });

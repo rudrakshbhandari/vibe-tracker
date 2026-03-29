@@ -44,6 +44,11 @@ function redirect(url: string, headers = new Headers()) {
   });
 }
 
+function getAppRedirectUrl(env: VibeWorkerEnv, request: Request, pathWithQuery: string) {
+  const baseUrl = env.APP_URL ?? new URL(request.url).origin;
+  return new URL(pathWithQuery, baseUrl).toString();
+}
+
 function getReconnectState(url: string) {
   return {
     connected: false,
@@ -287,7 +292,7 @@ export async function handleGitHubState(request: Request, env: VibeWorkerEnv) {
 
 export async function handleGitHubInstall(request: Request, env: VibeWorkerEnv) {
   if (!hasGitHubAuthEnv(env) || !env.GITHUB_APP_SLUG) {
-    return redirect(new URL("/?github=missing-config", request.url).toString());
+    return redirect(getAppRedirectUrl(env, request, "/?github=missing-config"));
   }
 
   const session = await getValidUserAccessToken(env, request);
@@ -308,12 +313,13 @@ export async function handleGitHubInstall(request: Request, env: VibeWorkerEnv) 
       );
 
       if (queued) {
-        return redirect(
-          new URL("/?github=installation-connected", request.url).toString(),
-        );
+        return redirect(getAppRedirectUrl(env, request, "/?github=installation-connected"));
       }
-    } catch {
-      return redirect(new URL("/?github=sync-failed", request.url).toString());
+    } catch (error) {
+      console.error("Failed to sync existing GitHub installations during install", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return redirect(getAppRedirectUrl(env, request, "/?github=sync-failed"));
     }
   }
 
@@ -324,12 +330,12 @@ export async function handleGitHubInstall(request: Request, env: VibeWorkerEnv) 
 
 export async function handleGitHubSetup(request: Request, env: VibeWorkerEnv) {
   if (!hasGitHubAuthEnv(env)) {
-    return redirect(new URL("/?github=missing-config", request.url).toString());
+    return redirect(getAppRedirectUrl(env, request, "/?github=missing-config"));
   }
 
   const session = await getValidUserAccessToken(env, request);
   if (!session) {
-    return redirect(new URL("/?github=not-connected", request.url).toString());
+    return redirect(getAppRedirectUrl(env, request, "/?github=not-connected"));
   }
 
   const installationId = Number.parseInt(
@@ -337,14 +343,14 @@ export async function handleGitHubSetup(request: Request, env: VibeWorkerEnv) {
     10,
   );
   if (Number.isNaN(installationId)) {
-    return redirect(new URL("/?github=invalid-installation", request.url).toString());
+    return redirect(getAppRedirectUrl(env, request, "/?github=invalid-installation"));
   }
 
   try {
     const installations = await getUserInstallations(session.accessToken);
     const installation = installations.find((entry) => entry.id === installationId);
     if (!installation) {
-      return redirect(new URL("/?github=invalid-installation", request.url).toString());
+      return redirect(getAppRedirectUrl(env, request, "/?github=invalid-installation"));
     }
 
     const queued = await enqueueInstallationMessages(env, session.accountId, [
@@ -358,14 +364,16 @@ export async function handleGitHubSetup(request: Request, env: VibeWorkerEnv) {
     ]);
 
     if (!queued) {
-      return redirect(new URL("/?github=sync-failed", request.url).toString());
+      return redirect(getAppRedirectUrl(env, request, "/?github=sync-failed"));
     }
 
-    return redirect(
-      new URL("/?github=installation-connected", request.url).toString(),
-    );
-  } catch {
-    return redirect(new URL("/?github=sync-failed", request.url).toString());
+    return redirect(getAppRedirectUrl(env, request, "/?github=installation-connected"));
+  } catch (error) {
+    console.error("Failed to complete GitHub installation setup", {
+      installationId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return redirect(getAppRedirectUrl(env, request, "/?github=sync-failed"));
   }
 }
 
@@ -374,12 +382,12 @@ export async function handleGitHubActivitySync(
   env: VibeWorkerEnv,
 ) {
   if (!hasGitHubAuthEnv(env)) {
-    return redirect(new URL("/?github=missing-config", request.url).toString());
+    return redirect(getAppRedirectUrl(env, request, "/?github=missing-config"));
   }
 
   const accountId = await getRequestAccountId(request, env);
   if (!accountId) {
-    return redirect(new URL("/?github=not-connected", request.url).toString());
+    return redirect(getAppRedirectUrl(env, request, "/?github=not-connected"));
   }
 
   const installations = await listInstallationsForAccount(env, accountId);
@@ -390,12 +398,10 @@ export async function handleGitHubActivitySync(
   );
 
   if (!queued) {
-    return redirect(new URL("/?github=sync-failed", request.url).toString());
+    return redirect(getAppRedirectUrl(env, request, "/?github=sync-failed"));
   }
 
-  return redirect(
-    new URL("/?github=activity-sync-started", request.url).toString(),
-  );
+  return redirect(getAppRedirectUrl(env, request, "/?github=activity-sync-started"));
 }
 
 export async function handleGitHubInstallationSync(
@@ -405,7 +411,7 @@ export async function handleGitHubInstallationSync(
 ) {
   const accountId = await getRequestAccountId(request, env);
   if (!accountId) {
-    return redirect(new URL("/?github=not-connected", request.url).toString());
+    return redirect(getAppRedirectUrl(env, request, "/?github=not-connected"));
   }
 
   const installations = await listInstallationsForAccount(env, accountId);
@@ -414,7 +420,7 @@ export async function handleGitHubInstallationSync(
   );
 
   if (!installation) {
-    return redirect(new URL("/?github=invalid-installation", request.url).toString());
+    return redirect(getAppRedirectUrl(env, request, "/?github=invalid-installation"));
   }
 
   const queued = await enqueueInstallationMessages(env, accountId, [
@@ -422,12 +428,10 @@ export async function handleGitHubInstallationSync(
   ]);
 
   if (!queued) {
-    return redirect(new URL("/?github=sync-failed", request.url).toString());
+    return redirect(getAppRedirectUrl(env, request, "/?github=sync-failed"));
   }
 
-  return redirect(
-    new URL("/?github=repositories-refreshed", request.url).toString(),
-  );
+  return redirect(getAppRedirectUrl(env, request, "/?github=repositories-refreshed"));
 }
 
 export async function handleGitHubInstallationScope(
@@ -437,7 +441,7 @@ export async function handleGitHubInstallationScope(
 ) {
   const accountId = await getRequestAccountId(request, env);
   if (!accountId) {
-    return redirect(new URL("/?github=not-connected", request.url).toString());
+    return redirect(getAppRedirectUrl(env, request, "/?github=not-connected"));
   }
 
   const installations = await listInstallationsForAccount(env, accountId);
@@ -446,7 +450,7 @@ export async function handleGitHubInstallationScope(
   );
 
   if (!installation) {
-    return redirect(new URL("/?github=invalid-installation", request.url).toString());
+    return redirect(getAppRedirectUrl(env, request, "/?github=invalid-installation"));
   }
 
   const formData = await request.formData();
@@ -463,7 +467,7 @@ export async function handleGitHubInstallationScope(
 
   if (selectedRepositoryIds.length > MAX_TRACKED_REPOSITORIES_PER_INSTALLATION) {
     return redirect(
-      new URL("/?github=repository-scope-too-large", request.url).toString(),
+      getAppRedirectUrl(env, request, "/?github=repository-scope-too-large"),
     );
   }
 
@@ -493,9 +497,7 @@ export async function handleGitHubInstallationScope(
     ).bind(Date.now(), Date.now(), installation.id),
   ]);
 
-  return redirect(
-    new URL("/?github=repository-scope-saved", request.url).toString(),
-  );
+  return redirect(getAppRedirectUrl(env, request, "/?github=repository-scope-saved"));
 }
 
 export async function handleSocialProfileUpdate(

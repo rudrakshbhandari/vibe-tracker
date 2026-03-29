@@ -91,11 +91,42 @@ function encodeBase64Url(input: string | ArrayBuffer) {
 }
 
 function decodePemPrivateKey(privateKey: string) {
-  const normalized = privateKey
+  const trimmed = privateKey.trim();
+  const normalized = trimmed
+    .trim()
+    .replace(/^"|"$/g, "")
+    .replace(/\\r/g, "")
+    .replace(/\\n/g, "\n")
     .replace(/-----BEGIN PRIVATE KEY-----/g, "")
     .replace(/-----END PRIVATE KEY-----/g, "")
-    .replace(/\s+/g, "");
-  const binary = atob(normalized);
+    .replace(/\s+/g, "")
+    .replace(/-/g, "+")
+    .replace(/_/g, "/");
+  let binary: string;
+
+  try {
+    binary = atob(normalized);
+  } catch (error) {
+    const lines = trimmed.split(/\r?\n/);
+    const invalidChars = Array.from(
+      new Set(
+        normalized
+          .split("")
+          .filter((character) => !/[A-Za-z0-9+/=]/.test(character)),
+      ),
+    );
+    throw new Error(
+      `Failed to decode GitHub private key: ${
+        error instanceof Error ? error.message : String(error)
+      } (trimmedLength=${trimmed.length}, normalizedLength=${normalized.length}, lineCount=${lines.length}, hasBegin=${trimmed.includes(
+        "BEGIN PRIVATE KEY",
+      )}, hasEnd=${trimmed.includes("END PRIVATE KEY")}, hasEscapedNewlines=${trimmed.includes(
+        "\\n",
+      )}, wrappedInQuotes=${trimmed.startsWith("\"") && trimmed.endsWith("\"")}, invalidChars=${JSON.stringify(
+        invalidChars.map((character) => character.codePointAt(0)),
+      )}, firstLineLength=${lines[0]?.length ?? 0}, lastLineLength=${lines.at(-1)?.length ?? 0})`,
+    );
+  }
   const bytes = new Uint8Array(binary.length);
 
   for (let index = 0; index < binary.length; index += 1) {
@@ -238,6 +269,7 @@ async function githubRequest<T>(
       headers: {
         Accept: "application/vnd.github+json",
         Authorization: `Bearer ${accessToken}`,
+        "User-Agent": "vibe-tracker-worker",
         "X-GitHub-Api-Version": "2022-11-28",
       },
       cache: "no-store",
@@ -272,6 +304,7 @@ async function createInstallationToken(env: VibeWorkerEnv, installationId: numbe
       headers: {
         Accept: "application/vnd.github+json",
         Authorization: `Bearer ${jwt}`,
+        "User-Agent": "vibe-tracker-worker",
         "X-GitHub-Api-Version": "2022-11-28",
       },
     },
