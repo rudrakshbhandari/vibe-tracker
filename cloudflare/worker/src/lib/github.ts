@@ -92,6 +92,12 @@ function encodeBase64Url(input: string | ArrayBuffer) {
 
 function decodePemPrivateKey(privateKey: string) {
   const trimmed = privateKey.trim();
+  if (trimmed.includes("BEGIN RSA PRIVATE KEY")) {
+    throw new Error(
+      "GitHub private key must be stored in PKCS#8 format (BEGIN PRIVATE KEY).",
+    );
+  }
+
   const normalized = trimmed
     .trim()
     .replace(/^"|"$/g, "")
@@ -106,26 +112,8 @@ function decodePemPrivateKey(privateKey: string) {
 
   try {
     binary = atob(normalized);
-  } catch (error) {
-    const lines = trimmed.split(/\r?\n/);
-    const invalidChars = Array.from(
-      new Set(
-        normalized
-          .split("")
-          .filter((character) => !/[A-Za-z0-9+/=]/.test(character)),
-      ),
-    );
-    throw new Error(
-      `Failed to decode GitHub private key: ${
-        error instanceof Error ? error.message : String(error)
-      } (trimmedLength=${trimmed.length}, normalizedLength=${normalized.length}, lineCount=${lines.length}, hasBegin=${trimmed.includes(
-        "BEGIN PRIVATE KEY",
-      )}, hasEnd=${trimmed.includes("END PRIVATE KEY")}, hasEscapedNewlines=${trimmed.includes(
-        "\\n",
-      )}, wrappedInQuotes=${trimmed.startsWith("\"") && trimmed.endsWith("\"")}, invalidChars=${JSON.stringify(
-        invalidChars.map((character) => character.codePointAt(0)),
-      )}, firstLineLength=${lines[0]?.length ?? 0}, lastLineLength=${lines.at(-1)?.length ?? 0})`,
-    );
+  } catch {
+    throw new Error("GitHub private key secret is not valid base64.");
   }
   const bytes = new Uint8Array(binary.length);
 
