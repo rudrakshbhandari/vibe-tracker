@@ -16,11 +16,14 @@ vi.mock("@/lib/cloudflare-read", () => ({
   proxyCloudflareRequest: proxyCloudflareRequestMock,
 }));
 
-vi.mock("@/lib/social", () => ({
-  socialWindowSchema: z.enum(["7d", "30d", "90d"]),
+vi.mock("@/lib/metrics", () => ({
+  metricsQuerySchema: z.object({
+    view: z.enum(["daily", "weekly", "monthly"]).default("daily"),
+    mode: z.enum(["shipped", "merged"]).default("shipped"),
+  }),
 }));
 
-describe("GET /api/social/friends", () => {
+describe("GET /api/metrics", () => {
   beforeEach(() => {
     vi.resetModules();
     hasCloudflareWorkerProxyMock.mockReset();
@@ -28,23 +31,25 @@ describe("GET /api/social/friends", () => {
     proxyCloudflareRequestMock.mockResolvedValue(new Response(null, { status: 200 }));
   });
 
-  it("passes the selected window to the worker", async () => {
+  it("proxies the validated query string through to the worker", async () => {
     hasCloudflareWorkerProxyMock.mockReturnValue(true);
 
-    const { GET } = await import("@/app/api/social/friends/route");
-    const request = new NextRequest("http://localhost/api/social/friends?window=7d");
+    const { GET } = await import("@/app/api/metrics/route");
+    const request = new NextRequest(
+      "http://localhost/api/metrics?view=weekly&mode=shipped",
+    );
     const response = await GET(request);
 
     expect(response.status).toBe(200);
     expect(proxyCloudflareRequestMock).toHaveBeenCalledWith(
       request,
-      "/api/social/friends?window=7d",
+      "/api/metrics?view=weekly&mode=shipped",
     );
   });
 
-  it("returns 400 when the window is invalid", async () => {
-    const { GET } = await import("@/app/api/social/friends/route");
-    const request = new NextRequest("http://localhost/api/social/friends?window=bad");
+  it("returns 400 when the query params are invalid", async () => {
+    const { GET } = await import("@/app/api/metrics/route");
+    const request = new NextRequest("http://localhost/api/metrics?view=oops");
     const response = await GET(request);
 
     expect(response.status).toBe(400);

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import {
-  fetchCloudflareReadJson,
   hasCloudflareWorkerProxy,
+  proxyCloudflareRequest,
 } from "@/lib/cloudflare-read";
 
 type RouteContext = {
@@ -11,17 +11,14 @@ type RouteContext = {
   }>;
 };
 
-export async function GET(_request: NextRequest, context: RouteContext) {
+export async function GET(request: NextRequest, context: RouteContext) {
   const { login } = await context.params;
 
   if (hasCloudflareWorkerProxy()) {
-    const proxied = await fetchCloudflareReadJson(
+    return proxyCloudflareRequest(
+      request,
       `/api/social/profile/${encodeURIComponent(login)}`,
     );
-
-    if (proxied) {
-      return NextResponse.json(proxied);
-    }
   }
 
   return NextResponse.json(

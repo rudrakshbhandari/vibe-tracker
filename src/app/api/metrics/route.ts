@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import {
-  fetchCloudflareReadJson,
   hasCloudflareWorkerProxy,
+  proxyCloudflareRequest,
 } from "@/lib/cloudflare-read";
 import { metricsQuerySchema } from "@/lib/metrics";
 
@@ -23,16 +23,13 @@ export async function GET(request: NextRequest) {
   }
 
   if (hasCloudflareWorkerProxy()) {
-    const proxied = await fetchCloudflareReadJson(
+    return proxyCloudflareRequest(
+      request,
       `/api/metrics?${new URLSearchParams({
         view: parseResult.data.view,
         mode: parseResult.data.mode,
       }).toString()}`,
     );
-
-    if (proxied) {
-      return NextResponse.json(proxied);
-    }
   }
 
   return NextResponse.json(

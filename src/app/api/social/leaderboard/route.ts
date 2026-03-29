@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import {
-  fetchCloudflareReadJson,
   hasCloudflareWorkerProxy,
+  proxyCloudflareRequest,
 } from "@/lib/cloudflare-read";
 import { socialScopeSchema, socialWindowSchema } from "@/lib/social";
 
@@ -29,16 +29,13 @@ export async function GET(request: NextRequest) {
   }
 
   if (hasCloudflareWorkerProxy()) {
-    const proxied = await fetchCloudflareReadJson(
+    return proxyCloudflareRequest(
+      request,
       `/api/social/leaderboard?${new URLSearchParams({
         scope: parseResult.data.scope,
         window: parseResult.data.window,
       }).toString()}`,
     );
-
-    if (proxied) {
-      return NextResponse.json(proxied);
-    }
   }
 
   return NextResponse.json(

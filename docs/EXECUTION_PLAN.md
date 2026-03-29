@@ -1,5 +1,27 @@
 # Execution Plan
 
+## Issue #113 - Fix worker-backed read API status propagation
+
+- Issue: [#113](https://github.com/rudrakshbhandari/vibe-tracker/issues/113)
+- Branch: `rudrakshbhandari/fix-worker-read-proxy`
+- PR: pending
+- Workflow: In Progress
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Create the follow-up issue, task branch, and project tracking entry
+- [x] Preserve worker response status/body for worker-backed metrics and social GET API routes
+- [x] Add route coverage for the affected proxy endpoints
+- [x] Run targeted verification for the updated routes and a production build
+- [ ] Push branch, open PR, deploy, and complete one real production GitHub connect + sync flow
+
+### Verification
+
+- `npm test -- src/app/api/metrics/route.test.ts src/app/api/social/me/route.test.ts src/app/api/social/leaderboard/route.test.ts src/app/api/social/friends/route.test.ts 'src/app/api/social/profile/[login]/route.test.ts'`
+- `npm run build`
+
 ## Issue #111 - Fix Cloudflare production config and deploy worker
 
 - Issue: [#111](https://github.com/rudrakshbhandari/vibe-tracker/issues/111)
