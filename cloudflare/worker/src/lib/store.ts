@@ -13,6 +13,9 @@ type ExistingRepositoryRow = {
   id: string;
   github_repo_id: number;
   sync_enabled: number;
+  owner?: string;
+  name?: string;
+  pushed_at?: number | null;
 };
 
 type RepositoryActivityRow = {
@@ -54,6 +57,37 @@ function getTrackedRepositories<T extends { syncEnabled: boolean }>(repositories
 
 function getRepositoryRecencyTimestamp(repository: GitHubRepository) {
   return repository.pushed_at ? new Date(repository.pushed_at).getTime() : 0;
+}
+
+function sortRepositoriesByRecommendation<T extends {
+  githubRepoId: number;
+  fullName: string;
+  pushedAt: number;
+}>(repositories: T[], activityByRepoId: Map<number, number>) {
+  return [...repositories].sort((left, right) =>
+    (activityByRepoId.get(right.githubRepoId) ?? 0) -
+      (activityByRepoId.get(left.githubRepoId) ?? 0) ||
+    right.pushedAt - left.pushedAt ||
+    left.fullName.localeCompare(right.fullName),
+  );
+}
+
+export function getRecommendedRepositoryIds<T extends {
+  id: string;
+  githubRepoId: number;
+  fullName: string;
+  pushedAt: number;
+}>(input: {
+  repositories: T[];
+  activityByRepoId: Map<number, number>;
+  limit?: number;
+}) {
+  return sortRepositoriesByRecommendation(
+    input.repositories,
+    input.activityByRepoId,
+  )
+    .slice(0, input.limit ?? MAX_TRACKED_REPOSITORIES_PER_INSTALLATION)
+    .map((repository) => repository.id);
 }
 
 function getStaleRepositoryIds(input: {
@@ -188,7 +222,7 @@ export async function syncInstallationRepositories(
     .run();
 
   const existingRepositories = await env.DB.prepare(
-    `SELECT id, github_repo_id, sync_enabled
+    `SELECT id, github_repo_id, sync_enabled, owner, name, pushed_at
      FROM repositories
      WHERE installation_id = ?`,
   )
@@ -240,10 +274,14 @@ export async function syncInstallationRepositories(
     (repository) => repository.sync_enabled === 1,
   ).length;
 
-  const sortedRepositories = [...input.repositories].sort((left, right) =>
-    (activityByRepoId.get(right.id) ?? 0) - (activityByRepoId.get(left.id) ?? 0) ||
-    getRepositoryRecencyTimestamp(right) - getRepositoryRecencyTimestamp(left) ||
-    left.full_name.localeCompare(right.full_name),
+  const sortedRepositories = sortRepositoriesByRecommendation(
+    input.repositories.map((repository) => ({
+      ...repository,
+      githubRepoId: repository.id,
+      fullName: repository.full_name,
+      pushedAt: getRepositoryRecencyTimestamp(repository),
+    })),
+    activityByRepoId,
   );
 
   for (const repository of sortedRepositories) {
@@ -265,16 +303,18 @@ export async function syncInstallationRepositories(
         name,
         default_branch,
         is_private,
+        pushed_at,
         sync_enabled,
         installation_id,
         created_at,
         updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(github_repo_id) DO UPDATE SET
         owner = excluded.owner,
         name = excluded.name,
         default_branch = excluded.default_branch,
         is_private = excluded.is_private,
+        pushed_at = excluded.pushed_at,
         sync_enabled = excluded.sync_enabled,
         installation_id = excluded.installation_id,
         updated_at = excluded.updated_at`,
@@ -286,6 +326,7 @@ export async function syncInstallationRepositories(
         repository.name,
         repository.default_branch,
         repository.private ? 1 : 0,
+        getRepositoryRecencyTimestamp(repository),
         syncEnabled ? 1 : 0,
         installationId,
         now,
