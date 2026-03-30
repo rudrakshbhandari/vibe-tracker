@@ -1,5 +1,25 @@
 # Execution Plan
 
+## Issue #126 - Fix post-connect GitHub state fallback on production dashboard
+
+- Issue: [#126](https://github.com/rudrakshbhandari/vibe-tracker/issues/126)
+- Branch: `rudrakshbhandari/fix-recommended-scope-button`
+- PR: pending
+- Workflow: In Progress
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Create the follow-up issue and task branch
+- [ ] Add the missing Next proxy route for `/api/github/state`
+- [ ] Harden worker GitHub state reads so backend lookup failures degrade safely
+- [ ] Run verification, push branch, open PR, and redeploy production
+
+### Verification
+
+- Pending
+
 ## Issue #121 - Harden client browser API reads to avoid global error boundary
 
 - Issue: [#121](https://github.com/rudrakshbhandari/vibe-tracker/issues/121)

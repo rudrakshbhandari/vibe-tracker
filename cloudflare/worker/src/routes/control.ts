@@ -278,61 +278,73 @@ export async function handleGitHubState(request: Request, env: VibeWorkerEnv) {
     });
   }
 
-  const accountId = await getRequestAccountId(request, env);
-  if (!accountId) {
-    return json(getReconnectState(request.url));
+  try {
+    const accountId = await getRequestAccountId(request, env);
+    if (!accountId) {
+      return json(getReconnectState(request.url));
+    }
+
+    const [account, installations, latestSyncAt] = await Promise.all([
+      env.DB.prepare(
+        `SELECT login
+         FROM github_accounts
+         WHERE id = ?`,
+      )
+        .bind(accountId)
+        .first<{ login: string }>(),
+      listInstallationsForAccount(env, accountId),
+      getLatestSyncTimestamp(env, accountId),
+    ]);
+
+    if (!account) {
+      return json(getReconnectState(request.url));
+    }
+
+    return json({
+      connected: true,
+      title: "GitHub is connected",
+      description:
+        "Installations are cached locally in the Cloudflare backend, and merged PR sync runs asynchronously in the queue.",
+      primaryAction: {
+        label: "Add another installation",
+        href: "/api/github/install",
+      },
+      accountId,
+      viewer: {
+        login: account.login,
+      },
+      activitySync: latestSyncAt
+        ? {
+            status: "synced",
+            updatedAt: formatTimestamp(latestSyncAt),
+          }
+        : null,
+      activitySyncRunning: false,
+      syncHealth: null,
+      installations: installations.map((installation) => ({
+        id: installation.id,
+        githubInstallId: installation.githubInstallId,
+        accountLogin: installation.accountLogin,
+        repositoryCount: installation.repositories.length,
+        trackedRepositoryCount: installation.repositories.filter(
+          (repository) => repository.syncEnabled,
+        ).length,
+        recommendedRepositoryCount: installation.recommendedRepositoryIds.length,
+        recommendedRepositoryIds: installation.recommendedRepositoryIds,
+        repositories: installation.repositories,
+      })),
+    });
+  } catch (error) {
+    console.error("GitHub state lookup failed", {
+      message: error instanceof Error ? error.message : "unknown",
+    });
+    return json({
+      ...getReconnectState(request.url),
+      title: "GitHub sync unavailable",
+      description:
+        "We could not load your GitHub connection right now. Please try again later.",
+    });
   }
-
-  const [account, installations, latestSyncAt] = await Promise.all([
-    env.DB.prepare(
-      `SELECT login
-       FROM github_accounts
-       WHERE id = ?`,
-    )
-      .bind(accountId)
-      .first<{ login: string }>(),
-    listInstallationsForAccount(env, accountId),
-    getLatestSyncTimestamp(env, accountId),
-  ]);
-
-  if (!account) {
-    return json(getReconnectState(request.url));
-  }
-
-  return json({
-    connected: true,
-    title: "GitHub is connected",
-    description:
-      "Installations are cached locally in the Cloudflare backend, and merged PR sync runs asynchronously in the queue.",
-    primaryAction: {
-      label: "Add another installation",
-      href: "/api/github/install",
-    },
-    accountId,
-    viewer: {
-      login: account.login,
-    },
-    activitySync: latestSyncAt
-      ? {
-          status: "synced",
-          updatedAt: formatTimestamp(latestSyncAt),
-        }
-      : null,
-    activitySyncRunning: false,
-    syncHealth: null,
-    installations: installations.map((installation) => ({
-      id: installation.id,
-      githubInstallId: installation.githubInstallId,
-      accountLogin: installation.accountLogin,
-      repositoryCount: installation.repositories.length,
-      trackedRepositoryCount: installation.repositories.filter(
-        (repository) => repository.syncEnabled,
-      ).length,
-      recommendedRepositoryCount: installation.recommendedRepositoryIds.length,
-      recommendedRepositoryIds: installation.recommendedRepositoryIds,
-      repositories: installation.repositories,
-    })),
-  });
 }
 
 export async function handleGitHubInstall(request: Request, env: VibeWorkerEnv) {
