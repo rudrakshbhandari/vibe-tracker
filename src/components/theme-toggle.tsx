@@ -6,13 +6,35 @@ import { Moon, Sun } from "lucide-react";
 const STORAGE_KEY = "vt-theme";
 const THEME_EVENT = "vt-theme-change";
 
-function getResolvedTheme(): "light" | "dark" {
+function readStoredTheme(): "light" | "dark" | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    return stored === "light" || stored === "dark" ? stored : null;
+  } catch {
+    return null;
+  }
+}
+
+export function getResolvedTheme(): "light" | "dark" {
   if (typeof window === "undefined") return "light";
-  const rootTheme = document.documentElement.getAttribute("data-theme");
-  if (rootTheme === "light" || rootTheme === "dark") return rootTheme;
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored === "light" || stored === "dark") return stored;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+
+  try {
+    const rootTheme = document.documentElement.getAttribute("data-theme");
+    if (rootTheme === "light" || rootTheme === "dark") return rootTheme;
+  } catch {
+    return "light";
+  }
+
+  const stored = readStoredTheme();
+  if (stored) return stored;
+
+  try {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  } catch {
+    return "light";
+  }
 }
 
 function subscribe(onStoreChange: () => void) {
@@ -40,9 +62,19 @@ export function ThemeToggle() {
 
   function toggle() {
     const next = theme === "dark" ? "light" : "dark";
-    localStorage.setItem(STORAGE_KEY, next);
-    document.documentElement.setAttribute("data-theme", next);
-    window.dispatchEvent(new Event(THEME_EVENT));
+
+    try {
+      window.localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+      // Ignore storage failures; the toggle should still work for the current document.
+    }
+
+    try {
+      document.documentElement.setAttribute("data-theme", next);
+      window.dispatchEvent(new Event(THEME_EVENT));
+    } catch {
+      // Ignore DOM/event failures so the page never crashes from theme persistence.
+    }
   }
 
   return (

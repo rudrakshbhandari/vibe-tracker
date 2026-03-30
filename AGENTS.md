@@ -104,7 +104,7 @@ EOF
 
 ### GitHub Project + Docs Sync (Required)
 
-Liftlytics uses a **hybrid system**:
+Vibe Tracker uses a **hybrid system**:
 
 1. **GitHub Project** = planning/status source of truth (priority, owner, current stage)
 2. **In-repo docs/checklists** = implementation/runbook source of truth (exact steps, constraints, evidence)

@@ -1,5 +1,27 @@
 # Execution Plan
 
+## Issue #121 - Harden client browser API reads to avoid global error boundary
+
+- Issue: [#121](https://github.com/rudrakshbhandari/vibe-tracker/issues/121)
+- Branch: `rudrakshbhandari/fix-browser-api-error-boundary`
+- PR: [#122](https://github.com/rudrakshbhandari/vibe-tracker/pull/122)
+- Workflow: In Review
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Create the follow-up issue, task branch, and project tracking entry
+- [x] Harden client-only browser API reads so storage/cookie/timezone failures cannot trip the global error boundary
+- [x] Add regression coverage for guarded browser API paths
+- [x] Run verification, push branch, and open PR
+
+### Verification
+
+- `npm test`
+- `npm run build`
+- PR: [#122](https://github.com/rudrakshbhandari/vibe-tracker/pull/122)
+
 ## Issue #119 - Add recommended repo scope and one-click apply flow
 
 - Issue: [#119](https://github.com/rudrakshbhandari/vibe-tracker/issues/119)
