@@ -9,6 +9,12 @@ import {
 } from "@/lib/cloudflare-read";
 import { formatNumber } from "@/lib/dashboard";
 import type { AnalyticsView, MetricMode } from "@/lib/dashboard";
+import {
+  normalizeGithubState,
+  type GithubState,
+  type GithubStateInstallation,
+  type SyncHealthSummary,
+} from "@/lib/github-state-normalize";
 import { getLinkPrefetch } from "@/lib/link-prefetch";
 
 type HomePageProps = {
@@ -278,45 +284,6 @@ function DashboardMetrics({
   );
 }
 
-type GithubStateInstallation = {
-  id: string;
-  githubInstallId: number;
-  accountLogin: string;
-  repositoryCount: number;
-  trackedRepositoryCount: number;
-  recommendedRepositoryCount: number;
-  recommendedRepositoryIds: string[];
-  repositories: Array<{
-    id: string;
-    name: string;
-    owner: string;
-    syncEnabled: boolean;
-  }>;
-};
-
-type SyncHealthSummary = {
-  queuedJobs: number;
-  runningJobs: number;
-  completedLast24Hours: number;
-  failedLast24Hours: number;
-  averageDurationMs: number | null;
-  latestCompletedAt: Date | null;
-  latestResult: {
-    selectedRepositoryCount?: number;
-    skippedRepositoryCount?: number;
-    syncedRepositoryCount?: number;
-    processedPullRequestCount?: number;
-    fetchedPullRequestCount?: number;
-    githubRetryCount?: number;
-    githubRetryDelayMs?: number;
-    averageRepositoryDurationMs?: number;
-    queueDelayMs?: number;
-    durationMs?: number;
-    deferredUntil?: string;
-  } | null;
-  latestError: string | null;
-};
-
 type RepoSummary = {
   name: string;
   detail: string;
@@ -341,41 +308,6 @@ type DashboardPayload = {
     login: string;
     source: "live" | "sample";
   };
-};
-
-type GithubState = {
-  connected: boolean;
-  title: string;
-  description: string;
-  primaryAction: {
-    label: string;
-    href: string;
-  } | null;
-  accountId: string | null;
-  viewer: {
-    login: string;
-  } | null;
-  activitySync: {
-    status: string;
-    updatedAt: string;
-  } | null;
-  activitySyncRunning: boolean;
-  syncHealth: SyncHealthSummary | null;
-  installations: Array<{
-    id: string;
-    githubInstallId: number;
-    accountLogin: string;
-    repositoryCount: number;
-    trackedRepositoryCount: number;
-    recommendedRepositoryCount: number;
-    recommendedRepositoryIds: string[];
-    repositories: Array<{
-      id: string;
-      name: string;
-      owner: string;
-      syncEnabled: boolean;
-    }>;
-  }>;
 };
 
 function RepoSection({
@@ -678,9 +610,11 @@ export default async function Home({ searchParams }: HomePageProps) {
   let dashboard: DashboardPayload | null = null;
   try {
     githubState =
-      (hasCloudflareWorkerProxy()
-        ? await fetchCloudflareReadJson<GithubState>("/api/github/state")
-        : null) ?? FALLBACK_GITHUB_STATE;
+      normalizeGithubState(
+        hasCloudflareWorkerProxy()
+          ? await fetchCloudflareReadJson<GithubState>("/api/github/state")
+          : null,
+      ) ?? FALLBACK_GITHUB_STATE;
     dashboard = githubState.connected
       ? await fetchCloudflareReadJson<DashboardPayload>(
           `/api/metrics?${new URLSearchParams({
