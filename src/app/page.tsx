@@ -16,6 +16,7 @@ import {
   type SyncHealthSummary,
 } from "@/lib/github-state-normalize";
 import { getLinkPrefetch } from "@/lib/link-prefetch";
+import { getOptionalUserSession } from "@/lib/session";
 
 type HomePageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -605,6 +606,8 @@ export default async function Home({ searchParams }: HomePageProps) {
       : "daily";
   const mode: MetricMode = "shipped";
   const githubStatus = typeof params.github === "string" ? params.github : undefined;
+  const session = hasCloudflareWorkerProxy() ? await getOptionalUserSession() : null;
+  const accountId = session?.accountId ?? null;
 
   let githubState: GithubState = FALLBACK_GITHUB_STATE;
   let dashboard: DashboardPayload | null = null;
@@ -612,7 +615,9 @@ export default async function Home({ searchParams }: HomePageProps) {
     githubState =
       normalizeGithubState(
         hasCloudflareWorkerProxy()
-          ? await fetchCloudflareReadJson<GithubState>("/api/github/state")
+          ? await fetchCloudflareReadJson<GithubState>("/api/github/state", {
+              accountId,
+            })
           : null,
       ) ?? FALLBACK_GITHUB_STATE;
     dashboard = githubState.connected
@@ -621,6 +626,9 @@ export default async function Home({ searchParams }: HomePageProps) {
             view,
             mode,
           }).toString()}`,
+          {
+            accountId,
+          },
         )
       : null;
   } catch {
