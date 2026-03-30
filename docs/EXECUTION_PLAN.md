@@ -1,5 +1,26 @@
 # Execution Plan
 
+## Issue #121 - Harden client browser API reads to avoid global error boundary
+
+- Issue: [#121](https://github.com/rudrakshbhandari/vibe-tracker/issues/121)
+- Branch: `rudrakshbhandari/fix-browser-api-error-boundary`
+- PR: pending
+- Workflow: In Progress
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Create the follow-up issue, task branch, and project tracking entry
+- [x] Harden client-only browser API reads so storage/cookie/timezone failures cannot trip the global error boundary
+- [x] Add regression coverage for guarded browser API paths
+- [ ] Run verification, push branch, and open PR
+
+### Verification
+
+- `npm test`
+- `npm run build`
+
 ## Issue #111 - Fix Cloudflare production config and deploy worker
 
 - Issue: [#111](https://github.com/rudrakshbhandari/vibe-tracker/issues/111)

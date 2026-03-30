@@ -6,6 +6,21 @@ import { useEffect, useRef } from "react";
 const TZ_COOKIE = "tz";
 const ONE_YEAR_SECONDS = 365 * 24 * 60 * 60;
 
+export function getBrowserTimezone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || null;
+  } catch {
+    return null;
+  }
+}
+
+function getCookieValue(cookieString: string, name: string) {
+  return cookieString
+    .split("; ")
+    .find((cookie) => cookie.startsWith(`${name}=`))
+    ?.split("=")[1] ?? null;
+}
+
 /**
  * Sets the user's timezone cookie so server-rendered dates use local time.
  * Runs once on mount; triggers a refresh when the cookie is first set.
@@ -17,16 +32,23 @@ export function TimezoneSync() {
   useEffect(() => {
     if (didSet.current) return;
 
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const tz = getBrowserTimezone();
     if (!tz) return;
 
-    const existing = document.cookie
-      .split("; ")
-      .find((c) => c.startsWith(`${TZ_COOKIE}=`));
-    const alreadySet = existing?.split("=")[1] === tz;
+    let alreadySet = false;
+
+    try {
+      alreadySet = getCookieValue(document.cookie, TZ_COOKIE) === tz;
+    } catch {
+      return;
+    }
 
     if (!alreadySet) {
-      document.cookie = `${TZ_COOKIE}=${tz}; path=/; max-age=${ONE_YEAR_SECONDS}; SameSite=Lax`;
+      try {
+        document.cookie = `${TZ_COOKIE}=${tz}; path=/; max-age=${ONE_YEAR_SECONDS}; SameSite=Lax`;
+      } catch {
+        return;
+      }
       didSet.current = true;
       router.refresh();
     }
