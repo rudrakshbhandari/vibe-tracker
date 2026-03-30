@@ -4,21 +4,23 @@
 
 - Issue: [#124](https://github.com/rudrakshbhandari/vibe-tracker/issues/124)
 - Branch: `rudrakshbhandari/fix-live-homepage-crash`
-- PR: pending
-- Workflow: In Progress
+- PR: [#125](https://github.com/rudrakshbhandari/vibe-tracker/pull/125)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
 ### Checklist
 
 - [x] Create the follow-up issue and task branch
-- [ ] Normalize worker-backed GitHub installation payloads before dashboard render
-- [ ] Add regression coverage for missing recommended repository ids
-- [ ] Run verification, push branch, and open PR
+- [x] Normalize worker-backed GitHub installation payloads before dashboard render
+- [x] Add regression coverage for missing recommended repository ids
+- [x] Run verification, push branch, and open PR
 
 ### Verification
 
-- Pending
+- `npm test`
+- `npm run build`
+- PR: [#125](https://github.com/rudrakshbhandari/vibe-tracker/pull/125)
 
 ## Issue #121 - Harden client browser API reads to avoid global error boundary
 
