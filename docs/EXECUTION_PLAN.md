@@ -1,5 +1,25 @@
 # Execution Plan
 
+## Issue #124 - Fix production homepage crash when recommended repo ids are missing
+
+- Issue: [#124](https://github.com/rudrakshbhandari/vibe-tracker/issues/124)
+- Branch: `rudrakshbhandari/fix-live-homepage-crash`
+- PR: pending
+- Workflow: In Progress
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Create the follow-up issue and task branch
+- [ ] Normalize worker-backed GitHub installation payloads before dashboard render
+- [ ] Add regression coverage for missing recommended repository ids
+- [ ] Run verification, push branch, and open PR
+
+### Verification
+
+- Pending
+
 ## Issue #121 - Harden client browser API reads to avoid global error boundary
 
 - Issue: [#121](https://github.com/rudrakshbhandari/vibe-tracker/issues/121)
