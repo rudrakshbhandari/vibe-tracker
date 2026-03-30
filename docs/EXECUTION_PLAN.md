@@ -1,5 +1,12 @@
 # Execution Plan
 
+## Issue #126 - Fix post-connect GitHub state fallback on production dashboard
+
+- Issue: [#126](https://github.com/rudrakshbhandari/vibe-tracker/issues/126)
+- Branch: `rudrakshbhandari/fix-recommended-scope-button`
+- PR: pending
+- Workflow: In Progress
+
 ## Issue #124 - Fix production homepage crash when recommended repo ids are missing
 
 - Issue: [#124](https://github.com/rudrakshbhandari/vibe-tracker/issues/124)
@@ -12,15 +19,13 @@
 ### Checklist
 
 - [x] Create the follow-up issue and task branch
-- [x] Normalize worker-backed GitHub installation payloads before dashboard render
-- [x] Add regression coverage for missing recommended repository ids
-- [x] Run verification, push branch, and open PR
+- [ ] Add the missing Next proxy route for `/api/github/state`
+- [ ] Harden worker GitHub state reads so backend lookup failures degrade safely
+- [ ] Run verification, push branch, open PR, and redeploy production
 
 ### Verification
 
-- `npm test`
-- `npm run build`
-- PR: [#125](https://github.com/rudrakshbhandari/vibe-tracker/pull/125)
+- Pending
 
 ## Issue #121 - Harden client browser API reads to avoid global error boundary
 
