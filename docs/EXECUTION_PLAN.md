@@ -6,6 +6,13 @@
 - Branch: `rudrakshbhandari/fix-recommended-scope-button`
 - PR: pending
 - Workflow: In Progress
+
+## Issue #124 - Fix production homepage crash when recommended repo ids are missing
+
+- Issue: [#124](https://github.com/rudrakshbhandari/vibe-tracker/issues/124)
+- Branch: `rudrakshbhandari/fix-live-homepage-crash`
+- PR: [#125](https://github.com/rudrakshbhandari/vibe-tracker/pull/125)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
