@@ -9,6 +9,7 @@ import {
 } from "@/lib/cloudflare-read";
 import { formatNumber } from "@/lib/dashboard";
 import type { AnalyticsView, MetricMode } from "@/lib/dashboard";
+import { getLinkPrefetch } from "@/lib/link-prefetch";
 
 type HomePageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -176,6 +177,7 @@ function ConnectionAction({
   return (
     <Link
       href={href}
+      prefetch={getLinkPrefetch(href)}
       className={tone === "primary" ? "button-primary w-full sm:w-auto" : "button-secondary w-full sm:w-auto"}
     >
       {label}

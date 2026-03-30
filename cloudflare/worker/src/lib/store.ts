@@ -15,6 +15,11 @@ type ExistingRepositoryRow = {
   sync_enabled: number;
 };
 
+type RepositoryActivityRow = {
+  githubRepoId: number;
+  latestMergedAt: number | null;
+};
+
 type PullRequestRow = {
   id: string;
   author_id: string | null;
@@ -45,6 +50,10 @@ function getTrackedRepositories<T extends { syncEnabled: boolean }>(repositories
         ),
     ),
   };
+}
+
+function getRepositoryRecencyTimestamp(repository: GitHubRepository) {
+  return repository.pushed_at ? new Date(repository.pushed_at).getTime() : 0;
 }
 
 function getStaleRepositoryIds(input: {
@@ -210,11 +219,30 @@ export async function syncInstallationRepositories(
   const persistedRepositoryMap = new Map(
     persistedRepositories.map((repository) => [repository.github_repo_id, repository]),
   );
+  const activityRows = await env.DB.prepare(
+    `SELECT
+       repositories.github_repo_id AS githubRepoId,
+       MAX(pull_requests.merged_at) AS latestMergedAt
+     FROM repositories
+     INNER JOIN pull_requests
+       ON pull_requests.repository_id = repositories.id
+     WHERE repositories.installation_id = ?
+       AND pull_requests.author_id = ?
+       AND pull_requests.merged_at IS NOT NULL
+     GROUP BY repositories.github_repo_id`,
+  )
+    .bind(installationId, input.accountId)
+    .all<RepositoryActivityRow>();
+  const activityByRepoId = new Map(
+    (activityRows.results ?? []).map((row) => [row.githubRepoId, row.latestMergedAt ?? 0]),
+  );
   let enabledRepositoryCount = persistedRepositories.filter(
     (repository) => repository.sync_enabled === 1,
   ).length;
 
   const sortedRepositories = [...input.repositories].sort((left, right) =>
+    (activityByRepoId.get(right.id) ?? 0) - (activityByRepoId.get(left.id) ?? 0) ||
+    getRepositoryRecencyTimestamp(right) - getRepositoryRecencyTimestamp(left) ||
     left.full_name.localeCompare(right.full_name),
   );
 
