@@ -1,5 +1,25 @@
 # Execution Plan
 
+## Issue #130 - Homepage crashes with 500 for authenticated users
+
+- Issue: [#130](https://github.com/rudrakshbhandari/vibe-tracker/issues/130)
+- Branch: `rudrakshbhandari/fix-session-crash-on-homepage`
+- PR: [#131](https://github.com/rudrakshbhandari/vibe-tracker/pull/131)
+- Workflow: In Review
+- Priority: P0
+- App: multi
+
+### Checklist
+
+- [x] Diagnose 500 error on production for authenticated users
+- [x] Wrap getOptionalUserSession() in try/catch on homepage and social page
+- [x] All tests pass (50/50)
+- [ ] Merge PR and verify production recovery
+
+### Verification
+
+- `curl -s -H 'Cookie: vibe_tracker_session=any-value' https://vibe-tracker-max.vercel.app/ -o /dev/null -w "%{http_code}"` returned 500 before fix
+
 ## Issue #128 - Fix production GitHub sync state and SSR metrics loading
 
 - Issue: [#128](https://github.com/rudrakshbhandari/vibe-tracker/issues/128)
