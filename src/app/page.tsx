@@ -606,8 +606,17 @@ export default async function Home({ searchParams }: HomePageProps) {
       : "daily";
   const mode: MetricMode = "shipped";
   const githubStatus = typeof params.github === "string" ? params.github : undefined;
-  const session = hasCloudflareWorkerProxy() ? await getOptionalUserSession() : null;
-  const accountId = session?.accountId ?? null;
+
+  let accountId: string | null = null;
+  if (hasCloudflareWorkerProxy()) {
+    try {
+      const session = await getOptionalUserSession();
+      accountId = session?.accountId ?? null;
+    } catch {
+      // DB/session lookup can fail on cold starts or connection issues;
+      // fall through to anonymous rendering instead of crashing the page.
+    }
+  }
 
   let githubState: GithubState = FALLBACK_GITHUB_STATE;
   let dashboard: DashboardPayload | null = null;

@@ -21,8 +21,17 @@ type SocialShellProps = ComponentProps<typeof SocialShell>;
 
 export default async function SocialPage({ searchParams }: SocialPageProps) {
   const hasSession = await hasCloudflareSessionCookie();
-  const session = hasCloudflareWorkerProxy() ? await getOptionalUserSession() : null;
-  const accountId = session?.accountId ?? null;
+
+  let accountId: string | null = null;
+  if (hasCloudflareWorkerProxy()) {
+    try {
+      const session = await getOptionalUserSession();
+      accountId = session?.accountId ?? null;
+    } catch {
+      // DB/session lookup can fail on cold starts or connection issues;
+      // fall through to anonymous rendering instead of crashing the page.
+    }
+  }
 
   if (!hasSession || !hasCloudflareWorkerProxy()) {
     return (
