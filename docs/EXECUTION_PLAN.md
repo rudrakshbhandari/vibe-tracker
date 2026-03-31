@@ -24,6 +24,49 @@
 - `npm test`
 - `npm run build`
 
+## Issue #136 - Fix worker internal auth lookup across Vercel and D1 stores
+
+- Issue: [#136](https://github.com/rudrakshbhandari/vibe-tracker/issues/136)
+- Branch: `rudrakshbhandari/fix-worker-internal-github-user-lookup`
+- PR: pending
+- Workflow: In Progress
+- Priority: P0
+- App: multi
+
+### Checklist
+
+- [x] Create the follow-up issue and task branch
+- [ ] Add trusted worker lookup by GitHub user id instead of cross-store account id
+- [ ] Update the live smoke route to use GitHub user id
+- [ ] Add regression coverage for the trusted lookup and smoke path
+- [ ] Redeploy and rerun the production smoke route
+
+### Verification
+
+- Pending
+
+## Issue #134 - Add live GitHub sync safeguards and smoke coverage
+
+- Issue: [#134](https://github.com/rudrakshbhandari/vibe-tracker/issues/134)
+- Branch: `rudrakshbhandari/add-live-github-sync-safeguards`
+- PR: [#135](https://github.com/rudrakshbhandari/vibe-tracker/pull/135)
+- Workflow: In Review
+- Priority: P0
+- App: multi
+
+### Checklist
+
+- [x] Create the follow-up issue and task branch
+- [x] Add structured worker-read failure logging
+- [x] Extend the protected smoke route to validate live GitHub state and metrics by login
+- [x] Add regression coverage and verify locally
+- [x] Push branch, open PR, and run the live smoke check
+
+### Verification
+
+- `npm test -- src/lib/cloudflare-read.test.ts src/app/api/smoke/github-sync/route.test.ts`
+- `npm run build`
+
 ## Issue #132 - Authenticated users see anonymous view due to empty DATABASE_URL
 
 - Issue: [#132](https://github.com/rudrakshbhandari/vibe-tracker/issues/132)
