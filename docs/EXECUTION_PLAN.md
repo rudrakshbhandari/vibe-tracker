@@ -1,14 +1,33 @@
 # Execution Plan
 
+## Issue #138 - Refine shipped-work chart UI and scale readability
+
+- Issue: [#138](https://github.com/rudrakshbhandari/vibe-tracker/issues/138)
+- Branch: `rudrakshbhandari/chart-ui-audit`
+- PR: [#139](https://github.com/rudrakshbhandari/vibe-tracker/pull/139)
+- Workflow: In Review
+- Priority: P2
+- App: multi
+
+### Checklist
+
+- [x] Audit the shipped-work chart for semantic and readability problems
+- [x] Move deletions below the baseline so chart direction matches the KPI language
+- [x] Add overflow-aware scaling so one outlier period does not flatten the rest of the chart
+- [x] Rework chart framing copy and summary cards to explain the visible range
+- [x] Run local verification (`npm run lint`, `npm test`, `npm run build`)
+- [x] Open PR and update project tracking to In Review
+
+### Verification
+
+- `npm run lint`
+- `npm test`
+- `npm run build`
+
 ## Issue #136 - Fix worker internal auth lookup across Vercel and D1 stores
 
 - Issue: [#136](https://github.com/rudrakshbhandari/vibe-tracker/issues/136)
 - Branch: `rudrakshbhandari/fix-worker-internal-github-user-lookup`
-
-## Issue #134 - Add live GitHub sync safeguards and smoke coverage
-
-- Issue: [#134](https://github.com/rudrakshbhandari/vibe-tracker/issues/134)
-- Branch: `rudrakshbhandari/add-live-github-sync-safeguards`
 - PR: pending
 - Workflow: In Progress
 - Priority: P0
@@ -21,10 +40,6 @@
 - [ ] Update the live smoke route to use GitHub user id
 - [ ] Add regression coverage for the trusted lookup and smoke path
 - [ ] Redeploy and rerun the production smoke route
-- [ ] Add structured worker-read failure logging
-- [ ] Extend the protected smoke route to validate live GitHub state and metrics by login
-- [ ] Add regression coverage and verify locally
-- [ ] Push branch, open PR, and run the live smoke check
 
 ### Verification
 

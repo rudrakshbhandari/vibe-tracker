@@ -218,17 +218,29 @@ function buildBarChartGeometry(timeline: TimelinePoint[]) {
     1,
     ...timeline.flatMap((point) => [point.additions, point.deletions]),
   );
+  const values = timeline
+    .flatMap((point) => [point.additions, point.deletions])
+    .filter((value) => value > 0)
+    .sort((left, right) => right - left);
+  const primaryValue = values[0] ?? maxValue;
+  const secondaryValue = values[1] ?? primaryValue;
+  const hasScaleBreak = secondaryValue > 0 && primaryValue >= secondaryValue * 1.75;
+  const displayMaxValue = hasScaleBreak
+    ? Math.max(1, roundTick(secondaryValue * 1.25))
+    : roundTick(primaryValue);
   const groupWidth = innerWidth / Math.max(timeline.length, 1);
   const barWidth = Math.min(22, Math.max(10, groupWidth * 0.28));
   const barGap = Math.max(4, groupWidth * 0.08);
-  const baselineY = CHART_PADDING.top + innerHeight;
+  const centerGap = 18;
+  const halfHeight = (innerHeight - centerGap) / 2;
+  const baselineY = CHART_PADDING.top + halfHeight + centerGap / 2;
 
   const toHeight = (value: number) => {
     if (value <= 0) {
       return 0;
     }
 
-    return Math.max(6, (value / maxValue) * innerHeight);
+    return Math.max(6, (Math.min(value, displayMaxValue) / displayMaxValue) * halfHeight);
   };
 
   const bars = timeline.map((point, index) => {
@@ -245,25 +257,42 @@ function buildBarChartGeometry(timeline: TimelinePoint[]) {
         x: centerX - barWidth - barGap / 2,
         y: baselineY - additionsHeight,
         height: additionsHeight,
+        truncated: point.additions > displayMaxValue,
       },
       deletions: {
         x: centerX + barGap / 2,
-        y: baselineY - deletionsHeight,
+        y: baselineY,
         height: deletionsHeight,
+        truncated: point.deletions > displayMaxValue,
       },
     };
   });
 
   return {
-    ticks: getTickValues(maxValue),
+    ticks: getTickValues(displayMaxValue),
     maxAdditions: Math.max(...timeline.map((point) => point.additions), 0),
     maxDeletions: Math.max(...timeline.map((point) => point.deletions), 0),
     bars,
     baselineY,
     barWidth,
     maxValue,
+    displayMaxValue,
+    hasScaleBreak,
     innerHeight,
   };
+}
+
+function getTypicalWeekValue(timeline: TimelinePoint[]) {
+  const totals = timeline
+    .map((point) => point.additions + point.deletions)
+    .filter((value) => value > 0)
+    .sort((left, right) => left - right);
+
+  if (totals.length === 0) {
+    return 0;
+  }
+
+  return totals[Math.floor(totals.length / 2)] ?? 0;
 }
 
 function DashboardMetrics({
@@ -308,6 +337,13 @@ type DashboardPayload = {
     login: string;
     source: "live" | "sample";
   };
+};
+
+type PeakWeekSummary = {
+  label: string;
+  total: number;
+  additions: number;
+  deletions: number;
 };
 
 function RepoSection({
@@ -639,6 +675,21 @@ export default async function Home({ searchParams }: HomePageProps) {
     ) ?? [1]),
   );
   const chartGeometry = dashboard ? buildBarChartGeometry(dashboard.timeline) : null;
+  const peakWeek = dashboard?.timeline.reduce<PeakWeekSummary | null>((currentPeak, point) => {
+    const total = point.additions + point.deletions;
+
+    if (!currentPeak || total > currentPeak.total) {
+      return {
+        label: point.label,
+        total,
+        additions: point.additions,
+        deletions: point.deletions,
+      };
+    }
+
+    return currentPeak;
+  }, null) ?? null;
+  const typicalWeekValue = dashboard ? getTypicalWeekValue(dashboard.timeline) : 0;
   const connectionSummary = githubState.activitySyncRunning
     ? "Running now"
     : githubState.activitySync
@@ -834,11 +885,17 @@ export default async function Home({ searchParams }: HomePageProps) {
 
             <section className="story-panel">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
+                <div className="space-y-3">
                   <p className="panel-label">{dashboard.chartTitle}</p>
-                  <h3 className="panel-heading">Activity over time</h3>
+                  <h3 className="panel-heading">Lines changed by ship period</h3>
+                  <p className="chart-intro">
+                    Additions rise above the center line and deletions drop below it so the direction stays obvious at a glance.
+                    {chartGeometry?.hasScaleBreak
+                      ? ` The scale is capped at ${formatNumber(chartGeometry.displayMaxValue)} lines to keep non-peak periods readable.`
+                      : " The vertical scale stays linear across the full selected range."}
+                  </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="chart-legend" aria-label="Chart legend">
                   <span className="legend-pill">
                     <span className="legend-swatch legend-swatch-additions" />
                     Additions
@@ -854,15 +911,32 @@ export default async function Home({ searchParams }: HomePageProps) {
                 <div className="mt-5 space-y-4">
                   <div className="chart-stat-row">
                     <article className="chart-stat-card">
-                      <p className="panel-label">Peak additions</p>
+                      <p className="panel-label">Peak period</p>
                       <p className="chart-stat-value">
-                        +{formatNumber(chartGeometry.maxAdditions)}
+                        {peakWeek?.label ?? "N/A"}
+                      </p>
+                      <p className="chart-stat-detail">
+                        {peakWeek
+                          ? `+${formatNumber(peakWeek.additions)} added and -${formatNumber(peakWeek.deletions)} removed`
+                          : "No shipped work in this range yet."}
                       </p>
                     </article>
                     <article className="chart-stat-card">
-                      <p className="panel-label">Peak deletions</p>
+                      <p className="panel-label">Typical active period</p>
                       <p className="chart-stat-value">
-                        -{formatNumber(chartGeometry.maxDeletions)}
+                        {formatNumber(typicalWeekValue)}
+                      </p>
+                      <p className="chart-stat-detail">Median combined line change for non-zero periods in this view.</p>
+                    </article>
+                    <article className="chart-stat-card">
+                      <p className="panel-label">Visible chart range</p>
+                      <p className="chart-stat-value">
+                        ±{formatNumber(chartGeometry.displayMaxValue)}
+                      </p>
+                      <p className="chart-stat-detail">
+                        {chartGeometry.hasScaleBreak
+                          ? "Overflow caps mark periods that exceeded the visible scale."
+                          : "No scale break applied in this range."}
                       </p>
                     </article>
                   </div>
