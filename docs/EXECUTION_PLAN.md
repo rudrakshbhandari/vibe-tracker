@@ -1,5 +1,28 @@
 # Execution Plan
 
+## Issue #138 - Refine shipped-work chart UI and scale readability
+
+- Issue: [#138](https://github.com/rudrakshbhandari/vibe-tracker/issues/138)
+- Branch: `rudrakshbhandari/chart-ui-audit`
+- PR: pending
+- Workflow: In Progress
+- Priority: P2
+- App: multi
+
+### Checklist
+
+- [x] Audit the shipped-work chart for semantic and readability problems
+- [x] Move deletions below the baseline so chart direction matches the KPI language
+- [x] Add overflow-aware scaling so one outlier period does not flatten the rest of the chart
+- [x] Rework chart framing copy and summary cards to explain the visible range
+- [x] Run local verification (`npm run lint`, `npm test`)
+- [ ] Open PR and update project tracking to In Review
+
+### Verification
+
+- `npm run lint`
+- `npm test`
+
 ## Issue #132 - Authenticated users see anonymous view due to empty DATABASE_URL
 
 - Issue: [#132](https://github.com/rudrakshbhandari/vibe-tracker/issues/132)

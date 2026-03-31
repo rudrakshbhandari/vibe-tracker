@@ -432,7 +432,7 @@ a {
 
 @media (min-width: 700px) {
   .chart-stat-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -451,8 +451,30 @@ a {
   letter-spacing: -0.05em;
 }
 
+.chart-stat-detail,
+.chart-intro {
+  max-width: 58ch;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.chart-stat-detail {
+  margin-top: 0.45rem;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+
 .legend-pill {
   font-size: 0.72rem;
+  border: 1px solid rgba(78, 89, 106, 0.1);
+  background: rgba(250, 245, 238, 0.72);
+  padding: 0.5rem 0.75rem;
 }
 
 .legend-swatch {
@@ -474,10 +496,8 @@ a {
   border-radius: 1.6rem;
   border: 1px solid rgba(78, 89, 106, 0.1);
   background:
-    linear-gradient(to top, rgba(110, 132, 173, 0.06) 1px, transparent 1px),
     linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(248, 242, 234, 0.88));
-  background-size: 100% 25%;
-  padding: 0.7rem;
+  padding: 0.85rem 0.7rem 0.7rem;
 }
 
 .chart-bar {
@@ -497,6 +517,21 @@ a {
   filter: brightness(1.05) saturate(1.02);
   transform: translateY(-2px);
   outline: none;
+}
+
+.chart-axis-caption {
+  fill: rgba(91, 99, 111, 0.82);
+  font-family: var(--font-manrope), sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.chart-overflow-cap {
+  stroke: rgba(31, 39, 51, 0.58);
+  stroke-linecap: round;
+  stroke-width: 2.5;
 }
 
 .repo-list {
