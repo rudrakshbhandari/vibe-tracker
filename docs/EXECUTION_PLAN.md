@@ -1,5 +1,31 @@
 # Execution Plan
 
+## Issue #141 - Add localhost GitHub auth fallback for local verification
+
+- Issue: [#141](https://github.com/rudrakshbhandari/vibe-tracker/issues/141)
+- Branch: `rudrakshbhandari/fix-local-github-auth`
+- PR: pending
+- Workflow: In Progress
+- Priority: P1
+- App: multi
+
+### Checklist
+
+- [x] Reproduce the localhost auth redirect problem and confirm production callback leakage
+- [x] Add localhost-only auth route fallbacks in Next for connect, callback, install, setup, and session reset
+- [x] Normalize local `.env` and local Postgres setup so auth routes can run in dev
+- [x] Verify localhost `/api/github/connect` redirects to GitHub with `http://localhost:3000/api/github/callback`
+- [x] Run local verification (`npm run lint`, `npm test`, `npm run build`)
+- [ ] Open PR and update project tracking
+
+### Verification
+
+- `npm run lint`
+- `npm test`
+- `npm run build`
+- `curl -s http://localhost:3000/api/github/connect -D - -o /dev/null`
+- Playwright `page.goto('http://localhost:3000/api/github/connect')` reached GitHub sign-in with the localhost callback encoded in the return URL
+
 ## Issue #138 - Refine shipped-work chart UI and scale readability
 
 - Issue: [#138](https://github.com/rudrakshbhandari/vibe-tracker/issues/138)
