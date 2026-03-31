@@ -4,8 +4,8 @@
 
 - Issue: [#141](https://github.com/rudrakshbhandari/vibe-tracker/issues/141)
 - Branch: `rudrakshbhandari/fix-local-github-auth`
-- PR: pending
-- Workflow: In Progress
+- PR: [#142](https://github.com/rudrakshbhandari/vibe-tracker/pull/142)
+- Workflow: In Review
 - Priority: P1
 - App: multi
 
@@ -16,7 +16,7 @@
 - [x] Normalize local `.env` and local Postgres setup so auth routes can run in dev
 - [x] Verify localhost `/api/github/connect` redirects to GitHub with `http://localhost:3000/api/github/callback`
 - [x] Run local verification (`npm run lint`, `npm test`, `npm run build`)
-- [ ] Open PR and update project tracking
+- [x] Open PR and update project tracking
 
 ### Verification
 
