@@ -1,5 +1,25 @@
 # Execution Plan
 
+## Issue #128 - Fix production GitHub sync state and SSR metrics loading
+
+- Issue: [#128](https://github.com/rudrakshbhandari/vibe-tracker/issues/128)
+- Branch: `rudrakshbhandari/fix-live-github-sync-state`
+- PR: pending
+- Workflow: In Progress
+- Priority: P0
+- App: multi
+
+### Checklist
+
+- [x] Create the follow-up issue and task branch
+- [ ] Route SSR Cloudflare reads through the Vercel-side session account id
+- [ ] Add regression coverage for internal account-id worker reads
+- [ ] Redeploy production and verify connected GitHub state plus dashboard charts
+
+### Verification
+
+- Pending
+
 ## Issue #126 - Fix post-connect GitHub state fallback on production dashboard
 
 - Issue: [#126](https://github.com/rudrakshbhandari/vibe-tracker/issues/126)
