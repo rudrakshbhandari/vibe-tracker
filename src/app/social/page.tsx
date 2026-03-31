@@ -11,7 +11,6 @@ import {
   hasCloudflareWorkerProxy,
 } from "@/lib/cloudflare-read";
 import { socialScopeSchema, socialTabSchema, socialWindowSchema } from "@/lib/social";
-import { getOptionalUserSession } from "@/lib/session";
 
 type SocialPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -21,17 +20,6 @@ type SocialShellProps = ComponentProps<typeof SocialShell>;
 
 export default async function SocialPage({ searchParams }: SocialPageProps) {
   const hasSession = await hasCloudflareSessionCookie();
-
-  let accountId: string | null = null;
-  if (hasCloudflareWorkerProxy()) {
-    try {
-      const session = await getOptionalUserSession();
-      accountId = session?.accountId ?? null;
-    } catch {
-      // DB/session lookup can fail on cold starts or connection issues;
-      // fall through to anonymous rendering instead of crashing the page.
-    }
-  }
 
   if (!hasSession || !hasCloudflareWorkerProxy()) {
     return (
@@ -132,25 +120,17 @@ export default async function SocialPage({ searchParams }: SocialPageProps) {
     SocialShellProps["initialLeaderboard"] | null,
   ] = hasCloudflareWorkerProxy()
     ? await Promise.all([
-        fetchCloudflareReadJson<SocialShellProps["initialMe"]>("/api/social/me", {
-          accountId,
-        }),
+        fetchCloudflareReadJson<SocialShellProps["initialMe"]>("/api/social/me"),
         fetchCloudflareReadJson(
           `/api/social/friends?${new URLSearchParams({
             window: initialWindow,
           }).toString()}`,
-          {
-            accountId,
-          },
         ) as Promise<SocialShellProps["initialFriends"] | null>,
         fetchCloudflareReadJson(
           `/api/social/leaderboard?${new URLSearchParams({
             scope: initialScope,
             window: initialWindow,
           }).toString()}`,
-          {
-            accountId,
-          },
         ) as Promise<SocialShellProps["initialLeaderboard"] | null>,
       ])
     : [null, null, null];

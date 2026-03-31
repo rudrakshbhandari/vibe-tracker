@@ -16,7 +16,6 @@ import {
   type SyncHealthSummary,
 } from "@/lib/github-state-normalize";
 import { getLinkPrefetch } from "@/lib/link-prefetch";
-import { getOptionalUserSession } from "@/lib/session";
 
 type HomePageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -607,26 +606,13 @@ export default async function Home({ searchParams }: HomePageProps) {
   const mode: MetricMode = "shipped";
   const githubStatus = typeof params.github === "string" ? params.github : undefined;
 
-  let accountId: string | null = null;
-  if (hasCloudflareWorkerProxy()) {
-    try {
-      const session = await getOptionalUserSession();
-      accountId = session?.accountId ?? null;
-    } catch {
-      // DB/session lookup can fail on cold starts or connection issues;
-      // fall through to anonymous rendering instead of crashing the page.
-    }
-  }
-
   let githubState: GithubState = FALLBACK_GITHUB_STATE;
   let dashboard: DashboardPayload | null = null;
   try {
     githubState =
       normalizeGithubState(
         hasCloudflareWorkerProxy()
-          ? await fetchCloudflareReadJson<GithubState>("/api/github/state", {
-              accountId,
-            })
+          ? await fetchCloudflareReadJson<GithubState>("/api/github/state")
           : null,
       ) ?? FALLBACK_GITHUB_STATE;
     dashboard = githubState.connected
@@ -635,9 +621,6 @@ export default async function Home({ searchParams }: HomePageProps) {
             view,
             mode,
           }).toString()}`,
-          {
-            accountId,
-          },
         )
       : null;
   } catch {

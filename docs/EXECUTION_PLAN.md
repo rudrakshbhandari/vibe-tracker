@@ -1,5 +1,21 @@
 # Execution Plan
 
+## Issue #132 - Authenticated users see anonymous view due to empty DATABASE_URL
+
+- Issue: [#132](https://github.com/rudrakshbhandari/vibe-tracker/issues/132)
+- Branch: `rudrakshbhandari/remove-prisma-session-from-ssr`
+- PR: [#133](https://github.com/rudrakshbhandari/vibe-tracker/pull/133)
+- Workflow: In Review
+- Priority: P0
+- App: multi
+
+### Checklist
+
+- [x] Diagnose empty DATABASE_URL on Vercel production
+- [x] Remove Prisma session lookup from SSR pages (page.tsx, social/page.tsx)
+- [x] All tests pass (50/50)
+- [ ] Merge and verify authenticated view restores with "Use recommended 25" button
+
 ## Issue #130 - Homepage crashes with 500 for authenticated users
 
 - Issue: [#130](https://github.com/rudrakshbhandari/vibe-tracker/issues/130)
