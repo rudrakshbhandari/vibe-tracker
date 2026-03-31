@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { getSmokeTestSecret, hasSmokeTestSecret } from "@/lib/env";
 import { runHostedSyncSmokeTest } from "@/lib/hosted-sync-smoke";
+import { runWorkerReadSmokeTest } from "@/lib/worker-read-smoke";
 
 function isAuthorized(request: NextRequest) {
   if (!hasSmokeTestSecret()) {
@@ -17,7 +18,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const result = await runHostedSyncSmokeTest();
+    const login = request.nextUrl.searchParams.get("login")?.trim();
+    const result = login
+      ? await runWorkerReadSmokeTest(login)
+      : await runHostedSyncSmokeTest();
     return NextResponse.json({
       ok: true,
       result,

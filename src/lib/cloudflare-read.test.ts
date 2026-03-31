@@ -28,7 +28,7 @@ describe("fetchCloudflareReadJson", () => {
     );
   });
 
-  it("forwards internal auth headers when an account id is provided", async () => {
+  it("forwards internal auth headers when a github user id is provided", async () => {
     vi.stubEnv("CLOUDFLARE_WORKER_URL", "https://worker.example.com");
     vi.stubEnv("CLOUDFLARE_INTERNAL_API_TOKEN", "internal-token");
 
@@ -45,7 +45,7 @@ describe("fetchCloudflareReadJson", () => {
     const { fetchCloudflareReadJson } = await import("@/lib/cloudflare-read");
 
     await fetchCloudflareReadJson("/api/github/state", {
-      accountId: "account-123",
+      githubUserId: 53033094,
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
@@ -58,7 +58,8 @@ describe("fetchCloudflareReadJson", () => {
 
     const requestHeaders = fetchMock.mock.calls[0]?.[1]?.headers as Headers;
     expect(requestHeaders.get("x-vibe-internal-token")).toBe("internal-token");
-    expect(requestHeaders.get("x-vibe-account-id")).toBe("account-123");
+    expect(requestHeaders.get("x-vibe-github-user-id")).toBe("53033094");
+    expect(requestHeaders.get("x-vibe-account-id")).toBeNull();
     expect(requestHeaders.get("cookie")).toBeNull();
   });
 
@@ -86,5 +87,35 @@ describe("fetchCloudflareReadJson", () => {
     );
     expect(requestHeaders.get("x-vibe-internal-token")).toBeNull();
     expect(requestHeaders.get("x-vibe-account-id")).toBeNull();
+  });
+
+  it("logs when an internal worker read returns a server error", async () => {
+    vi.stubEnv("CLOUDFLARE_WORKER_URL", "https://worker.example.com");
+    vi.stubEnv("CLOUDFLARE_INTERNAL_API_TOKEN", "internal-token");
+
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response("boom", {
+        status: 500,
+      }),
+    );
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { fetchCloudflareReadJson } = await import("@/lib/cloudflare-read");
+
+    await expect(
+      fetchCloudflareReadJson("/api/github/state", {
+        githubUserId: 53033094,
+      }),
+    ).resolves.toBeNull();
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      "Cloudflare read returned non-ok response",
+      expect.objectContaining({
+        path: "/api/github/state",
+        status: 500,
+        authMode: "internal-github-user",
+      }),
+    );
   });
 });

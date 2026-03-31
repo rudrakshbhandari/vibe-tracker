@@ -16,6 +16,7 @@ function buildCloudflareWorkerUrl(path: string) {
 async function buildForwardHeaders(
   input: {
     accountId?: string | null;
+    githubUserId?: number | null;
     request?: NextRequest | Request;
     contentType?: string | null;
     accept?: string | null;
@@ -28,6 +29,15 @@ async function buildForwardHeaders(
   }
   if (input.contentType) {
     requestHeaders.set("content-type", input.contentType);
+  }
+
+  if (input.githubUserId && CLOUDFLARE_INTERNAL_API_TOKEN) {
+    requestHeaders.set(
+      "x-vibe-internal-token",
+      CLOUDFLARE_INTERNAL_API_TOKEN,
+    );
+    requestHeaders.set("x-vibe-github-user-id", String(input.githubUserId));
+    return requestHeaders;
   }
 
   if (input.accountId && CLOUDFLARE_INTERNAL_API_TOKEN) {
@@ -68,6 +78,7 @@ export async function fetchCloudflareReadJson<T>(
   path: string,
   input: {
     accountId?: string | null;
+    githubUserId?: number | null;
   } = {},
 ) {
   if (!CLOUDFLARE_WORKER_URL) {
@@ -77,12 +88,36 @@ export async function fetchCloudflareReadJson<T>(
   const response = await fetch(buildCloudflareWorkerUrl(path), {
     headers: await buildForwardHeaders({
       accountId: input.accountId,
+      githubUserId: input.githubUserId,
       accept: "application/json",
     }),
     cache: "no-store",
   }).catch(() => null);
 
-  if (!response?.ok) {
+  if (!response) {
+    console.error("Cloudflare read request failed", {
+      path,
+      authMode: input.githubUserId
+        ? "internal-github-user"
+        : input.accountId
+          ? "internal-account"
+          : "cookie-forward",
+    });
+    return null;
+  }
+
+  if (!response.ok) {
+    if (input.accountId || input.githubUserId || response.status >= 500) {
+      console.error("Cloudflare read returned non-ok response", {
+        path,
+        status: response.status,
+        authMode: input.githubUserId
+          ? "internal-github-user"
+          : input.accountId
+            ? "internal-account"
+            : "cookie-forward",
+      });
+    }
     return null;
   }
 
