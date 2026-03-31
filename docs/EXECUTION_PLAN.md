@@ -1,5 +1,26 @@
 # Execution Plan
 
+## Issue #134 - Add live GitHub sync safeguards and smoke coverage
+
+- Issue: [#134](https://github.com/rudrakshbhandari/vibe-tracker/issues/134)
+- Branch: `rudrakshbhandari/add-live-github-sync-safeguards`
+- PR: pending
+- Workflow: In Progress
+- Priority: P0
+- App: multi
+
+### Checklist
+
+- [x] Create the follow-up issue and task branch
+- [ ] Add structured worker-read failure logging
+- [ ] Extend the protected smoke route to validate live GitHub state and metrics by login
+- [ ] Add regression coverage and verify locally
+- [ ] Push branch, open PR, and run the live smoke check
+
+### Verification
+
+- Pending
+
 ## Issue #132 - Authenticated users see anonymous view due to empty DATABASE_URL
 
 - Issue: [#132](https://github.com/rudrakshbhandari/vibe-tracker/issues/132)

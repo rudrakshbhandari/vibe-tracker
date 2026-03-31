@@ -87,4 +87,34 @@ describe("fetchCloudflareReadJson", () => {
     expect(requestHeaders.get("x-vibe-internal-token")).toBeNull();
     expect(requestHeaders.get("x-vibe-account-id")).toBeNull();
   });
+
+  it("logs when an internal worker read returns a server error", async () => {
+    vi.stubEnv("CLOUDFLARE_WORKER_URL", "https://worker.example.com");
+    vi.stubEnv("CLOUDFLARE_INTERNAL_API_TOKEN", "internal-token");
+
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response("boom", {
+        status: 500,
+      }),
+    );
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { fetchCloudflareReadJson } = await import("@/lib/cloudflare-read");
+
+    await expect(
+      fetchCloudflareReadJson("/api/github/state", {
+        accountId: "account-123",
+      }),
+    ).resolves.toBeNull();
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      "Cloudflare read returned non-ok response",
+      expect.objectContaining({
+        path: "/api/github/state",
+        status: 500,
+        authMode: "internal-account",
+      }),
+    );
+  });
 });
