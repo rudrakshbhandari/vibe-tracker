@@ -82,7 +82,22 @@ export async function fetchCloudflareReadJson<T>(
     cache: "no-store",
   }).catch(() => null);
 
-  if (!response?.ok) {
+  if (!response) {
+    console.error("Cloudflare read request failed", {
+      path,
+      authMode: input.accountId ? "internal-account" : "cookie-forward",
+    });
+    return null;
+  }
+
+  if (!response.ok) {
+    if (input.accountId || response.status >= 500) {
+      console.error("Cloudflare read returned non-ok response", {
+        path,
+        status: response.status,
+        authMode: input.accountId ? "internal-account" : "cookie-forward",
+      });
+    }
     return null;
   }
 
