@@ -31,7 +31,7 @@ export async function runWorkerReadSmokeTest(login: string) {
       login,
     },
     select: {
-      id: true,
+      githubUserId: true,
       login: true,
     },
   });
@@ -42,10 +42,10 @@ export async function runWorkerReadSmokeTest(login: string) {
 
   const [state, metrics] = await Promise.all([
     fetchCloudflareReadJson<WorkerGithubState>("/api/github/state", {
-      accountId: account.id,
+      githubUserId: account.githubUserId,
     }),
     fetchCloudflareReadJson<WorkerMetrics>("/api/metrics?view=daily", {
-      accountId: account.id,
+      githubUserId: account.githubUserId,
     }),
   ]);
 
