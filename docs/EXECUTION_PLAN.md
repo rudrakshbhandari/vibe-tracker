@@ -1,5 +1,28 @@
 # Execution Plan
 
+## Issue #143 - Switch shipped-work chart back to single-scale layout
+
+- Issue: [#143](https://github.com/rudrakshbhandari/vibe-tracker/issues/143)
+- Branch: `rudrakshbhandari/chart-single-scale`
+- PR: [#144](https://github.com/rudrakshbhandari/vibe-tracker/pull/144)
+- Workflow: In Review
+- Priority: P2
+- App: multi
+
+### Checklist
+
+- [x] Reproduce the chart regression and confirm the mirrored layout is wasting vertical space
+- [x] Rework the chart back to a shared upward scale while keeping the outlier cap
+- [x] Update chart copy and labels to match the single-scale layout
+- [x] Run local verification (`npm run lint`, `npm test`, `npm run build`)
+- [x] Open PR and update project tracking
+
+### Verification
+
+- `npm run lint`
+- `npm test`
+- `npm run build`
+
 ## Issue #141 - Add localhost GitHub auth fallback for local verification
 
 - Issue: [#141](https://github.com/rudrakshbhandari/vibe-tracker/issues/141)
