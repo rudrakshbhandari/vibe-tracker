@@ -231,16 +231,14 @@ function buildBarChartGeometry(timeline: TimelinePoint[]) {
   const groupWidth = innerWidth / Math.max(timeline.length, 1);
   const barWidth = Math.min(22, Math.max(10, groupWidth * 0.28));
   const barGap = Math.max(4, groupWidth * 0.08);
-  const centerGap = 18;
-  const halfHeight = (innerHeight - centerGap) / 2;
-  const baselineY = CHART_PADDING.top + halfHeight + centerGap / 2;
+  const baselineY = CHART_PADDING.top + innerHeight;
 
   const toHeight = (value: number) => {
     if (value <= 0) {
       return 0;
     }
 
-    return Math.max(6, (Math.min(value, displayMaxValue) / displayMaxValue) * halfHeight);
+    return Math.max(6, (Math.min(value, displayMaxValue) / displayMaxValue) * innerHeight);
   };
 
   const bars = timeline.map((point, index) => {
@@ -261,7 +259,7 @@ function buildBarChartGeometry(timeline: TimelinePoint[]) {
       },
       deletions: {
         x: centerX + barGap / 2,
-        y: baselineY,
+        y: baselineY - deletionsHeight,
         height: deletionsHeight,
         truncated: point.deletions > displayMaxValue,
       },
@@ -889,7 +887,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                   <p className="panel-label">{dashboard.chartTitle}</p>
                   <h3 className="panel-heading">Lines changed by ship period</h3>
                   <p className="chart-intro">
-                    Additions rise above the center line and deletions drop below it so the direction stays obvious at a glance.
+                    Additions and deletions share one upward scale so the busiest periods stay easy to compare at a glance.
                     {chartGeometry?.hasScaleBreak
                       ? ` The scale is capped at ${formatNumber(chartGeometry.displayMaxValue)} lines to keep non-peak periods readable.`
                       : " The vertical scale stays linear across the full selected range."}
@@ -929,9 +927,9 @@ export default async function Home({ searchParams }: HomePageProps) {
                       <p className="chart-stat-detail">Median combined line change for non-zero periods in this view.</p>
                     </article>
                     <article className="chart-stat-card">
-                      <p className="panel-label">Visible chart range</p>
+                      <p className="panel-label">Visible chart ceiling</p>
                       <p className="chart-stat-value">
-                        ±{formatNumber(chartGeometry.displayMaxValue)}
+                        {formatNumber(chartGeometry.displayMaxValue)}
                       </p>
                       <p className="chart-stat-detail">
                         {chartGeometry.hasScaleBreak

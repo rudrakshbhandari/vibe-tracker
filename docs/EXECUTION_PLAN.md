@@ -1,5 +1,28 @@
 # Execution Plan
 
+## Issue #143 - Switch shipped-work chart back to single-scale layout
+
+- Issue: [#143](https://github.com/rudrakshbhandari/vibe-tracker/issues/143)
+- Branch: `rudrakshbhandari/chart-single-scale`
+- PR: pending
+- Workflow: In Progress
+- Priority: P2
+- App: multi
+
+### Checklist
+
+- [x] Reproduce the chart regression and confirm the mirrored layout is wasting vertical space
+- [x] Rework the chart back to a shared upward scale while keeping the outlier cap
+- [x] Update chart copy and labels to match the single-scale layout
+- [x] Run local verification (`npm run lint`, `npm test`, `npm run build`)
+- [ ] Open PR and update project tracking
+
+### Verification
+
+- `npm run lint`
+- `npm test`
+- `npm run build`
+
 ## Issue #138 - Refine shipped-work chart UI and scale readability
 
 - Issue: [#138](https://github.com/rudrakshbhandari/vibe-tracker/issues/138)
