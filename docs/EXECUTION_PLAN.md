@@ -4,8 +4,8 @@
 
 - Issue: [#143](https://github.com/rudrakshbhandari/vibe-tracker/issues/143)
 - Branch: `rudrakshbhandari/chart-single-scale`
-- PR: pending
-- Workflow: In Progress
+- PR: [#144](https://github.com/rudrakshbhandari/vibe-tracker/pull/144)
+- Workflow: In Review
 - Priority: P2
 - App: multi
 
@@ -15,7 +15,7 @@
 - [x] Rework the chart back to a shared upward scale while keeping the outlier cap
 - [x] Update chart copy and labels to match the single-scale layout
 - [x] Run local verification (`npm run lint`, `npm test`, `npm run build`)
-- [ ] Open PR and update project tracking
+- [x] Open PR and update project tracking
 
 ### Verification
 
