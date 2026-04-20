@@ -738,6 +738,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               </div>
             </div>
             <div className="space-y-4">
+              <span className="hero-kicker">Shipped-work analytics</span>
               <h1 className="page-title">How much are you actually shipping?</h1>
               <p className="page-description">
                 Track shipped work, recent momentum, and repository impact from your merged pull requests.
@@ -750,7 +751,12 @@ export default async function Home({ searchParams }: HomePageProps) {
               <div className="meta-row">
                 <span className="hero-meta-label">GitHub</span>
                 <span className="hero-meta-value">
-                  {githubState.connected ? "GitHub connected" : "Not connected"}
+                  <span
+                    className={
+                      githubState.connected ? "status-dot status-dot-live" : "status-dot"
+                    }
+                  />
+                  {githubState.connected ? "Connected" : "Not connected"}
                 </span>
               </div>
               <div className="meta-row">
