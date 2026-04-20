@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Manrope, Newsreader } from "next/font/google";
+import { Manrope } from "next/font/google";
 import { TimezoneSync } from "@/components/timezone-sync";
 import "./globals.css";
 
@@ -12,13 +12,6 @@ const manrope = Manrope({
   subsets: ["latin"],
   display: "swap",
 });
-
-const newsreader = Newsreader({
-  variable: "--font-newsreader",
-  subsets: ["latin"],
-  display: "swap",
-});
-
 
 export const metadata: Metadata = {
   title: "Vibe Tracker",
@@ -37,7 +30,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: ANTI_FLASH_SCRIPT }} />
       </head>
       <body
-        className={`${manrope.variable} ${newsreader.variable} bg-background text-foreground antialiased selection:bg-accent/20 selection:text-foreground`}
+        className={`${manrope.variable} bg-background text-foreground antialiased selection:bg-accent/20 selection:text-foreground`}
       >
         <TimezoneSync />
         {children}
