@@ -723,18 +723,22 @@ export default async function Home({ searchParams }: HomePageProps) {
       <div className="relative mx-auto flex w-full max-w-[1280px] flex-col gap-4 px-4 py-4 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
         <section className="top-panel">
           <div className="top-panel-copy">
-            <span className="eyebrow">Vibe Tracker</span>
-            <div className="flex flex-wrap items-center gap-2">
-              <Link href="/" className="toggle-pill toggle-pill-active">
-                Dashboard
-              </Link>
-              <Link href="/social" className="toggle-pill">
-                Social
-              </Link>
-              <ThemeToggle />
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-[0.9375rem] font-semibold tracking-tight text-foreground">
+                Vibe Tracker
+              </span>
+              <div className="flex flex-wrap items-center gap-1">
+                <Link href="/" className="toggle-pill toggle-pill-active">
+                  Dashboard
+                </Link>
+                <Link href="/social" className="toggle-pill">
+                  Social
+                </Link>
+                <ThemeToggle />
+              </div>
             </div>
-            <div className="space-y-3">
-              <h1 className="page-title">Everyone is vibe coding, but how much?</h1>
+            <div className="space-y-4">
+              <h1 className="page-title">How much are you actually shipping?</h1>
               <p className="page-description">
                 Track shipped work, recent momentum, and repository impact from your merged pull requests.
               </p>
